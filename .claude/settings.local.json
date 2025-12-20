@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(test:*)",
+      "Bash(git mv:*)",
+      "Bash(tree:*)"
+    ]
+  }
+}
