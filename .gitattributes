@@ -1,3 +1,15 @@
+# 기본: 모든 텍스트 파일 LF로 통일
+* text=auto eol=lf
+
+# Gradle 관련
 /gradlew text eol=lf
+*.gradle text eol=lf
+
+# Windows 전용
 *.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 바이너리
 *.jar binary
+*.png binary
+*.jpg binary
