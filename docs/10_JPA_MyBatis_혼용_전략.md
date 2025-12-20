@@ -222,7 +222,131 @@ public class SeriesService {
 
 ---
 
-## 5. 성능 고려사항
+## 5. 멀티테넌시와 JPA/MyBatis 통합 ⭐
+
+### 5.1 TenantAwareEntity 상속
+
+**모든 Entity는 TenantAwareEntity를 상속**:
+```java
+@FilterDef(name = "tenantFilter",
+           parameters = @ParamDef(name = "tenantId", type = Long.class))
+@Filter(name = "tenantFilter",
+        condition = "tenant_id = :tenantId")
+@MappedSuperclass
+@EntityListeners(TenantEntityListener.class)
+public abstract class TenantAwareEntity {
+
+    @Column(name = "tenant_id", nullable = false)
+    private Long tenantId;
+
+    public Long getTenantId() { return tenantId; }
+    public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
+}
+
+@Entity
+@Table(name = "study")
+public class Study extends TenantAwareEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long studyId;
+
+    // tenant_id는 TenantAwareEntity에서 상속받음
+}
+```
+
+### 5.2 JPA Filter 자동 활성화
+
+**AOP로 모든 Repository 메서드 전에 Filter 활성화**:
+```java
+@Component
+@Aspect
+public class TenantFilterAspect {
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @Before("execution(* com.sado..repository..*(..))")
+    public void enableTenantFilter() {
+        Long tenantId = TenantContext.getCurrentTenantId();
+        Session session = entityManager.unwrap(Session.class);
+        session.enableFilter("tenantFilter")
+               .setParameter("tenantId", tenantId);
+    }
+}
+```
+
+**AspectJ 활성화**:
+```java
+@Configuration
+@EnableAspectJAutoProxy
+public class AopConfig {
+    // AspectJ 활성화
+}
+```
+
+### 5.3 MyBatis에서 tenant_id 자동 추가
+
+**BaseMapper XML 사용**:
+```xml
+<!-- BaseMapper.xml -->
+<sql id="tenantFilter">
+    AND tenant_id = #{tenantId}
+</sql>
+
+<!-- StudyQueryMapper.xml -->
+<select id="findStudyList" resultType="StudyListDTO">
+    SELECT * FROM study
+    WHERE 1=1
+    <include refid="BaseMapper.tenantFilter"/>
+    ORDER BY study_date DESC
+</select>
+```
+
+또는 **MyBatis Interceptor 사용**:
+```java
+@Intercepts({@Signature(type = Executor.class, method = "query", args = {...})})
+public class TenantInterceptor implements Interceptor {
+    @Override
+    public Object intercept(Invocation invocation) {
+        // SQL에 tenant_id 조건 자동 추가
+        // 구현 생략
+    }
+}
+```
+
+### 5.4 사용 기준 (멀티테넌시 고려)
+
+| 상황 | 사용 기술 | tenant_id 처리 |
+|------|---------|---------------|
+| Study 생성/수정/삭제 | JPA | @PrePersist에서 자동 주입 |
+| Study 목록 조회 | MyBatis | WHERE tenant_id = #{tenantId} |
+| Study 단건 조회 | JPA | @Filter로 자동 필터링 |
+| 통계 쿼리 | MyBatis | WHERE tenant_id = #{tenantId} |
+| 크로스 테넌트 조회 (Admin) | MyBatis | Filter 미적용, 명시적 조회 |
+
+**관리자 크로스 테넌트 조회 예시**:
+```java
+@Service
+public class AdminService {
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    public List<Study> findAllStudiesAcrossTenants() {
+        // Filter 비활성화
+        Session session = entityManager.unwrap(Session.class);
+        session.disableFilter("tenantFilter");
+
+        // 모든 테넌트 데이터 조회
+        return entityManager.createQuery("SELECT s FROM Study s", Study.class)
+                            .getResultList();
+    }
+}
+```
+
+---
+
+## 6. 성능 고려사항
 
 ### JPA N+1 문제 방지
 
@@ -266,7 +390,7 @@ List<StudyWithSeriesCountDTO> findStudiesWithSeriesCount();
 
 ---
 
-## 6. 테스트 전략
+## 7. 테스트 전략
 
 ### JPA 테스트
 ```java
@@ -304,7 +428,7 @@ class StudyQueryMapperTest {
 
 ---
 
-## 7. 블로그 작성 가이드
+## 8. 블로그 작성 가이드
 
 ### 추천 주제
 1. "JPA와 MyBatis 어떻게 섞어 쓸까? 실전 가이드"
@@ -318,7 +442,7 @@ class StudyQueryMapperTest {
 
 ---
 
-## 8. 참고 자료
+## 9. 참고 자료
 
 - [Spring Data JPA 공식 문서](https://spring.io/projects/spring-data-jpa)
 - [MyBatis 공식 문서](https://mybatis.org/)

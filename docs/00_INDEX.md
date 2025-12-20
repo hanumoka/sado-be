@@ -292,6 +292,49 @@ START
 
 ---
 
+#### [12_멀티테넌시_설계_가이드.md](./12_멀티테넌시_설계_가이드.md) ⭐ NEW
+**읽어야 하는 이유**: 멀티테넌시 전체 설계 및 구현 가이드
+**주요 내용**:
+- 데이터 격리 전략 비교 (Shared DB vs Schema per Tenant vs DB per Tenant)
+- Shared Database with tenant_id 구현 상세
+- TenantContext, TenantInterceptor, TenantFilterAspect 구현
+- Keycloak JWT에 tenant_id claim 추가 방법
+- 모듈별 멀티테넌시 적용 가이드
+- 보안 고려사항 및 테스트 전략
+
+**대상 독자**: Week 2 시작 전 필수 숙지
+
+**핵심 섹션**:
+- 아키텍처 설계: 전체 흐름 및 컴포넌트별 책임
+- 구현 가이드: DB 스키마, JPA Entity, Interceptor
+- 보안 고려사항: Tenant 격리 검증
+
+**활용**: Week 2, 12, 13 구현 시 참조
+
+---
+
+#### [13_mini-pacs-poc_분석_및_통합_계획.md](./13_mini-pacs-poc_분석_및_통합_계획.md) ⭐ NEW
+**읽어야 하는 이유**: 기존 mini-pacs-poc 프로젝트 분석 및 sado-be 통합 계획
+**주요 내용**:
+- mini-pacs-poc 프로젝트 종합 분석 (90% 완성도, 65개 Java 파일)
+- 기술 스택 비교 (sado-be vs mini-pacs-poc)
+- 도메인 모델 통합 계획 (PostgreSQL → MySQL 변환)
+- DICOMWeb API (QIDO-RS, WADO-RS, STOW-RS) 이관 계획
+- DICOM 처리 서비스 학습 및 구현 가이드
+- Phase별 통합 단계 (6개 Phase, 8-10주 예상)
+- 예상 효과: 개발 기간 50% 단축 (20주 → 8-10주)
+
+**대상 독자**: Week 2 시작 전 필수 숙지, 프로젝트 리더
+
+**핵심 섹션**:
+- 기술 스택 비교 분석
+- 도메인 모델 설계 (Entity 구조)
+- Phase별 통합 계획 (상세 일정)
+
+**활용**: Week 2부터 mini-pacs-poc 코드 이관 및 학습 시 참조
+
+---
+
 ### 학습 노트 (구현 중 작성 예정)
 
 #### [learning/](./learning/)
@@ -337,10 +380,10 @@ sado-be/
 | 기술 | 용도 | 학습 주차 |
 |------|------|----------|
 | **Kafka** | 메시지 브로커 | Week 5-7 |
-| **MySQL 8.0** | RDB (JPA + MyBatis) | Week 2 |
+| **MySQL 8.0** | RDB (JPA + MyBatis, **Multi-tenancy**) ⭐ | Week 2 |
 | **Temporal** | 워크플로우 | Week 8-10 |
 | **SeaweedFS** | Object Storage | Week 11 |
-| **Keycloak** | 인증/인가 | Week 12-13 |
+| **Keycloak** | 인증/인가, **tenant_id claim** ⭐ | Week 12-13 |
 | **Redis** | 분산락/캐싱 | Week 14 |
 
 ### 16주 Phase 구성
@@ -417,12 +460,28 @@ Gateway가 Keycloak을 직접 연동합니다.
 ### Q9. Week 1부터 시작하면 되나요?
 **A**: 네, `07_최종_구현_계획.md`의 Week 1 섹션을 참조하여 시작하세요.
 
+### Q10. 멀티테넌시는 어떻게 구현하나요? ⭐ NEW
+**A**: `12_멀티테넌시_설계_가이드.md`를 참조하세요.
+- **전략**: Shared Database with tenant_id 컬럼
+- **식별**: Keycloak JWT에 tenant_id claim 포함
+- **격리**: JPA @Filter로 자동 필터링
+- **시기**: Week 2부터 즉시 적용
+
+**구현 핵심**:
+- TenantAwareEntity 상속으로 모든 Entity에 tenant_id 자동 관리
+- TenantFilterAspect로 모든 JPA 쿼리에 WHERE tenant_id = ? 자동 추가
+- ThreadLocal TenantContext로 요청별 tenant 관리
+- Gateway에서 JWT 파싱 후 X-Tenant-ID 헤더로 전파
+
+자세한 구현 방법은 `12_멀티테넌시_설계_가이드.md` 참조
+
 ---
 
 ## 📝 문서 업데이트 이력
 
 | 날짜 | 변경 내용 | 작성자 |
 |------|-----------|--------|
+| 2025-12-20 | **멀티테넌시 기능 추가** (12번 문서 신규, 07/10/learning/week02 업데이트, FAQ Q10 추가) ⭐ | Claude |
 | 2025-12-20 | PostgreSQL → MySQL 변경, JPA+MyBatis 혼용 전략 반영 (07, 10, 11 문서) | Claude |
 | 2025-12-20 | AWS 배포 아키텍처 및 Master-Slave 전략 추가 (07) | Claude |
 | 2025-12-20 | 10_JPA_MyBatis_혼용_전략.md 신규 작성 | Claude |
