@@ -6,6 +6,23 @@
 
 ---
 
+## 🏗️ SADO 프로젝트 전체 구조
+
+```
+sado/
+├── sado_be/    # Spring 멀티모듈 백엔드 + 통합 문서관리 (이 프로젝트)
+├── sado_fe/    # React 프론트엔드
+└── sado_ai/    # Triton AI 분석 서버 (심장 초음파) ⭐
+```
+
+| 프로젝트 | 기술 스택 | 역할 |
+|---------|----------|------|
+| **sado_be** | Spring Boot, Kafka, Temporal | 백엔드 API, 워크플로우 오케스트레이션 |
+| **sado_fe** | React, TypeScript | 프론트엔드 UI |
+| **sado_ai** | Triton, Python, gRPC | 심장 초음파 AI 분석 (Mock 서비스) |
+
+---
+
 ## 📊 진행 상황 추적
 
 **16주 장기 프로젝트를 위한 진행 상황 관리 시스템**
@@ -351,6 +368,29 @@ START
 
 ---
 
+#### [14_sado_ai_요구사항.md](./14_sado_ai_요구사항.md) ⭐ NEW
+**읽어야 하는 이유**: sado_ai (AI 분석 모듈) 구성 및 연동 가이드
+**주요 내용**:
+- sado_ai 프로젝트 개요 (Mock 서비스, 학습용)
+- NVIDIA Triton Inference Server 구성
+- 오픈소스 모델 선택 (EchoNet-Dynamic)
+- gRPC 인터페이스 정의
+- DICOM → 이미지 변환 파이프라인
+- 분석 결과 데이터 스키마 (EF, 세그멘테이션 이미지)
+- sado_be (Orchestrator) 연동 방법
+- 개발 환경 설정 (Docker Compose)
+
+**대상 독자**: Week 10 시작 전 숙지
+
+**핵심 섹션**:
+- 입출력 정의 (DICOM → EF + 세그멘테이션)
+- gRPC 인터페이스
+- sado_be 연동 플로우
+
+**활용**: Week 10 sado_ai 연동 시 참조
+
+---
+
 ### 학습 노트 (구현 중 작성 예정)
 
 #### [learning/](./learning/)
@@ -491,12 +531,31 @@ Gateway가 Keycloak을 직접 연동합니다.
 
 자세한 구현 방법은 `12_멀티테넌시_설계_가이드.md` 참조
 
+### Q11. sado_ai는 어떻게 구성하나요? ⭐ NEW
+**A**: `14_sado_ai_요구사항.md`를 참조하세요.
+- **목적**: 심장 초음파 DICOM AI 분석 (Mock 서비스)
+- **기술**: NVIDIA Triton Inference Server + gRPC
+- **모델**: 오픈소스 EchoNet-Dynamic (분석 정확도 중요하지 않음)
+- **시기**: Week 10에 기본 구현
+
+**연동 플로우**:
+```
+sado_be/Orchestrator → gRPC → sado_ai/Triton → 분석 결과
+                                        ↓
+                              EF(심박출률) + 세그멘테이션 이미지
+                                        ↓
+                              리포트 생성 (sado_be에서 처리)
+```
+
+자세한 구성 방법은 `14_sado_ai_요구사항.md` 참조
+
 ---
 
 ## 📝 문서 업데이트 이력
 
 | 날짜 | 변경 내용 | 작성자 |
 |------|-----------|--------|
+| 2025-12-21 | **sado_ai 요구사항 추가** (14번 문서 신규, 07/00 업데이트, FAQ Q11 추가) ⭐ | Claude |
 | 2025-12-21 | **진행 상황 추적 시스템 구축** (PROGRESS.md, CHANGELOG.md, progress/ 디렉토리 생성) ⭐ | Claude |
 | 2025-12-20 | **멀티테넌시 기능 추가** (12번 문서 신규, 07/10/learning/week02 업데이트, FAQ Q10 추가) ⭐ | Claude |
 | 2025-12-20 | PostgreSQL → MySQL 변경, JPA+MyBatis 혼용 전략 반영 (07, 10, 11 문서) | Claude |
