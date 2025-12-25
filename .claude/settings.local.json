@@ -16,7 +16,8 @@
       "WebSearch",
       "Bash(wc:*)",
       "Bash(done)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(find:*)"
     ]
   }
 }
