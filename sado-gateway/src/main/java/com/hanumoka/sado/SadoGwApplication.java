@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class SadoBeApplication {
+public class SadoGwApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SadoBeApplication.class, args);
+        SpringApplication.run(SadoGwApplication.class, args);
     }
 
 }

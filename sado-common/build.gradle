@@ -12,10 +12,9 @@ java {
 }
 
 dependencies {
-    // 공통으로 사용할 라이브러리
-    api 'org.springframework.boot:spring-boot-starter'
-    api 'org.projectlombok:lombok'
+    // 공통으로 사용할 라이브러리 (Version Catalog 사용)
+    api libs.spring.boot.starter
+    api libs.lombok
 
-    annotationProcessor 'org.projectlombok:lombok'
-
+    annotationProcessor libs.lombok
 }

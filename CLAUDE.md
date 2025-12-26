@@ -80,6 +80,15 @@ Spring Boot 4.0.1 기반의 백엔드 REST API 프로젝트 (16주 학습 프로
 - **비즈니스 로직 직접 구현 (절대 금지)**
 - **학습 목표 코드 대신 작성 (절대 금지)**
 - Edit/Write 도구로 Java/TypeScript 코드 작성
+- **Gradle 학습 내용 (build.gradle, libs.versions.toml) 직접 수정 (가이드만 제공)**
+
+#### 핵심 판단 기준
+```
+학습 목표인가? → ❌ 작성 금지, 가이드만
+최초 프로젝트 생성인가? (settings.gradle 등) → ✅ 작성 가능
+순수 인프라 설정인가? (docker-compose.yml 등) → ✅ 작성 가능
+그 외 모든 경우 → ❌ 작성 금지, 가이드만
+```
 
 #### 작업 흐름
 ```
