@@ -2,3 +2,4 @@ rootProject.name = 'sado_be'
 
 include 'sado-common'
 include 'sado-gateway'
+include 'sado-minipacs'

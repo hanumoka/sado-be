@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+    alias(libs.plugins.spring.boot) apply false  // 실행 가능한 앱이 아님
+    alias(libs.plugins.spring.dependency.management)
+}
+
+group = "com.hanumoka.sado"
+version = "0.0.1-SNAPSHOT"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+dependencies {
+    // sado-common 의존성 (BaseEntity, TenantAwareEntity 사용)
+    implementation project(':sado-common')
+
+    // Spring Boot & JPA
+    implementation libs.spring.boot.starter.web
+    implementation libs.spring.boot.starter.data.jpa
+
+    // Database
+    runtimeOnly libs.mysql.connector.java
+
+    // Lombok
+    implementation libs.lombok
+    annotationProcessor libs.lombok
+
+    // Test
+    testImplementation libs.spring.boot.starter.test
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
