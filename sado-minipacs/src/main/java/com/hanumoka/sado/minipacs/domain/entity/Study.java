@@ -1,14 +1,14 @@
 package com.hanumoka.sado.minipacs.domain.entity;
 
 import com.hanumoka.sado.common.entity.TenantAwareEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Application Domain Layer - 검사 비즈니스 엔티티
@@ -30,6 +30,16 @@ public class Study extends TenantAwareEntity {
     @Column(name = "study_instance_uid", length = 256)
     private String studyInstanceUid;
 
+    // ========== Patient 관계 (Application Layer 내 직접 FK) ==========
+
+    /**
+     * 소속 환자
+     * N개의 검사 → 1명의 환자
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "patient_id", nullable = false)
+    private Patient patient;
+
     // ========== Application Domain 필드 ==========
 
     /**
@@ -44,10 +54,51 @@ public class Study extends TenantAwareEntity {
     @Column(name = "study_description", length = 255)
     private String studyDescription;
 
-    // ========== 향후 추가 예정 ==========
+    /**
+     * Number of Series
+     * 역정규화: 통계용 (실시간 COUNT 대신 캐싱)
+     */
+    @Column(name = "number_of_series")
+    private Integer numberOfSeries;
 
-    // TODO: PatientEntity 생성 후 관계 추가
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "patient_id")
-    // private Patient patient;
+    /**
+     * Number of Instances
+     * 역정규화: 통계용
+     */
+    @Column(name = "number_of_instances")
+    private Integer numberOfInstances;
+
+    // ========== Series 관계 ==========
+
+    /**
+     * 검사의 시리즈 목록
+     * 1개의 검사 → N개의 시리즈
+     */
+    @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Series> series = new ArrayList<>();
+
+    // ========== 비즈니스 메서드 ==========
+
+    /**
+     * Series 추가 및 numberOfSeries 증가
+     */
+    public void addSeries(Series seriesItem) {
+        series.add(seriesItem);
+        seriesItem.setStudy(this);
+        if (numberOfSeries == null) {
+            numberOfSeries = 0;
+        }
+        numberOfSeries++;
+    }
+
+    /**
+     * Series 제거 및 numberOfSeries 감소
+     */
+    public void removeSeries(Series seriesItem) {
+        series.remove(seriesItem);
+        seriesItem.setStudy(null);
+        if (numberOfSeries != null && numberOfSeries > 0) {
+            numberOfSeries--;
+        }
+    }
 }
