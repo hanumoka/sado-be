@@ -1,5 +1,6 @@
 package com.hanumoka.sado.common.entity;
 
+import com.hanumoka.sado.common.listener.TenantEntityListener;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
