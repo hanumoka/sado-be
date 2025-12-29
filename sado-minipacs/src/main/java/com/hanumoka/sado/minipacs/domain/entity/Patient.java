@@ -13,6 +13,12 @@ import java.util.List;
 /**
  * Application Domain Layer - 환자 엔티티
  * DICOM PatientID와 EMR 환자 ID 매핑 관리
+ *
+ *   | 관계              | 설명 | 비유                             |
+ *   |-------------------|------|----------------------------------|
+ *   | Patient → Study   | 1:N  | 1명의 환자 → 여러 번 검사        |
+ *   | Study → Series    | 1:N  | 1번의 검사 → 여러 각도/시점 촬영 |
+ *   | Series → Instance | 1:N  | 1개의 시리즈 → 여러 장의 영상    |
  */
 @Entity
 @Table(
