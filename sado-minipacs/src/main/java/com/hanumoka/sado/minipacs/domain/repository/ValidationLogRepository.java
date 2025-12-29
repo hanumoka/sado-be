@@ -1,8 +1,8 @@
 package com.hanumoka.sado.minipacs.domain.repository;
 
 import com.hanumoka.sado.minipacs.domain.entity.ValidationLog;
+import com.hanumoka.sado.minipacs.domain.entity.ValidationLog.ValidationLevel;
 import com.hanumoka.sado.minipacs.domain.enums.ValidationResult;
-import com.hanumoka.sado.minipacs.domain.enums.ValidationType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -19,30 +19,30 @@ import java.util.List;
 public interface ValidationLogRepository extends JpaRepository<ValidationLog, Long> {
 
     /**
-     * Instance ID로 검증 로그 조회 (최신순)
+     * DicomMetadataRecord ID로 검증 로그 조회 (최신순)
      *
-     * @param instanceId Instance PK
+     * @param dicomMetadataRecordId DicomMetadataRecord PK
      * @return 검증 로그 목록 (최신순)
      */
-    List<ValidationLog> findByInstanceIdOrderByCreatedAtDesc(Long instanceId);
+    List<ValidationLog> findByDicomMetadataRecordIdOrderByCreatedAtDesc(Long dicomMetadataRecordId);
 
     /**
      * 검증 결과로 필터링
      *
-     * @param result 검증 결과 (SUCCESS, WARNING, ERROR)
+     * @param result 검증 결과 (PASS, WARNING, FAIL)
      * @return 검증 로그 목록
      */
-    List<ValidationLog> findByValidationResult(ValidationResult result);
+    List<ValidationLog> findByResult(ValidationResult result);
 
     /**
-     * 특정 검증 타입의 특정 결과 로그 조회
+     * 특정 검증 레벨의 특정 결과 로그 조회
      *
-     * @param type 검증 타입 (DICOM_CONFORMANCE, MANDATORY_TAGS 등)
-     * @param result 검증 결과 (SUCCESS, WARNING, ERROR)
+     * @param level 검증 레벨 (LEVEL_1, LEVEL_2, LEVEL_3)
+     * @param result 검증 결과 (PASS, WARNING, FAIL)
      * @return 검증 로그 목록
      */
-    List<ValidationLog> findByValidationTypeAndValidationResult(
-            ValidationType type,
+    List<ValidationLog> findByValidationLevelAndResult(
+            ValidationLevel level,
             ValidationResult result
     );
 

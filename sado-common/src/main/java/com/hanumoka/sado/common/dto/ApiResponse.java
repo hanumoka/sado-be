@@ -1,21 +1,28 @@
 package com.hanumoka.sado.common.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hanumoka.sado.common.code.ApiCode;
 import com.hanumoka.sado.common.code.CommonCode;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Builder
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class ApiResponse<T> {
-    private final ApiCode type;
-    private final Integer code;
-    private final String message;
-    private final T data;
+    @JsonIgnore  // Jackson 역직렬화에서 제외 (인터페이스 타입이라 역직렬화 불가)
+    private ApiCode type;
+    private Integer code;
+    private String message;
+    private T data;
 
-    // 성공 여부 판단 (HttpStatus 기반)
+    // 성공 여부 판단 (API 응답 코드 기반)
     public boolean isSuccess() {
-        return this.type.getHttpStatus().is2xxSuccessful();
+        // API 코드 체계: 2xxxxx = 성공, 4xxxxx = 클라이언트 에러, 5xxxxx = 서버 에러
+        return this.code != null && this.code >= 200000 && this.code < 300000;
     }
 
     // ========== 팩토리 메서드 ==========

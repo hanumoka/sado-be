@@ -2,13 +2,19 @@ package com.hanumoka.sado.minipacs.controller;
 
 import com.hanumoka.sado.common.dto.ApiResponse;
 import com.hanumoka.sado.minipacs.domain.entity.Patient;
+import com.hanumoka.sado.minipacs.domain.entity.Study;
 import com.hanumoka.sado.minipacs.domain.service.PatientService;
+import com.hanumoka.sado.minipacs.domain.service.StudyService;
 import com.hanumoka.sado.minipacs.dto.request.CreatePatientRequest;
 import com.hanumoka.sado.minipacs.dto.request.UpdatePatientRequest;
 import com.hanumoka.sado.minipacs.dto.response.PatientResponse;
+import com.hanumoka.sado.minipacs.dto.response.StudyResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Patient REST API Controller
@@ -22,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class PatientController {
 
     private final PatientService patientService;
+    private final StudyService studyService;
 
     /**
      * 환자 생성
@@ -102,6 +109,26 @@ public class PatientController {
         return ApiResponse.success();
     }
 
+    /**
+     * 환자의 검사 목록 조회
+     * GET /api/patients/{id}/studies
+     */
+    @GetMapping("/{id}/studies")
+    public ApiResponse<List<StudyResponse>> getPatientStudies(@PathVariable Long id) {
+        log.info("GET /api/patients/{}/studies", id);
+
+        // 1. Service 호출
+        List<Study> studies = studyService.findByPatientId(id);
+
+        // 2. Entity → Response DTO 변환
+        List<StudyResponse> response = studies.stream()
+                .map(this::toStudyResponse)
+                .collect(Collectors.toList());
+
+        // 3. 성공 응답 반환
+        return ApiResponse.success(response);
+    }
+
     // ========== Helper Methods: Entity ↔ DTO 변환 ==========
 
     /**
@@ -174,6 +201,21 @@ public class PatientController {
                 .build();
     }
 
-
-
+    /**
+     * Study Entity → StudyResponse 변환
+     */
+    private StudyResponse toStudyResponse(Study study) {
+        return StudyResponse.builder()
+                .id(study.getId())
+                .patientId(study.getPatient().getId())
+                .studyInstanceUid(study.getStudyInstanceUid())
+                .studyDate(study.getStudyDate())
+                .studyDescription(study.getStudyDescription())
+                .numberOfSeries(study.getNumberOfSeries())
+                .numberOfInstances(study.getNumberOfInstances())
+                .createdAt(study.getCreatedAt())
+                .updatedAt(study.getUpdatedAt())
+                .tenantId(study.getTenantId())
+                .build();
+    }
 }

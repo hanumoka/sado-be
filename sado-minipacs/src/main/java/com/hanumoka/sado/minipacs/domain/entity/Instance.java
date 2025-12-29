@@ -49,14 +49,14 @@ public class Instance extends TenantAwareEntity {
      * Rows (0028,0010)
      * 이미지 높이 (픽셀)
      */
-    @Column(name = "rows")
+    @Column(name = "image_rows")
     private Integer rows;
 
     /**
      * Columns (0028,0011)
      * 이미지 너비 (픽셀)
      */
-    @Column(name = "columns")
+    @Column(name = "image_columns")
     private Integer columns;
 
     /**

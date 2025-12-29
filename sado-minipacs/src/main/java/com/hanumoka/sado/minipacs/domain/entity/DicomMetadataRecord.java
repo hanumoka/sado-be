@@ -38,6 +38,11 @@ public class DicomMetadataRecord extends TenantAwareEntity {
 
     // ========== 선택 필드 (NULL 허용) ==========
 
+    // Instance FK (간접 참조)
+    // → DicomMetadataRecord ↔ Instance 1:1 관계
+    @Column(name = "instance_id")
+    private Long instanceId;
+
     // 파일 해시 (SHA-256, 무결성 검증용)
     // → 파일 업로드 후 비동기로 생성 가능
     @Column(name = "file_hash", length = 64, unique = true)
@@ -47,6 +52,18 @@ public class DicomMetadataRecord extends TenantAwareEntity {
     // → DICOM에 없을 수 있음 (연구용 데이터)
     @Column(name = "study_instance_uid", length = 256)
     private String studyInstanceUid;
+
+    // DICOM Series Instance UID (0020,000E)
+    // DicomMetadataRecord 조회 키 (간접 참조)
+    // → DICOM에 없을 수 있음 (연구용 데이터)
+    @Column(name = "series_instance_uid", length = 256)
+    private String seriesInstanceUid;
+
+    // DICOM SOP Instance UID (0008,0018)
+    // DicomMetadataRecord 조회 키 (간접 참조)
+    // → DICOM에 없을 수 있음 (연구용 데이터)
+    @Column(name = "sop_instance_uid", length = 256)
+    private String sopInstanceUid;
 
     // 파일 경로 (원본 DICOM 파일)
     // → 1024자 (Linux 긴 경로 대응)

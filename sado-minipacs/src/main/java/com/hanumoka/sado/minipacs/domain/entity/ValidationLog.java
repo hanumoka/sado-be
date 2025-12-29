@@ -1,6 +1,8 @@
 package com.hanumoka.sado.minipacs.domain.entity;
 
 import com.hanumoka.sado.common.entity.TenantAwareEntity;
+import com.hanumoka.sado.minipacs.domain.enums.ValidationResult;
+import com.hanumoka.sado.minipacs.domain.enums.ValidationType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -263,20 +265,45 @@ public class ValidationLog extends TenantAwareEntity {
     // ========== 검증 정보 ==========
 
     /**
-     * Validation Level
-     * - LEVEL_1: 기본 DICOM 필수 태그 검증
-     * - LEVEL_2: 심초음파 특화 검증
-     * - LEVEL_3: AI 준비 검증 (EchoNet 요구사항)
+     * Validation Level (검증 수준)
+     * "어느 수준의 검증을 수행했는가?"
+     *
+     * - LEVEL_1: 기본 DICOM 필수 태그 검증 (저장 가능 여부 판단)
+     * - LEVEL_2: 심초음파 특화 검증 (임상 품질 판단)
+     * - LEVEL_3: AI 준비 검증 (연구/분석 가능 여부 판단)
+     *
+     * 예: 하나의 파일에 대해 LEVEL_1, LEVEL_2, LEVEL_3 검증을 각각 수행하면
+     *     ValidationLog 3개가 생성됨 (각각 다른 validationLevel)
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "validation_level", nullable = false, length = 16)
     private ValidationLevel validationLevel;
 
     /**
+     * Validation Type (검증 종류)
+     * "어떤 종류의 검증을 수행했는가?"
+     *
+     * - DICOM_CONFORMANCE: DICOM 표준 준수 여부
+     * - MANDATORY_TAGS: 필수 태그 존재 여부
+     * - DATA_INTEGRITY: 데이터 무결성 (Pixel Data 손상 등)
+     * - DUPLICATE_CHECK: SOP Instance UID 중복 확인
+     *
+     * 예: LEVEL_1 검증 시 MANDATORY_TAGS, DATA_INTEGRITY 검증을 각각 수행하면
+     *     ValidationLog 2개가 생성됨 (같은 validationLevel, 다른 validationType)
+     *
+     * 관계: validationLevel + validationType 조합으로 구체적인 검증 정의
+     * 예: (LEVEL_1, MANDATORY_TAGS) = "기본 필수 태그 검증"
+     *     (LEVEL_2, DICOM_CONFORMANCE) = "심초음파 DICOM 표준 준수 검증"
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "validation_type", nullable = false, length = 32)
+    private ValidationType validationType;
+
+    /**
      * Validation Result
-     * - PASS: 검증 통과
+     * - SUCCESS: 검증 통과
      * - WARNING: 경고 (저장 허용, 관리자 알림)
-     * - FAIL: 실패 (저장 거부 또는 기능 제한)
+     * - ERROR: 실패 (저장 거부 또는 기능 제한)
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "result", nullable = false, length = 16)
@@ -350,40 +377,20 @@ public class ValidationLog extends TenantAwareEntity {
         LEVEL_3
     }
 
-    /**
-     * 검증 결과
-     */
-    public enum ValidationResult {
-        /**
-         * 검증 통과
-         */
-        PASS,
-
-        /**
-         * 경고 (저장 허용, 관리자 알림)
-         */
-        WARNING,
-
-        /**
-         * 실패 (저장 거부 또는 기능 제한)
-         */
-        FAIL
-    }
-
     // ========== 비즈니스 메서드 ==========
 
     /**
      * 검증 통과 여부
      */
     public boolean isPassed() {
-        return result == ValidationResult.PASS;
+        return result == ValidationResult.SUCCESS;
     }
 
     /**
      * 검증 실패 여부
      */
     public boolean isFailed() {
-        return result == ValidationResult.FAIL;
+        return result == ValidationResult.ERROR;
     }
 
     /**

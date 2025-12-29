@@ -13,6 +13,12 @@ java {
     }
 }
 
+// Java 컴파일러에 -parameters 플래그 추가
+// → Spring이 @PathVariable, @RequestParam 등의 파라미터 이름을 런타임에 인식 가능
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-parameters']
+}
+
 dependencies {
     // sado-common 의존성 (BaseEntity, TenantAwareEntity 사용)
     implementation project(':sado-common')
@@ -30,6 +36,8 @@ dependencies {
 
     // Test
     testImplementation libs.spring.boot.starter.test
+    testRuntimeOnly libs.h2.database  // H2 in-memory database for testing
+    testRuntimeOnly libs.junit.platform.launcher  // JUnit Platform launcher
 }
 
 tasks.named('test') {

@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: sado-minipacs
+
+  # 데이터소스 설정 (MySQL)
+  datasource:
+    url: jdbc:mysql://localhost:3306/sado_minipacs?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: root1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+    # HikariCP 커넥션 풀 설정
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # JPA 설정
+  jpa:
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQLDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: create  # 개발: update, 운영: validate
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        default_batch_fetch_size: 100
+        # JPA Auditing 활성화 (@CreatedDate, @LastModifiedDate)
+        enable_lazy_load_no_trans: false
+
+  # 서버 설정
+  server:
+    port: 8081
+
+# 로깅 설정
+logging:
+  level:
+    root: INFO
+    com.hanumoka.sado: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.tool.schema: DEBUG
+    org.hibernate.boot: DEBUG
+    org.springframework.web: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

@@ -49,10 +49,10 @@ public interface InstanceRepository extends JpaRepository<Instance, Long> {
     long countBySeriesId(Long seriesId);
 
     /**
-     * 파일 경로로 조회 (중복 방지용)
+     * 스토리지 경로로 조회 (중복 방지용)
      *
-     * @param filePath DICOM 파일 경로
+     * @param storagePath DICOM 파일 저장 경로
      * @return Instance (없으면 empty)
      */
-    Optional<Instance> findByFilePath(String filePath);
+    Optional<Instance> findByStoragePath(String storagePath);
 }

@@ -49,13 +49,14 @@ public class InstanceService {
     }
 
     /**
-     * 파일 경로로 조회 (중복 방지용)
+     * Storage Path로 Instance 조회
+     * 파일 중복 업로드 방지용 (같은 경로에 이미 저장된 파일이 있는지 확인)
      *
-     * @param filePath DICOM 파일 경로
+     * @param storagePath Storage Path (예: /data/dicom/2025/01/15/abc123.dcm)
      * @return Instance 엔티티 (Optional)
      */
-    public Optional<Instance> findByFilePath(String filePath) {
-        return instanceRepository.findByFilePath(filePath);
+    public Optional<Instance> findByStoragePath(String storagePath) {
+        return instanceRepository.findByStoragePath(storagePath);
     }
 
     /**
@@ -109,7 +110,7 @@ public class InstanceService {
 
         // 파일 경로 중복 확인
         if (instance.getStoragePath() != null) {
-            Optional<Instance> existingInstance = findByFilePath(instance.getStoragePath());
+            Optional<Instance> existingInstance = findByStoragePath(instance.getStoragePath());
             if (existingInstance.isPresent()) {
                 throw new IllegalArgumentException("Instance with storagePath already exists: " + instance.getStoragePath());
             }
@@ -158,7 +159,7 @@ public class InstanceService {
 
         // 2. 파일 경로 중복 확인
         if (storagePath != null) {
-            Optional<Instance> duplicateStoragePath = findByFilePath(storagePath);
+            Optional<Instance> duplicateStoragePath = findByStoragePath(storagePath);
             if (duplicateStoragePath.isPresent()) {
                 log.warn("Instance with same storagePath already exists: {}", storagePath);
                 throw new IllegalArgumentException("Instance with storagePath already exists: " + storagePath);

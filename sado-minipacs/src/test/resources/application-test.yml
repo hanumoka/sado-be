@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: sado-minipacs-test
+
+  # H2 In-Memory Database for Testing
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+    # HikariCP 커넥션 풀 설정 (테스트용)
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 10000
+      idle-timeout: 300000
+      max-lifetime: 600000
+
+  # JPA 설정 (테스트 환경)
+  jpa:
+    database: h2
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop  # 테스트 시작 시 스키마 생성, 종료 시 삭제
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        default_batch_fetch_size: 100
+
+  # H2 Console 비활성화 (테스트 환경)
+  h2:
+    console:
+      enabled: false
+
+# 서버 설정
+server:
+  port: 0  # Random port (auto-assigned by Spring Boot)
+
+# 로깅 설정 (테스트 환경)
+logging:
+  level:
+    root: INFO
+    com.hanumoka.sado: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.web: INFO
+    org.springframework.test: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
