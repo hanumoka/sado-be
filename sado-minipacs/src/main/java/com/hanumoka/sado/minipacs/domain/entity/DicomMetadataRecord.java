@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Objects;
+
 
 /**
  * DICOM Storage Layer - 원본 메타데이터 저장
@@ -75,6 +77,11 @@ public class DicomMetadataRecord extends TenantAwareEntity {
     @Column(name = "filename", length = 512)
     private String filename;
 
+    // 파일 크기 (bytes)
+    // → 원본 DICOM 파일 크기
+    @Column(name = "file_size")
+    private Long fileSize;
+
     // ========== 비즈니스 메서드 ==========
 
     /**
@@ -87,5 +94,103 @@ public class DicomMetadataRecord extends TenantAwareEntity {
             );
         }
         this.fileHash = hash;
+    }
+
+    // ========== Builder Pattern ==========
+
+    /**
+     * DicomMetadataRecord Entity Builder
+     *
+     * <p>유창한(fluent) API를 제공하여 DicomMetadataRecord 객체를 쉽게 생성할 수 있습니다.
+     *
+     * <p>사용 예시:
+     * <pre>
+     * {@code
+     * DicomMetadataRecord record = DicomMetadataRecord.builder()
+     *     .metadata(jsonMetadata)
+     *     .sopInstanceUid("1.2.840.113619.2.55.1.123456.789.1")
+     *     .filePath("/path/to/dicom/file.dcm")
+     *     .fileSize(1024000L)
+     *     .build();
+     * }
+     * </pre>
+     */
+    public static class Builder {
+        private final DicomMetadataRecord record = new DicomMetadataRecord();
+
+        public Builder metadata(String metadata) {
+            record.metadata = metadata;
+            return this;
+        }
+
+        public Builder immutable(Boolean immutable) {
+            record.immutable = immutable;
+            return this;
+        }
+
+        public Builder instanceId(Long instanceId) {
+            record.instanceId = instanceId;
+            return this;
+        }
+
+        public Builder fileHash(String fileHash) {
+            record.fileHash = fileHash;
+            return this;
+        }
+
+        public Builder studyInstanceUid(String studyInstanceUid) {
+            record.studyInstanceUid = studyInstanceUid;
+            return this;
+        }
+
+        public Builder seriesInstanceUid(String seriesInstanceUid) {
+            record.seriesInstanceUid = seriesInstanceUid;
+            return this;
+        }
+
+        public Builder sopInstanceUid(String sopInstanceUid) {
+            record.sopInstanceUid = sopInstanceUid;
+            return this;
+        }
+
+        public Builder filePath(String filePath) {
+            record.filePath = filePath;
+            return this;
+        }
+
+        public Builder filename(String filename) {
+            record.filename = filename;
+            return this;
+        }
+
+        public Builder fileSize(Long fileSize) {
+            record.fileSize = fileSize;
+            return this;
+        }
+
+        /**
+         * DicomMetadataRecord 객체 생성
+         *
+         * <p>필수 필드 검증을 수행합니다.
+         *
+         * @return 생성된 DicomMetadataRecord 객체
+         * @throws NullPointerException metadata가 null인 경우
+         */
+        public DicomMetadataRecord build() {
+            Objects.requireNonNull(record.metadata, "Metadata is required");
+            if (record.immutable == null) {
+                record.immutable = true; // 기본값
+            }
+            return record;
+        }
+    }
+
+    /**
+     * Builder 인스턴스 생성
+     *
+     * @return 새로운 Builder 인스턴스
+     */
+    public static Builder builder() {
+        return new Builder();
     }
 }

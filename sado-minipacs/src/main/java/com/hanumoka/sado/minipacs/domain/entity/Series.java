@@ -1,13 +1,16 @@
 package com.hanumoka.sado.minipacs.domain.entity;
 
 import com.hanumoka.sado.common.entity.TenantAwareEntity;
+import com.hanumoka.sado.minipacs.domain.util.CounterManager;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Application Domain Layer - 시리즈 엔티티
@@ -102,25 +105,178 @@ public class Series extends TenantAwareEntity {
     // ========== 비즈니스 메서드 ==========
 
     /**
-     * Instance 추가 및 numberOfInstances 증가
+     * Instance 추가 (양방향 관계 설정 + 카운터 증가)
+     *
+     * <p>검증:
+     * <ul>
+     *   <li>Instance null 체크</li>
+     *   <li>중복 추가 방지</li>
+     *   <li>다른 Series에 이미 속한 경우 방지</li>
+     * </ul>
+     *
+     * @param instance 추가할 Instance
+     * @throws NullPointerException instance가 null인 경우
+     * @throws IllegalStateException instance가 이미 존재하거나 다른 Series에 속한 경우
      */
     public void addInstance(Instance instance) {
+        // 선행조건 검증
+        Objects.requireNonNull(instance, "Instance cannot be null");
+
+        if (instances.contains(instance)) {
+            throw new IllegalStateException("Instance already exists in series");
+        }
+
+        if (instance.getSeries() != null && !instance.getSeries().equals(this)) {
+            throw new IllegalStateException("Instance already belongs to another series");
+        }
+
+        // 정상 로직
         instances.add(instance);
         instance.setSeries(this);
-        if (numberOfInstances == null) {
-            numberOfInstances = 0;
+
+        // numberOfInstances 증가
+        numberOfInstances = CounterManager.increment(numberOfInstances);
+
+        // Study의 numberOfInstances도 증가
+        if (study != null) {
+            study.incrementInstanceCount();
         }
-        numberOfInstances++;
     }
 
     /**
-     * Instance 제거 및 numberOfInstances 감소
+     * Instance 제거 (양방향 관계 해제 + 카운터 감소)
+     *
+     * <p>검증:
+     * <ul>
+     *   <li>Instance null 체크</li>
+     * </ul>
+     *
+     * @param instance 제거할 Instance
+     * @throws NullPointerException instance가 null인 경우
      */
     public void removeInstance(Instance instance) {
-        instances.remove(instance);
-        instance.setSeries(null);
-        if (numberOfInstances != null && numberOfInstances > 0) {
-            numberOfInstances--;
+        Objects.requireNonNull(instance, "Instance cannot be null");
+
+        boolean removed = instances.remove(instance);
+        if (removed) {
+            instance.setSeries(null);
+
+            // numberOfInstances 감소
+            numberOfInstances = CounterManager.decrement(numberOfInstances);
+
+            // Study의 numberOfInstances도 감소
+            if (study != null) {
+                study.decrementInstanceCount();
+            }
         }
+    }
+
+    /**
+     * 정합성 복구: 실제 Instance 개수 기반으로 재계산
+     * 데이터 마이그레이션 또는 수동 복구 시 사용
+     */
+    public void recalculateInstanceCount() {
+        numberOfInstances = CounterManager.fromCollectionSize(instances);
+    }
+
+    // ========== 컬렉션 접근 제어 ==========
+
+    /**
+     * Series의 Instance 목록 조회
+     *
+     * <p>불변 뷰를 반환하여 외부에서 직접 수정할 수 없도록 보호합니다.
+     * Instance를 추가하거나 제거하려면 addInstance() 또는 removeInstance()를 사용하세요.
+     *
+     * @return Instance 목록의 불변 뷰
+     */
+    public List<Instance> getInstances() {
+        return Collections.unmodifiableList(instances);
+    }
+
+    // ========== Builder Pattern ==========
+
+    /**
+     * Series Entity Builder
+     *
+     * <p>유창한(fluent) API를 제공하여 Series 객체를 쉽게 생성할 수 있습니다.
+     *
+     * <p>사용 예시:
+     * <pre>
+     * {@code
+     * Series series = Series.builder()
+     *     .study(study)
+     *     .seriesInstanceUid("1.2.840.113619.2.55.1.123456.789")
+     *     .seriesNumber(1)
+     *     .modality("CT")
+     *     .seriesDescription("Chest")
+     *     .build();
+     * }
+     * </pre>
+     */
+    public static class Builder {
+        private final Series series = new Series();
+
+        public Builder study(Study study) {
+            series.study = study;
+            return this;
+        }
+
+        public Builder seriesInstanceUid(String seriesInstanceUid) {
+            series.seriesInstanceUid = seriesInstanceUid;
+            return this;
+        }
+
+        public Builder modality(String modality) {
+            series.modality = modality;
+            return this;
+        }
+
+        public Builder seriesDescription(String seriesDescription) {
+            series.seriesDescription = seriesDescription;
+            return this;
+        }
+
+        public Builder bodyPartExamined(String bodyPartExamined) {
+            series.bodyPartExamined = bodyPartExamined;
+            return this;
+        }
+
+        public Builder manufacturer(String manufacturer) {
+            series.manufacturer = manufacturer;
+            return this;
+        }
+
+        public Builder manufacturerModelName(String manufacturerModelName) {
+            series.manufacturerModelName = manufacturerModelName;
+            return this;
+        }
+
+        public Builder seriesNumber(Integer seriesNumber) {
+            series.seriesNumber = seriesNumber;
+            return this;
+        }
+
+        /**
+         * Series 객체 생성
+         *
+         * <p>필수 필드 검증을 수행합니다.
+         *
+         * @return 생성된 Series 객체
+         * @throws NullPointerException 필수 필드가 null인 경우
+         */
+        public Series build() {
+            Objects.requireNonNull(series.study, "Study is required");
+            Objects.requireNonNull(series.seriesInstanceUid, "Series Instance UID is required");
+            return series;
+        }
+    }
+
+    /**
+     * Builder 인스턴스 생성
+     *
+     * @return 새로운 Builder 인스턴스
+     */
+    public static Builder builder() {
+        return new Builder();
     }
 }

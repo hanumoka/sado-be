@@ -119,8 +119,8 @@ public class InstanceController {
         instance.setSeries(series);
         instance.setSopInstanceUid(request.getSopInstanceUid());
         instance.setSopClassUid(request.getSopClassUid());
-        instance.setRows(request.getRows());
-        instance.setColumns(request.getColumns());
+        instance.setImageRows(request.getRows());
+        instance.setImageColumns(request.getColumns());
         instance.setNumberOfFrames(request.getNumberOfFrames());
         instance.setFrameRate(request.getFrameRate());
         instance.setFrameRateSource(request.getFrameRateSource());
@@ -141,10 +141,10 @@ public class InstanceController {
             instance.setSopClassUid(request.getSopClassUid());
         }
         if (request.getRows() != null) {
-            instance.setRows(request.getRows());
+            instance.setImageRows(request.getRows());
         }
         if (request.getColumns() != null) {
-            instance.setColumns(request.getColumns());
+            instance.setImageColumns(request.getColumns());
         }
         if (request.getNumberOfFrames() != null) {
             instance.setNumberOfFrames(request.getNumberOfFrames());
@@ -191,8 +191,8 @@ public class InstanceController {
                 .seriesId(instance.getSeries().getId())
                 .sopInstanceUid(instance.getSopInstanceUid())
                 .sopClassUid(instance.getSopClassUid())
-                .rows(instance.getRows())
-                .columns(instance.getColumns())
+                .rows(instance.getImageRows())
+                .columns(instance.getImageColumns())
                 .numberOfFrames(instance.getNumberOfFrames())
                 .frameRate(instance.getFrameRate())
                 .frameRateSource(instance.getFrameRateSource())

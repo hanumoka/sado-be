@@ -52,13 +52,13 @@ public class TestFixtures {
      * @return Patient entity with default test data
      */
     public static Patient createPatient() {
-        Patient patient = new Patient();
-        patient.setDicomPatientId("TEST-P001");
-        patient.setIssuerOfPatientId("TEST-HOSPITAL");
-        patient.setPatientName("홍길동^Hong^Gildong");
-        patient.setPatientBirthDate(LocalDate.of(1990, 1, 1));
-        patient.setPatientSex("M");
-        return patient;
+        return Patient.builder()
+                .dicomPatientId("TEST-P001")
+                .issuerOfPatientId("TEST-HOSPITAL")
+                .patientName("홍길동^Hong^Gildong")
+                .patientBirthDate(LocalDate.of(1990, 1, 1))
+                .patientSex("M")
+                .build();
     }
 
     /**
@@ -68,9 +68,13 @@ public class TestFixtures {
      * @return Patient entity with specified ID
      */
     public static Patient createPatient(String dicomPatientId) {
-        Patient patient = createPatient();
-        patient.setDicomPatientId(dicomPatientId);
-        return patient;
+        return Patient.builder()
+                .dicomPatientId(dicomPatientId)
+                .issuerOfPatientId("TEST-HOSPITAL")
+                .patientName("홍길동^Hong^Gildong")
+                .patientBirthDate(LocalDate.of(1990, 1, 1))
+                .patientSex("M")
+                .build();
     }
 
     /**
@@ -89,13 +93,13 @@ public class TestFixtures {
             String name,
             LocalDate birthDate,
             String sex) {
-        Patient patient = new Patient();
-        patient.setDicomPatientId(dicomPatientId);
-        patient.setIssuerOfPatientId(issuer);
-        patient.setPatientName(name);
-        patient.setPatientBirthDate(birthDate);
-        patient.setPatientSex(sex);
-        return patient;
+        return Patient.builder()
+                .dicomPatientId(dicomPatientId)
+                .issuerOfPatientId(issuer)
+                .patientName(name)
+                .patientBirthDate(birthDate)
+                .patientSex(sex)
+                .build();
     }
 
     /**
@@ -138,21 +142,21 @@ public class TestFixtures {
      * - studyInstanceUid: "1.2.840.113619.2.55.1.1762295501.65.1234567890.1"
      * - studyDate: today
      * - studyDescription: "Chest CT"
-     * - numberOfSeries: 1
-     * - numberOfInstances: 100
+     * - numberOfSeries: null (denormalized field, auto-updated by business methods)
+     * - numberOfInstances: null (denormalized field, auto-updated by business methods)
      *
      * @param patient Associated patient (required)
      * @return Study entity with default test data
      */
     public static Study createStudy(Patient patient) {
-        Study study = new Study();
-        study.setPatient(patient);
-        study.setStudyInstanceUid("1.2.840.113619.2.55.1.1762295501.65.1234567890.1");
-        study.setStudyDate(LocalDate.now());
-        study.setStudyDescription("Chest CT");
-        study.setNumberOfSeries(1);
-        study.setNumberOfInstances(100);
-        return study;
+        return Study.builder()
+                .patient(patient)
+                .studyInstanceUid("1.2.840.113619.2.55.1.1762295501.65.1234567890.1")
+                .studyDate(LocalDate.now())
+                .studyDescription("Chest CT")
+                .build();
+        // numberOfSeries and numberOfInstances are denormalized fields that should be null initially
+        // They will be auto-updated by business methods (addSeries, incrementInstanceCount, etc.)
     }
 
     /**

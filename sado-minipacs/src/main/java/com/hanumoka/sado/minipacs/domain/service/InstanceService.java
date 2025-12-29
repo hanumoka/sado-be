@@ -106,7 +106,8 @@ public class InstanceService {
             throw new IllegalArgumentException("Instance must have a series");
         }
 
-        seriesService.findById(instance.getSeries().getId());
+        // Series 조회 (관리되는 엔티티)
+        Series series = seriesService.findById(instance.getSeries().getId());
 
         // 파일 경로 중복 확인
         if (instance.getStoragePath() != null) {
@@ -118,7 +119,10 @@ public class InstanceService {
 
         log.info("Creating new instance: sopInstanceUid={}, seriesId={}",
                 instance.getSopInstanceUid(),
-                instance.getSeries().getId());
+                series.getId());
+
+        // 비즈니스 메서드 호출 (역정규화 필드 자동 업데이트)
+        series.addInstance(instance);
 
         return instanceRepository.save(instance);
     }
@@ -169,7 +173,6 @@ public class InstanceService {
         // 3. 새 Instance 생성
         Instance newInstance = new Instance();
         newInstance.setSopInstanceUid(sopInstanceUid);
-        newInstance.setSeries(series);
         newInstance.setInstanceNumber(instanceNumber);
         newInstance.setSopClassUid(sopClassUid);
         newInstance.setStoragePath(storagePath);
@@ -179,6 +182,9 @@ public class InstanceService {
                 sopInstanceUid,
                 series.getId(),
                 storagePath);
+
+        // 비즈니스 메서드 호출 (역정규화 필드 자동 업데이트)
+        series.addInstance(newInstance);
 
         return instanceRepository.save(newInstance);
     }
@@ -206,11 +212,17 @@ public class InstanceService {
     @Transactional
     public void deleteInstance(Long id) {
         Instance instance = findById(id);
+        Series series = instance.getSeries();
 
         log.info("Deleting instance: id={}, sopInstanceUid={}, storagePath={}",
                 id,
                 instance.getSopInstanceUid(),
                 instance.getStoragePath());
+
+        // 비즈니스 메서드 호출 (역정규화 필드 자동 업데이트)
+        if (series != null) {
+            series.removeInstance(instance);
+        }
 
         instanceRepository.delete(instance);
     }

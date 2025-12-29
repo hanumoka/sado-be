@@ -1,8 +1,8 @@
 package com.hanumoka.sado.minipacs.domain.repository;
 
 import com.hanumoka.sado.minipacs.domain.entity.ValidationLog;
-import com.hanumoka.sado.minipacs.domain.entity.ValidationLog.ValidationLevel;
-import com.hanumoka.sado.minipacs.domain.enums.ValidationResult;
+import com.hanumoka.sado.minipacs.domain.enums.DicomValidationLevel;
+import com.hanumoka.sado.minipacs.domain.enums.DicomValidationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -27,23 +27,23 @@ public interface ValidationLogRepository extends JpaRepository<ValidationLog, Lo
     List<ValidationLog> findByDicomMetadataRecordIdOrderByCreatedAtDesc(Long dicomMetadataRecordId);
 
     /**
-     * 검증 결과로 필터링
+     * 검증 상태로 필터링
      *
-     * @param result 검증 결과 (PASS, WARNING, FAIL)
+     * @param status 검증 상태 (SUCCESS, WARNING, ERROR)
      * @return 검증 로그 목록
      */
-    List<ValidationLog> findByResult(ValidationResult result);
+    List<ValidationLog> findByStatus(DicomValidationStatus status);
 
     /**
-     * 특정 검증 레벨의 특정 결과 로그 조회
+     * 특정 검증 레벨의 특정 상태 로그 조회
      *
      * @param level 검증 레벨 (LEVEL_1, LEVEL_2, LEVEL_3)
-     * @param result 검증 결과 (PASS, WARNING, FAIL)
+     * @param status 검증 상태 (SUCCESS, WARNING, ERROR)
      * @return 검증 로그 목록
      */
-    List<ValidationLog> findByValidationLevelAndResult(
-            ValidationLevel level,
-            ValidationResult result
+    List<ValidationLog> findByValidationLevelAndStatus(
+            DicomValidationLevel level,
+            DicomValidationStatus status
     );
 
     /**

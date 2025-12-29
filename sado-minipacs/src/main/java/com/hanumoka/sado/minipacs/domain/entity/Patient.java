@@ -8,7 +8,9 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Application Domain Layer - 환자 엔티티
@@ -140,5 +142,150 @@ public class Patient extends TenantAwareEntity {
          * 수동 확정 완료
          */
         MANUALLY_CONFIRMED
+    }
+
+    // ========== 컬렉션 접근 제어 ==========
+
+    /**
+     * 환자의 검사 목록 조회
+     *
+     * <p>불변 뷰를 반환하여 외부에서 직접 수정할 수 없도록 보호합니다.
+     * 검사를 추가하거나 제거하려면 addStudy() 또는 removeStudy()를 사용하세요.
+     *
+     * @return 검사 목록의 불변 뷰
+     */
+    public List<Study> getStudies() {
+        return Collections.unmodifiableList(studies);
+    }
+
+    // ========== 양방향 관계 관리 메서드 ==========
+
+    /**
+     * 검사 추가 (양방향 관계 설정)
+     *
+     * <p>환자에게 검사를 추가하고 양방향 관계를 설정합니다.
+     * 중복 추가나 null을 방지하기 위한 검증을 수행합니다.
+     *
+     * @param study 추가할 검사
+     * @throws NullPointerException study가 null인 경우
+     * @throws IllegalStateException study가 이미 존재하는 경우
+     */
+    public void addStudy(Study study) {
+        Objects.requireNonNull(study, "Study cannot be null");
+
+        if (studies.contains(study)) {
+            throw new IllegalStateException("Study already exists for this patient");
+        }
+
+        studies.add(study);
+        study.setPatient(this);
+    }
+
+    /**
+     * 검사 제거 (양방향 관계 해제)
+     *
+     * <p>환자에서 검사를 제거하고 양방향 관계를 해제합니다.
+     *
+     * @param study 제거할 검사
+     * @throws NullPointerException study가 null인 경우
+     */
+    public void removeStudy(Study study) {
+        Objects.requireNonNull(study, "Study cannot be null");
+
+        boolean removed = studies.remove(study);
+        if (removed) {
+            study.setPatient(null);
+        }
+    }
+
+    // ========== Builder Pattern ==========
+
+    /**
+     * Patient Entity Builder
+     *
+     * <p>유창한(fluent) API를 제공하여 Patient 객체를 쉽게 생성할 수 있습니다.
+     *
+     * <p>사용 예시:
+     * <pre>
+     * {@code
+     * Patient patient = Patient.builder()
+     *     .dicomPatientId("P-001")
+     *     .issuerOfPatientId("HOSPITAL-A")
+     *     .patientName("홍길동^Hong^Gildong")
+     *     .patientBirthDate(LocalDate.of(1990, 1, 1))
+     *     .patientSex("M")
+     *     .build();
+     * }
+     * </pre>
+     */
+    public static class Builder {
+        private final Patient patient = new Patient();
+
+        public Builder dicomPatientId(String dicomPatientId) {
+            patient.dicomPatientId = dicomPatientId;
+            return this;
+        }
+
+        public Builder issuerOfPatientId(String issuerOfPatientId) {
+            patient.issuerOfPatientId = issuerOfPatientId;
+            return this;
+        }
+
+        public Builder issuerTypeCode(String issuerTypeCode) {
+            patient.issuerTypeCode = issuerTypeCode;
+            return this;
+        }
+
+        public Builder patientName(String patientName) {
+            patient.patientName = patientName;
+            return this;
+        }
+
+        public Builder patientBirthDate(LocalDate patientBirthDate) {
+            patient.patientBirthDate = patientBirthDate;
+            return this;
+        }
+
+        public Builder patientSex(String patientSex) {
+            patient.patientSex = patientSex;
+            return this;
+        }
+
+        public Builder emrPatientId(String emrPatientId) {
+            patient.emrPatientId = emrPatientId;
+            return this;
+        }
+
+        public Builder matchingConfidence(Double matchingConfidence) {
+            patient.matchingConfidence = matchingConfidence;
+            return this;
+        }
+
+        public Builder matchingStatus(MatchingStatus matchingStatus) {
+            patient.matchingStatus = matchingStatus;
+            return this;
+        }
+
+        /**
+         * Patient 객체 생성
+         *
+         * <p>필수 필드 검증을 수행합니다.
+         *
+         * @return 생성된 Patient 객체
+         * @throws NullPointerException DICOM Patient ID가 null인 경우
+         */
+        public Patient build() {
+            Objects.requireNonNull(patient.dicomPatientId, "DICOM Patient ID is required");
+            return patient;
+        }
+    }
+
+    /**
+     * Builder 인스턴스 생성
+     *
+     * @return 새로운 Builder 인스턴스
+     */
+    public static Builder builder() {
+        return new Builder();
     }
 }

@@ -6,6 +6,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Objects;
+
 /**
  * Application Domain Layer - 영상 엔티티
  * 개별 DICOM 파일 (Instance) 관리
@@ -50,14 +54,14 @@ public class Instance extends TenantAwareEntity {
      * 이미지 높이 (픽셀)
      */
     @Column(name = "image_rows")
-    private Integer rows;
+    private Integer imageRows;
 
     /**
      * Columns (0028,0011)
      * 이미지 너비 (픽셀)
      */
     @Column(name = "image_columns")
-    private Integer columns;
+    private Integer imageColumns;
 
     /**
      * Number of Frames (0028,0008)
@@ -198,5 +202,126 @@ public class Instance extends TenantAwareEntity {
          * COLD: Archive (드문 접근)
          */
         COLD
+    }
+
+    // ========== Builder Pattern ==========
+
+    /**
+     * Instance Entity Builder
+     *
+     * <p>유창한(fluent) API를 제공하여 Instance 객체를 쉽게 생성할 수 있습니다.
+     *
+     * <p>사용 예시:
+     * <pre>
+     * {@code
+     * Instance instance = Instance.builder()
+     *     .series(series)
+     *     .sopInstanceUid("1.2.840.113619.2.55.1.123456.789.1")
+     *     .sopClassUid("1.2.840.10008.5.1.4.1.1.2")
+     *     .instanceNumber(1)
+     *     .build();
+     * }
+     * </pre>
+     */
+    public static class Builder {
+        private final Instance instance = new Instance();
+
+        public Builder series(Series series) {
+            instance.series = series;
+            return this;
+        }
+
+        public Builder sopInstanceUid(String sopInstanceUid) {
+            instance.sopInstanceUid = sopInstanceUid;
+            return this;
+        }
+
+        public Builder sopClassUid(String sopClassUid) {
+            instance.sopClassUid = sopClassUid;
+            return this;
+        }
+
+        public Builder imageRows(Integer imageRows) {
+            instance.imageRows = imageRows;
+            return this;
+        }
+
+        public Builder imageColumns(Integer imageColumns) {
+            instance.imageColumns = imageColumns;
+            return this;
+        }
+
+        public Builder numberOfFrames(Integer numberOfFrames) {
+            instance.numberOfFrames = numberOfFrames;
+            return this;
+        }
+
+        public Builder frameRate(Double frameRate) {
+            instance.frameRate = frameRate;
+            return this;
+        }
+
+        public Builder frameRateSource(String frameRateSource) {
+            instance.frameRateSource = frameRateSource;
+            return this;
+        }
+
+        public Builder instanceNumber(Integer instanceNumber) {
+            instance.instanceNumber = instanceNumber;
+            return this;
+        }
+
+        public Builder storagePath(String storagePath) {
+            instance.storagePath = storagePath;
+            return this;
+        }
+
+        public Builder fileSize(Long fileSize) {
+            instance.fileSize = fileSize;
+            return this;
+        }
+
+        public Builder transcodingStatus(TranscodingStatus transcodingStatus) {
+            instance.transcodingStatus = transcodingStatus;
+            return this;
+        }
+
+        public Builder thumbnailPath(String thumbnailPath) {
+            instance.thumbnailPath = thumbnailPath;
+            return this;
+        }
+
+        public Builder videoPath(String videoPath) {
+            instance.videoPath = videoPath;
+            return this;
+        }
+
+        public Builder storageTier(StorageTier storageTier) {
+            instance.storageTier = storageTier;
+            return this;
+        }
+
+        /**
+         * Instance 객체 생성
+         *
+         * <p>필수 필드 검증을 수행합니다.
+         *
+         * @return 생성된 Instance 객체
+         * @throws NullPointerException 필수 필드가 null인 경우
+         */
+        public Instance build() {
+            Objects.requireNonNull(instance.series, "Series is required");
+            Objects.requireNonNull(instance.sopInstanceUid, "SOP Instance UID is required");
+            return instance;
+        }
+    }
+
+    /**
+     * Builder 인스턴스 생성
+     *
+     * @return 새로운 Builder 인스턴스
+     */
+    public static Builder builder() {
+        return new Builder();
     }
 }

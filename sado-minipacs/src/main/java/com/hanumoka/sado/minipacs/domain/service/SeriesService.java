@@ -98,11 +98,15 @@ public class SeriesService {
             throw new IllegalArgumentException("Series must have a study");
         }
 
-        studyService.findById(series.getStudy().getId());
+        // Study 조회 (관리되는 엔티티)
+        Study study = studyService.findById(series.getStudy().getId());
 
         log.info("Creating new series: seriesInstanceUid={}, studyId={}",
                 series.getSeriesInstanceUid(),
-                series.getStudy().getId());
+                study.getId());
+
+        // 비즈니스 메서드 호출 (역정규화 필드 자동 업데이트)
+        study.addSeries(series);
 
         return seriesRepository.save(series);
     }
@@ -144,7 +148,6 @@ public class SeriesService {
         // 2. 새 Series 생성
         Series newSeries = new Series();
         newSeries.setSeriesInstanceUid(seriesInstanceUid);
-        newSeries.setStudy(study);
         newSeries.setSeriesNumber(seriesNumber);
         newSeries.setModality(modality);
         newSeries.setSeriesDescription(seriesDescription);
@@ -154,6 +157,9 @@ public class SeriesService {
                 seriesInstanceUid,
                 study.getId(),
                 modality);
+
+        // 비즈니스 메서드 호출 (역정규화 필드 자동 업데이트)
+        study.addSeries(newSeries);
 
         return seriesRepository.save(newSeries);
     }
@@ -181,10 +187,16 @@ public class SeriesService {
     @Transactional
     public void deleteSeries(Long id) {
         Series series = findById(id);
+        Study study = series.getStudy();
 
         log.info("Deleting series: id={}, seriesInstanceUid={}",
                 id,
                 series.getSeriesInstanceUid());
+
+        // 비즈니스 메서드 호출 (역정규화 필드 자동 업데이트)
+        if (study != null) {
+            study.removeSeries(series);
+        }
 
         seriesRepository.delete(series);
     }

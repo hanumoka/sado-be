@@ -1,8 +1,9 @@
 package com.hanumoka.sado.minipacs.domain.entity;
 
 import com.hanumoka.sado.common.entity.TenantAwareEntity;
-import com.hanumoka.sado.minipacs.domain.enums.ValidationResult;
-import com.hanumoka.sado.minipacs.domain.enums.ValidationType;
+import com.hanumoka.sado.minipacs.domain.enums.DicomValidationCategory;
+import com.hanumoka.sado.minipacs.domain.enums.DicomValidationLevel;
+import com.hanumoka.sado.minipacs.domain.enums.DicomValidationStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -277,10 +278,10 @@ public class ValidationLog extends TenantAwareEntity {
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "validation_level", nullable = false, length = 16)
-    private ValidationLevel validationLevel;
+    private DicomValidationLevel validationLevel;
 
     /**
-     * Validation Type (검증 종류)
+     * Validation Category (검증 카테고리)
      * "어떤 종류의 검증을 수행했는가?"
      *
      * - DICOM_CONFORMANCE: DICOM 표준 준수 여부
@@ -289,25 +290,25 @@ public class ValidationLog extends TenantAwareEntity {
      * - DUPLICATE_CHECK: SOP Instance UID 중복 확인
      *
      * 예: LEVEL_1 검증 시 MANDATORY_TAGS, DATA_INTEGRITY 검증을 각각 수행하면
-     *     ValidationLog 2개가 생성됨 (같은 validationLevel, 다른 validationType)
+     *     ValidationLog 2개가 생성됨 (같은 validationLevel, 다른 category)
      *
-     * 관계: validationLevel + validationType 조합으로 구체적인 검증 정의
+     * 관계: validationLevel + category 조합으로 구체적인 검증 정의
      * 예: (LEVEL_1, MANDATORY_TAGS) = "기본 필수 태그 검증"
      *     (LEVEL_2, DICOM_CONFORMANCE) = "심초음파 DICOM 표준 준수 검증"
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "validation_type", nullable = false, length = 32)
-    private ValidationType validationType;
+    @Column(name = "validation_category", nullable = false, length = 32)
+    private DicomValidationCategory category;
 
     /**
-     * Validation Result
+     * Validation Status (검증 상태)
      * - SUCCESS: 검증 통과
      * - WARNING: 경고 (저장 허용, 관리자 알림)
      * - ERROR: 실패 (저장 거부 또는 기능 제한)
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "result", nullable = false, length = 16)
-    private ValidationResult result;
+    @Column(name = "validation_status", nullable = false, length = 16)
+    private DicomValidationStatus status;
 
     /**
      * Issues (JSON)
@@ -338,65 +339,26 @@ public class ValidationLog extends TenantAwareEntity {
     @Column(name = "validator_version", length = 32)
     private String validatorVersion;
 
-    // ========== Enum 정의 ==========
-
-    /**
-     * 검증 레벨
-     */
-    public enum ValidationLevel {
-        /**
-         * Level 1: 기본 DICOM 검증
-         * 필수 태그 존재 확인
-         * - PatientID, StudyInstanceUID, SeriesInstanceUID, SOPInstanceUID
-         * - SOPClassUID, Modality
-         *
-         * 실패 시: 저장 거부 (Status 0xA700)
-         */
-        LEVEL_1,
-
-        /**
-         * Level 2: 심초음파 특화 검증
-         * 2025년 DICOM 표준 반영
-         * - SOP Class: US (Ultrasound) 확인
-         * - 멀티프레임 시 FrameTime or CineRate 권장
-         * - NumberOfFrames, FrameIncrementPointer
-         *
-         * 경고 시: 저장 허용 + 관리자 알림
-         */
-        LEVEL_2,
-
-        /**
-         * Level 3: AI 준비 검증
-         * EchoNet-Dynamic 요구사항
-         * - 해상도: 112x112 이상
-         * - 프레임: 16개 이상 (권장)
-         * - 픽셀 데이터 존재
-         *
-         * 실패 시: 저장 허용 (Trust Level = RESEARCH, AI 분석 스킵)
-         */
-        LEVEL_3
-    }
-
     // ========== 비즈니스 메서드 ==========
 
     /**
      * 검증 통과 여부
      */
     public boolean isPassed() {
-        return result == ValidationResult.SUCCESS;
+        return status == DicomValidationStatus.SUCCESS;
     }
 
     /**
      * 검증 실패 여부
      */
     public boolean isFailed() {
-        return result == ValidationResult.ERROR;
+        return status == DicomValidationStatus.ERROR;
     }
 
     /**
      * 경고 여부
      */
     public boolean hasWarning() {
-        return result == ValidationResult.WARNING;
+        return status == DicomValidationStatus.WARNING;
     }
 }
