@@ -19,5 +19,8 @@ dependencies {
 
     api libs.lombok
 
+    // SpringDoc OpenAPI (공유)
+    api libs.springdoc.openapi.starter.webmvc.ui
+
     annotationProcessor libs.lombok
 }

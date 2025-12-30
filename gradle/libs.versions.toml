@@ -19,6 +19,9 @@ spring-dependency-management = "1.1.7"
 # Lombok
 lombok = "1.18.30"
 
+# SpringDoc OpenAPI
+springdoc-openapi = "2.7.0"
+
 # Test
 junit = "5.10.1"
 
@@ -44,6 +47,9 @@ spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-star
 
 # Lombok
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+
+# SpringDoc OpenAPI
+springdoc-openapi-starter-webmvc-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc-openapi" }
 
 # Test
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }

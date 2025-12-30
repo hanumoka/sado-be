@@ -4,7 +4,7 @@ spring:
 
   # MySQL 데이터소스 설정
   datasource:
-    url: jdbc:mysql://localhost:3306/sado_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: jdbc:mysql://localhost:10100/sado_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: sado_user
     password: sado1234
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -33,7 +33,7 @@ spring:
 
   # Kafka 설정 (기본)
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: localhost:10102
     consumer:
       group-id: sado-gateway-group
       auto-offset-reset: earliest
@@ -45,7 +45,7 @@ spring:
 
 # 서버 설정
 server:
-  port: 8080
+  port: 10200
 
 # 로깅 설정
 logging:
@@ -53,3 +53,25 @@ logging:
     com.hanumoka.sado: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Swagger/OpenAPI 설정
+springdoc:
+  api-title: SADO Gateway API
+  api-description: Gateway 서비스 REST API
+  api-version: 0.0.1-SNAPSHOT
+  api-contact-name: SADO Gateway Team
+  api-contact-email: gateway@hanumoka.com
+
+  swagger-ui:
+    path: /swagger-ui.html
+    display-request-duration: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+    try-it-out-enabled: true
+
+  api-docs:
+    path: /api-docs
+    enabled: true
+
+  packages-to-scan: com.hanumoka.sado.controller
+  paths-to-match: /api/**

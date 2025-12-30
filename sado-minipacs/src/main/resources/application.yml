@@ -4,7 +4,7 @@ spring:
 
   # 데이터소스 설정 (MySQL)
   datasource:
-    url: jdbc:mysql://localhost:3306/sado_minipacs?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: jdbc:mysql://localhost:10100/sado_minipacs?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: root
     password: root1234
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -32,9 +32,9 @@ spring:
         # JPA Auditing 활성화 (@CreatedDate, @LastModifiedDate)
         enable_lazy_load_no_trans: false
 
-  # 서버 설정
-  server:
-    port: 8081
+# 서버 설정
+server:
+  port: 10201
 
 # 로깅 설정
 logging:
@@ -48,3 +48,25 @@ logging:
     org.springframework.web: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Swagger/OpenAPI 설정
+springdoc:
+  api-title: SADO MiniPACS API
+  api-description: MiniPACS 서비스 REST API - DICOM 이미지 관리 시스템
+  api-version: 0.0.1-SNAPSHOT
+  api-contact-name: SADO MiniPACS Team
+  api-contact-email: minipacs@hanumoka.com
+
+  swagger-ui:
+    path: /swagger-ui.html
+    display-request-duration: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+    try-it-out-enabled: true
+
+  api-docs:
+    path: /api-docs
+    enabled: true
+
+  packages-to-scan: com.hanumoka.sado.minipacs.controller
+  paths-to-match: /api/**
