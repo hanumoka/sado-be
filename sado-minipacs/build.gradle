@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    alias(libs.plugins.spring.boot) apply false  // 실행 가능한 앱이 아님
+    alias(libs.plugins.spring.boot)
     alias(libs.plugins.spring.dependency.management)
 }
 

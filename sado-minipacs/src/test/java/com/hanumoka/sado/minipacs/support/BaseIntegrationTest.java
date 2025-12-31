@@ -72,6 +72,20 @@ public abstract class BaseIntegrationTest {
     protected S3Client s3Client;
 
     /**
+     * Mock S3Presigner for testing
+     *
+     * <p>Pre-signed URL 생성 테스트를 위한 Mock입니다.
+     *
+     * <p>예시:
+     * <pre>
+     * given(s3Presigner.presignGetObject(any(GetObjectPresignRequest.class)))
+     *     .willReturn(mockPresignedRequest);
+     * </pre>
+     */
+    @Autowired
+    protected S3Presigner s3Presigner;
+
+    /**
      * RestTestClient instance for making HTTP requests
      *
      * Built from WebApplicationContext to test against the full Spring context

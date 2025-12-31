@@ -277,11 +277,22 @@ public class InstanceController {
         log.info("Series resolved: id={}, seriesInstanceUid={}, modality={}",
                 series.getId(), series.getSeriesInstanceUid(), series.getModality());
 
-        // 6. SeaweedFS 업로드 (UUID v7 생성)
-        String fileId = dicomStorageService.uploadDicomFile(file);
+        // 6. SeaweedFS 업로드 (DICOMweb 표준 경로)
+        String s3Key;
+        try {
+            s3Key = dicomStorageService.uploadDicomFile(
+                    study.getStudyInstanceUid(),
+                    series.getSeriesInstanceUid(),
+                    metadata.getSopInstanceUid(),
+                    file.getInputStream(),
+                    file.getSize()
+            );
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read uploaded file", e);
+        }
 
-        log.info("DICOM file uploaded to storage: fileId={}, originalFilename={}",
-                fileId, file.getOriginalFilename());
+        log.info("DICOM file uploaded to storage: s3Key={}, originalFilename={}",
+                s3Key, file.getOriginalFilename());
 
         // 7. Instance 생성 (Builder 패턴)
         Instance instance = Instance.builder()
@@ -292,17 +303,17 @@ public class InstanceController {
                 .imageRows(metadata.getImageRows())
                 .imageColumns(metadata.getImageColumns())
                 .numberOfFrames(metadata.getNumberOfFrames())
-                .storagePath(fileId)  // fileId를 storagePath로 저장
+                .storagePath(s3Key)  // S3 Key를 storagePath로 저장 (DICOMweb 표준 경로)
                 .fileSize(file.getSize())
                 .build();
 
         // 8. InstanceService로 DB 저장
         Instance savedInstance = instanceService.createInstance(instance);
 
-        log.info("Instance created: id={}, sopInstanceUid={}, fileId={}, seriesId={}",
+        log.info("Instance created: id={}, sopInstanceUid={}, s3Key={}, seriesId={}",
                 savedInstance.getId(),
                 savedInstance.getSopInstanceUid(),
-                fileId,
+                s3Key,
                 series.getId());
 
         // 9. Entity → Response DTO 변환
