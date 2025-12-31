@@ -45,6 +45,7 @@ dependencies {
 
     // Test
     testImplementation libs.spring.boot.starter.test
+    testImplementation 'org.mockito:mockito-core:5.8.0'  // Mockito for @MockBean
     testRuntimeOnly libs.h2.database  // H2 in-memory database for testing
     testRuntimeOnly libs.junit.platform.launcher  // JUnit Platform launcher
 }

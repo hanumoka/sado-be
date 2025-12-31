@@ -2,6 +2,10 @@ spring:
   application:
     name: sado-minipacs-test
 
+  # Bean Override 허용 (테스트에서 S3Client Mock 사용)
+  main:
+    allow-bean-definition-overriding: true
+
   # H2 In-Memory Database for Testing
   datasource:
     url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
