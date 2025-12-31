@@ -18,6 +18,16 @@ subprojects {
 
     repositories {
         mavenCentral()
+
+        // DCM4CHE 자체 저장소 추가
+        maven {
+            url 'https://maven.dcm4che.org/'
+            name 'DCM4CHE Repository'
+            content {
+                // 보안: DCM4CHE 그룹만 이 저장소에서 가져오도록 제한
+                includeGroup 'org.dcm4che'
+            }
+        }
     }
 
     // Spring Boot BOM import (추가!)

@@ -33,6 +33,11 @@ dependencies {
     // AWS SDK S3 (SeaweedFS 연동)
     implementation libs.aws.s3
 
+    // UUID v7
+    implementation 'com.github.f4b6a3:uuid-creator:5.3.7'
+
+    // DCM4CHE DICOM 라이브러리 (5.29.1 - mini-pacs-poc 검증 버전)
+    implementation 'org.dcm4che:dcm4che-core:5.29.1'
 
     // Lombok
     implementation libs.lombok

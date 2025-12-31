@@ -27,9 +27,9 @@ public class Series extends TenantAwareEntity {
 
     /**
      * DICOM SeriesInstanceUID (0020,000E)
-     * DicomMetadataRecord 조회 키 (간접 참조)
+     * DICOM 업로드 시 자동 추출 (필수)
      */
-    @Column(name = "series_instance_uid", length = 256)
+    @Column(name = "series_instance_uid", length = 256, nullable = false)
     private String seriesInstanceUid;
 
     // ========== Study 관계 (Application Layer 내 직접 FK) ==========

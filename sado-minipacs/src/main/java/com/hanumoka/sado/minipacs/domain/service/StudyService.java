@@ -123,12 +123,13 @@ public class StudyService {
             return existingStudy.get();
         }
 
-        // 2. 새 Study 생성
-        Study newStudy = new Study();
-        newStudy.setStudyInstanceUid(studyInstanceUid);
-        newStudy.setPatient(patient);
-        newStudy.setStudyDate(studyDate);
-        newStudy.setStudyDescription(studyDescription);
+        // 2. 새 Study 생성 (Builder 패턴)
+        Study newStudy = Study.builder()
+                .patient(patient)
+                .studyInstanceUid(studyInstanceUid)
+                .studyDate(studyDate)
+                .studyDescription(studyDescription)
+                .build();
 
         log.info("Creating new study from DICOM: studyInstanceUid={}, patientId={}",
                 studyInstanceUid,

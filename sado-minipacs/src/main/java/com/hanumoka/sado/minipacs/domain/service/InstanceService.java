@@ -170,13 +170,15 @@ public class InstanceService {
             }
         }
 
-        // 3. 새 Instance 생성
-        Instance newInstance = new Instance();
-        newInstance.setSopInstanceUid(sopInstanceUid);
-        newInstance.setInstanceNumber(instanceNumber);
-        newInstance.setSopClassUid(sopClassUid);
-        newInstance.setStoragePath(storagePath);
-        newInstance.setFileSize(fileSize);
+        // 3. 새 Instance 생성 (Builder 패턴)
+        Instance newInstance = Instance.builder()
+                .series(series)
+                .sopInstanceUid(sopInstanceUid)
+                .sopClassUid(sopClassUid)
+                .instanceNumber(instanceNumber)
+                .storagePath(storagePath)
+                .fileSize(fileSize)
+                .build();
 
         log.info("Creating new instance from DICOM: sopInstanceUid={}, seriesId={}, storagePath={}",
                 sopInstanceUid,

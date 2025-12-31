@@ -145,13 +145,15 @@ public class SeriesService {
             return existingSeries.get();
         }
 
-        // 2. 새 Series 생성
-        Series newSeries = new Series();
-        newSeries.setSeriesInstanceUid(seriesInstanceUid);
-        newSeries.setSeriesNumber(seriesNumber);
-        newSeries.setModality(modality);
-        newSeries.setSeriesDescription(seriesDescription);
-        newSeries.setBodyPartExamined(bodyPartExamined);
+        // 2. 새 Series 생성 (Builder 패턴)
+        Series newSeries = Series.builder()
+                .study(study)
+                .seriesInstanceUid(seriesInstanceUid)
+                .seriesNumber(seriesNumber)
+                .modality(modality)
+                .seriesDescription(seriesDescription)
+                .bodyPartExamined(bodyPartExamined)
+                .build();
 
         log.info("Creating new series from DICOM: seriesInstanceUid={}, studyId={}, modality={}",
                 seriesInstanceUid,

@@ -4,9 +4,9 @@ spring:
 
   # 데이터소스 설정 (MySQL)
   datasource:
-    url: jdbc:mysql://localhost:10100/sado_minipacs?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: root
-    password: root1234
+    url: jdbc:mysql://localhost:10100/sado_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: sado_user
+    password: sado1234
     driver-class-name: com.mysql.cj.jdbc.Driver
 
     # HikariCP 커넥션 풀 설정

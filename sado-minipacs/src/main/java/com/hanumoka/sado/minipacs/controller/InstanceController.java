@@ -2,19 +2,30 @@ package com.hanumoka.sado.minipacs.controller;
 
 import com.hanumoka.sado.common.dto.ApiResponse;
 import com.hanumoka.sado.minipacs.domain.entity.Instance;
+import com.hanumoka.sado.minipacs.domain.entity.Patient;
 import com.hanumoka.sado.minipacs.domain.entity.Series;
+import com.hanumoka.sado.minipacs.domain.entity.Study;
+import com.hanumoka.sado.minipacs.domain.parser.DicomMetadataExtractor;
 import com.hanumoka.sado.minipacs.domain.service.InstanceService;
+import com.hanumoka.sado.minipacs.domain.service.PatientService;
 import com.hanumoka.sado.minipacs.domain.service.SeriesService;
+import com.hanumoka.sado.minipacs.domain.service.StudyService;
+import com.hanumoka.sado.minipacs.storage.service.DicomStorageService;
 import com.hanumoka.sado.minipacs.dto.request.CreateInstanceRequest;
 import com.hanumoka.sado.minipacs.dto.request.UpdateInstanceRequest;
 import com.hanumoka.sado.minipacs.dto.response.InstanceResponse;
+import com.hanumoka.sado.minipacs.storage.dto.FileAccessResponse;
+import com.hanumoka.sado.minipacs.storage.strategy.StorageAccessStrategy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 /**
  * Instance REST API Controller
- *
+ * <p>
  * DICOM 영상 정보 관리 API
  */
 @RestController
@@ -25,6 +36,12 @@ public class InstanceController {
 
     private final InstanceService instanceService;
     private final SeriesService seriesService;
+    private final StudyService studyService;
+    private final PatientService patientService;
+    private final DicomStorageService dicomStorageService;
+
+
+    private final StorageAccessStrategy storageAccessStrategy; // Storage 접근 전략 (pre-signed url or backed proxy)
 
     /**
      * 영상 생성
@@ -106,6 +123,198 @@ public class InstanceController {
         return ApiResponse.success();
     }
 
+    /**
+     * DICOM 파일 다운로드 URL 조회
+     * GET /api/instances/{id}/download
+     *
+     * <p>이 API는 Frontend가 DICOM 파일을 다운로드할 수 있는 URL을 반환합니다.
+     *
+     * <p>Week 4-8 POC:
+     * <ul>
+     *   <li>Pre-signed URL 반환 (Frontend가 SeaweedFS에 직접 접근)</li>
+     *   <li>만료 시간: 1시간</li>
+     *   <li>보안 수준: 학습 환경</li>
+     * </ul>
+     *
+     * <p>Week 9+ 프로덕션 (KingArthur 통합):
+     * <ul>
+     *   <li>Backend Proxy URL 반환 (Frontend가 Backend 경유)</li>
+     *   <li>만료 시간: 없음 (Per-Request JWT 검증)</li>
+     *   <li>보안 수준: HIPAA/GDPR 준수</li>
+     * </ul>
+     *
+     * <p>전환 방법: application.yml에서 storage.access-strategy 변경만
+     *
+     * @param id Instance ID
+     * @return 파일 접근 방법 (Pre-signed URL or Backend Proxy URL)
+     */
+    @GetMapping("/{id}/download")
+    public ApiResponse<FileAccessResponse> getDownloadUrl(@PathVariable Long id) {
+        log.info("GET /api/instances/{}/download", id);
+
+        // 1. Instance 조회
+        Instance instance = instanceService.findById(id);
+
+        // 2. fileId 확인 (FileAsset 연관 관계에서 조회)
+        // TODO: Instance에 fileId 필드 또는 FileAsset 연관 관계 추가 필요
+        // 임시로 storagePath를 fileId로 사용 (Week 4-5 구현 완료 시 수정)
+        String fileId = instance.getStoragePath();
+
+        if (fileId == null || fileId.isEmpty()) {
+            throw new IllegalStateException(
+                    "Instance has no file stored. instanceId=" + id
+            );
+        }
+
+        // 3. Tenant ID, User ID 추출
+        // TODO: Spring Security @AuthenticationPrincipal로 실제 User 정보 받기
+        // POC에서는 임시로 instance.getTenantId() 사용
+        Long tenantId = instance.getTenantId();
+        Long userId = 1L; // TODO: 실제 User ID로 교체 (Week 12+ Keycloak 연동 시)
+
+        // 4. StorageAccessStrategy로 파일 접근 URL 생성
+        // - Pre-signed URL 방식: S3Presigner로 서명된 URL 생성 (1시간 유효)
+        // - Backend Proxy 방식: Proxy 엔드포인트 반환 (/api/files/{fileId}/proxy)
+        FileAccessResponse fileAccess = storageAccessStrategy.getFileAccess(
+                fileId,
+                userId,
+                tenantId
+        );
+
+        log.info("File access generated: method={}, url={}, instanceId={}",
+                fileAccess.getMethod(), fileAccess.getUrl(), id);
+
+        // 5. 성공 응답 반환
+        return ApiResponse.success(fileAccess);
+    }
+
+    /**
+     * DICOM 파일 업로드 (메타데이터 자동 파싱)
+     * POST /api/instances/upload
+     *
+     * <p>이 API는 DICOM 파일을 업로드하고 메타데이터를 자동으로 추출하여
+     * Patient → Study → Series → Instance를 생성합니다.
+     *
+     * <p>흐름:
+     * <ol>
+     *   <li>MultipartFile 검증 (파일 존재 여부, 크기)</li>
+     *   <li>DICOM 메타데이터 추출 (DCM4CHE)</li>
+     *   <li>Patient findOrCreate (PatientID + Issuer 기준)</li>
+     *   <li>Study findOrCreate (StudyInstanceUID 기준)</li>
+     *   <li>Series findOrCreate (SeriesInstanceUID 기준)</li>
+     *   <li>SeaweedFS 업로드 (UUID v7 생성)</li>
+     *   <li>Instance 생성 (SOPInstanceUID + fileId)</li>
+     *   <li>성공 응답 반환</li>
+     * </ol>
+     *
+     * <p>멱등성 보장:
+     * <ul>
+     *   <li>같은 DICOM 파일 재업로드 시 중복 생성 방지</li>
+     *   <li>Patient, Study, Series는 UID 기준으로 재사용</li>
+     * </ul>
+     *
+     * @param file DICOM 파일 (MultipartFile)
+     * @return 생성된 Instance 정보
+     * @throws IllegalArgumentException 파일이 비어있거나 DICOM 형식이 아닌 경우
+     * @throws IOException DICOM 파싱 실패 시
+     * @throws com.hanumoka.sado.common.exception.BusinessException 파일 업로드 실패 시
+     */
+    @PostMapping("/upload")
+    public ApiResponse<InstanceResponse> uploadDicom(
+            @RequestParam("file") MultipartFile file
+    ) throws IOException {
+        log.info("POST /api/instances/upload - filename: {}, size: {} bytes",
+                file.getOriginalFilename(), file.getSize());
+
+        // 1. 파일 검증
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("파일이 비어있습니다");
+        }
+
+        // 2. DICOM 메타데이터 추출
+        DicomMetadataExtractor.DicomMetadata metadata =
+                DicomMetadataExtractor.extract(file.getInputStream());
+
+        log.info("DICOM metadata extracted: PatientID={}, StudyUID={}, SeriesUID={}, SOPInstanceUID={}",
+                metadata.getPatientId(),
+                metadata.getStudyInstanceUid(),
+                metadata.getSeriesInstanceUid(),
+                metadata.getSopInstanceUid());
+
+        // 3. Patient findOrCreate
+        Patient patient = patientService.findOrCreatePatient(
+                metadata.getPatientId(),
+                metadata.getIssuerOfPatientId(),
+                metadata.getPatientName(),
+                metadata.getPatientBirthDate(),
+                metadata.getPatientSex()
+        );
+
+        log.info("Patient resolved: id={}, dicomPatientId={}",
+                patient.getId(), patient.getDicomPatientId());
+
+        // 4. Study findOrCreate
+        Study study = studyService.findOrCreateStudy(
+                metadata.getStudyInstanceUid(),
+                patient,
+                metadata.getStudyDate(),
+                metadata.getStudyDescription()
+        );
+
+        log.info("Study resolved: id={}, studyInstanceUid={}",
+                study.getId(), study.getStudyInstanceUid());
+
+        // 5. Series findOrCreate
+        Series series = seriesService.findOrCreateSeries(
+                metadata.getSeriesInstanceUid(),
+                study,
+                metadata.getSeriesNumber(),
+                metadata.getModality(),
+                metadata.getSeriesDescription(),
+                metadata.getBodyPartExamined()
+        );
+
+        log.info("Series resolved: id={}, seriesInstanceUid={}, modality={}",
+                series.getId(), series.getSeriesInstanceUid(), series.getModality());
+
+        // 6. SeaweedFS 업로드 (UUID v7 생성)
+        String fileId = dicomStorageService.uploadDicomFile(file);
+
+        log.info("DICOM file uploaded to storage: fileId={}, originalFilename={}",
+                fileId, file.getOriginalFilename());
+
+        // 7. Instance 생성 (Builder 패턴)
+        Instance instance = Instance.builder()
+                .series(series)
+                .sopInstanceUid(metadata.getSopInstanceUid())
+                .sopClassUid(metadata.getSopClassUid())
+                .instanceNumber(metadata.getInstanceNumber())
+                .imageRows(metadata.getImageRows())
+                .imageColumns(metadata.getImageColumns())
+                .numberOfFrames(metadata.getNumberOfFrames())
+                .storagePath(fileId)  // fileId를 storagePath로 저장
+                .fileSize(file.getSize())
+                .build();
+
+        // 8. InstanceService로 DB 저장
+        Instance savedInstance = instanceService.createInstance(instance);
+
+        log.info("Instance created: id={}, sopInstanceUid={}, fileId={}, seriesId={}",
+                savedInstance.getId(),
+                savedInstance.getSopInstanceUid(),
+                fileId,
+                series.getId());
+
+        // 9. Entity → Response DTO 변환
+        InstanceResponse response = toResponse(savedInstance);
+
+        // 10. 성공 응답 반환
+        return ApiResponse.success(response);
+    }
+
+
+
+
     // ========== Helper Methods: Entity ↔ DTO 변환 ==========
 
     /**
@@ -166,7 +375,7 @@ public class InstanceController {
         }
         if (request.getTranscodingStatus() != null) {
             instance.setTranscodingStatus(
-                Instance.TranscodingStatus.valueOf(request.getTranscodingStatus())
+                    Instance.TranscodingStatus.valueOf(request.getTranscodingStatus())
             );
         }
         if (request.getThumbnailPath() != null) {
@@ -177,7 +386,7 @@ public class InstanceController {
         }
         if (request.getStorageTier() != null) {
             instance.setStorageTier(
-                Instance.StorageTier.valueOf(request.getStorageTier())
+                    Instance.StorageTier.valueOf(request.getStorageTier())
             );
         }
     }
@@ -200,11 +409,11 @@ public class InstanceController {
                 .storagePath(instance.getStoragePath())
                 .fileSize(instance.getFileSize())
                 .transcodingStatus(instance.getTranscodingStatus() != null ?
-                    instance.getTranscodingStatus().name() : null)
+                        instance.getTranscodingStatus().name() : null)
                 .thumbnailPath(instance.getThumbnailPath())
                 .videoPath(instance.getVideoPath())
                 .storageTier(instance.getStorageTier() != null ?
-                    instance.getStorageTier().name() : null)
+                        instance.getStorageTier().name() : null)
                 .createdAt(instance.getCreatedAt())
                 .updatedAt(instance.getUpdatedAt())
                 .tenantId(instance.getTenantId())

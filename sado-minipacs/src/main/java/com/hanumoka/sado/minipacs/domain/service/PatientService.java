@@ -103,13 +103,14 @@ public class PatientService {
             return existingPatient.get();
         }
 
-        // 2. 새 환자 생성
-        Patient newPatient = new Patient();
-        newPatient.setDicomPatientId(dicomPatientId);
-        newPatient.setIssuerOfPatientId(issuerOfPatientId);
-        newPatient.setPatientName(patientName);
-        newPatient.setPatientBirthDate(patientBirthDate);
-        newPatient.setPatientSex(patientSex);
+        // 2. 새 환자 생성 (Builder 패턴)
+        Patient newPatient = Patient.builder()
+                .dicomPatientId(dicomPatientId)
+                .issuerOfPatientId(issuerOfPatientId)
+                .patientName(patientName)
+                .patientBirthDate(patientBirthDate)
+                .patientSex(patientSex)
+                .build();
 
         log.info("Creating new patient from DICOM: dicomPatientId={}, issuer={}",
                 dicomPatientId,

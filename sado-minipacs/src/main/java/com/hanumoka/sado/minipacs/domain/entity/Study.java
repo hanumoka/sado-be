@@ -29,9 +29,9 @@ public class Study extends TenantAwareEntity {
 
     /**
      * DICOM Study UID (DicomMetadataRecord 조회 키)
-     * nullable: Study 생성 후 DICOM 업로드 가능
+     * DICOM 업로드 시 자동 추출 (필수)
      */
-    @Column(name = "study_instance_uid", length = 256)
+    @Column(name = "study_instance_uid", length = 256, nullable = false)
     private String studyInstanceUid;
 
     // ========== Patient 관계 (Application Layer 내 직접 FK) ==========

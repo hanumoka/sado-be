@@ -269,13 +269,10 @@ public class Patient extends TenantAwareEntity {
         /**
          * Patient 객체 생성
          *
-         * <p>필수 필드 검증을 수행합니다.
-         *
          * @return 생성된 Patient 객체
-         * @throws NullPointerException DICOM Patient ID가 null인 경우
          */
         public Patient build() {
-            Objects.requireNonNull(patient.dicomPatientId, "DICOM Patient ID is required");
+            // DICOM Patient ID는 nullable (연구용 DICOM은 PatientID 없을 수 있음)
             return patient;
         }
     }
