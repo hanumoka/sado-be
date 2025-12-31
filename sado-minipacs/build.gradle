@@ -30,6 +30,10 @@ dependencies {
     // Database
     runtimeOnly libs.mysql.connector.java
 
+    // AWS SDK S3 (SeaweedFS 연동)
+    implementation libs.aws.s3
+
+
     // Lombok
     implementation libs.lombok
     annotationProcessor libs.lombok

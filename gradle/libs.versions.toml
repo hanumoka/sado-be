@@ -8,6 +8,9 @@ java = "21"
 # MySQL
 mysql-connector = "8.0.33"
 
+# AWS SDK for Java v2
+aws-sdk = "2.20.26"
+
 # H2 Database (for testing)
 h2 = "2.2.224"
 
@@ -33,6 +36,10 @@ spring-boot-devtools = { module = "org.springframework.boot:spring-boot-devtools
 
 # MySQL
 mysql-connector-java = { module = "com.mysql:mysql-connector-j", version.ref = "mysql-connector" }
+
+# AWS SDK S3
+aws-s3 = { module = "software.amazon.awssdk:s3", version.ref = "aws-sdk" }
+
 
 # H2 Database
 h2-database = { module = "com.h2database:h2", version.ref = "h2" }

@@ -50,3 +50,13 @@ logging:
     org.springframework.test: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# SeaweedFS S3 API 설정
+seaweedfs:
+  s3:
+    endpoint: http://localhost:10405   # filer S3 API 포트
+    region: us-east-1                  # AWS SDK 필수파라미터(SeaweedFS는 무시)
+    access-key: any                    # 로컬 개발용 임의값
+    secret-key: any                    # 로컬 개발용 임의값
+    bucket: minipacs                   # DICOM 파일 저장 버킷명
+    path-style-access: true            # SeaweedFS 필수 (true), 버킷을 path에 포함 하는 설정

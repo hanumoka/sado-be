@@ -51,8 +51,49 @@ services:
     networks:
       - sado-network
 
+  # SeaweedFS Master
+  seaweedfs-master:
+    image: chrislusf/seaweedfs:latest
+    container_name: sado-seaweedfs-master
+    ports:
+      - "10400:9333"      # HTTP API (Master 관리)
+      - "10401:19333"     # gRPC (Volume 등록)
+    command: 'master -ip=seaweedfs-master'
+    networks:
+      - sado-network
+
+  # SeaweedFS Volume
+  seaweedfs-volume:
+    image: chrislusf/seaweedfs:latest
+    container_name: sado-seaweedfs-volume
+    depends_on:
+      - seaweedfs-master
+    ports:
+      - "10402:8080"      # HTTP API (파일 읽기/쓰기)
+    command: 'volume -mserver=seaweedfs-master:9333 -port=8080'
+    volumes:
+      - seaweedfs-data:/data
+    networks:
+      - sado-network
+
+  # SeaweedFS Filer (S3 API) ⭐ CRITICAL
+  seaweedfs-filer:
+    image: chrislusf/seaweedfs:latest
+    container_name: sado-seaweedfs-filer
+    depends_on:
+      - seaweedfs-master
+      - seaweedfs-volume
+    ports:
+      - "10403:8888"      # HTTP API (Filer 관리, Web UI)
+      - "10404:18888"     # gRPC
+      - "10405:8333"      # S3 API ⭐ (Spring Boot에서 사용)
+    command: 'filer -master=seaweedfs-master:9333 -ip=seaweedfs-filer -s3 -s3.port=8333'
+    networks:
+      - sado-network
+
 volumes:
   mysql-data:
+  seaweedfs-data:
 
 networks:
   sado-network:

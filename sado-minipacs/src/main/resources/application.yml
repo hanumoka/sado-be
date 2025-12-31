@@ -70,3 +70,32 @@ springdoc:
 
   packages-to-scan: com.hanumoka.sado.minipacs.controller
   paths-to-match: /api/**
+
+  # SeaweedFS S3 API 설정
+  seaweedfs:
+    s3:
+      endpoint: http://localhost:10405   # filer S3 API 포트
+      region: us-east-1                  # AWS SDK 필수파라미터(SeaweedFS는 무시)
+      access-key: any                    # 로컬 개발용 임의값
+      secret-key: any                    # 로컬 개발용 임의값
+      bucket: minipacs                   # DICOM 파일 저장 버킷명
+      path-style-access: true            # SeaweedFS 필수 (true), 버킷을 path에 포함 하는 설정
+
+# Storage 접근 전략 설정 (Week 4-5 추가)
+storage:
+  # 파일 접근 방식 선택
+  # - presigned-url: Frontend가 SeaweedFS에 직접 접근 (POC 기본값)
+  # - backend-proxy: Frontend가 Backend Proxy 경유 (Week 9+ 프로덕션)
+  access-strategy: presigned-url
+
+  # POC (Week 4-8): Pre-signed URL 방식
+  #   장점: Backend 부하 최소화, 성능 우수, AWS S3 표준 패턴 학습
+  #   단점: URL 유출 위험, 감사 추적 불가, HIPAA/GDPR 미충족
+  #
+  # 프로덕션 (Week 9+ KingArthur 통합): Backend Proxy 방식
+  #   장점: 완벽한 테넌트 격리, 감사 추적, HIPAA/GDPR 준수, DLP 적용
+  #   단점: Backend 부하 증가, 성능 30% 느림
+  #
+  # 전환 방법: 설정만 변경 (코드 변경 0줄)
+  #   storage.access-strategy: backend-proxy
+
