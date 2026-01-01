@@ -77,6 +77,118 @@ public enum MiniPacsErrorCode implements ApiCode {
             HttpStatus.BAD_REQUEST,
             400101,
             "파일 읽기에 실패했습니다"
+    ),
+
+    // ========== DICOM 에러 (400200~400299, 500200~500299) ==========
+
+    /**
+     * DICOM 파싱 실패
+     *
+     * <p>발생 시점: DCM4CHE DicomInputStream 파싱 실패
+     * <p>원인: 손상된 DICOM 파일, 잘못된 파일 형식
+     */
+    DICOM_PARSING_FAILED(
+            HttpStatus.BAD_REQUEST,
+            400201,
+            "DICOM 파일 파싱에 실패했습니다"
+    ),
+
+    /**
+     * 잘못된 DICOM 형식
+     *
+     * <p>발생 시점: DICOM 매직 넘버 검증 실패
+     * <p>원인: DICOM이 아닌 파일 업로드
+     */
+    DICOM_INVALID_FORMAT(
+            HttpStatus.BAD_REQUEST,
+            400202,
+            "유효하지 않은 DICOM 파일 형식입니다"
+    ),
+
+    /**
+     * DICOM 필수 태그 누락
+     *
+     * <p>발생 시점: 필수 DICOM 태그 미존재
+     * <p>원인: 불완전한 DICOM 파일
+     */
+    DICOM_MISSING_REQUIRED_TAG(
+            HttpStatus.BAD_REQUEST,
+            400203,
+            "DICOM 필수 태그가 누락되었습니다"
+    ),
+
+    /**
+     * DICOM 중복
+     *
+     * <p>발생 시점: 동일한 SOP Instance UID가 이미 존재
+     * <p>원인: 동일 파일 재업로드
+     */
+    DICOM_DUPLICATE(
+            HttpStatus.CONFLICT,
+            409201,
+            "이미 존재하는 DICOM 파일입니다"
+    ),
+
+    // ========== Patient 에러 (404300~404399, 409300~409399) ==========
+
+    /**
+     * 환자를 찾을 수 없음
+     */
+    PATIENT_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            404301,
+            "환자를 찾을 수 없습니다"
+    ),
+
+    /**
+     * 환자 중복
+     */
+    PATIENT_DUPLICATE(
+            HttpStatus.CONFLICT,
+            409301,
+            "이미 존재하는 환자입니다"
+    ),
+
+    // ========== Study 에러 (404400~404499) ==========
+
+    /**
+     * 검사를 찾을 수 없음
+     */
+    STUDY_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            404401,
+            "검사를 찾을 수 없습니다"
+    ),
+
+    // ========== Series 에러 (404500~404599) ==========
+
+    /**
+     * 시리즈를 찾을 수 없음
+     */
+    SERIES_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            404501,
+            "시리즈를 찾을 수 없습니다"
+    ),
+
+    // ========== Instance 에러 (404600~404699, 409600~409699) ==========
+
+    /**
+     * 영상을 찾을 수 없음
+     */
+    INSTANCE_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            404601,
+            "영상을 찾을 수 없습니다"
+    ),
+
+    /**
+     * 영상 중복
+     */
+    INSTANCE_DUPLICATE(
+            HttpStatus.CONFLICT,
+            409601,
+            "이미 존재하는 영상입니다"
     );
 
     // ========== 필드 및 생성자 ==========

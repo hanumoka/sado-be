@@ -50,6 +50,15 @@ public class StudyService {
     }
 
     /**
+     * 전체 Study 조회
+     *
+     * @return 모든 Study 목록
+     */
+    public List<Study> findAll() {
+        return studyRepository.findAll();
+    }
+
+    /**
      * 특정 환자의 모든 검사 조회 (최신순)
      *
      * @param patientId Patient PK

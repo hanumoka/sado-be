@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Patient REST API Controller
@@ -123,7 +122,7 @@ public class PatientController {
         // 2. Entity → Response DTO 변환
         List<StudyResponse> response = studies.stream()
                 .map(this::toStudyResponse)
-                .collect(Collectors.toList());
+                .toList();
 
         // 3. 성공 응답 반환
         return ApiResponse.success(response);

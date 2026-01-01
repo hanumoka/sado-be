@@ -22,6 +22,29 @@ package com.hanumoka.sado.minipacs.domain.enums;
 public enum FileCategory {
 
     /**
+     * DICOM 파일
+     *
+     * <p>DICOM 형식의 의료 영상 파일입니다.
+     *
+     * <p>포함 파일 종류:
+     * <ul>
+     *   <li>원본 DICOM 파일 (.dcm)</li>
+     *   <li>심초음파 영상</li>
+     *   <li>CT, MRI 등 모든 DICOM Modality</li>
+     * </ul>
+     *
+     * <p>보관 정책:
+     * <ul>
+     *   <li>TTL: 없음 (영구 보관)</li>
+     *   <li>이유: 의료법 의무 보관 (진단 원본 데이터)</li>
+     *   <li>Storage Tier: HOT (자주 접근)</li>
+     * </ul>
+     *
+     * <p>참조 타입: INSTANCE
+     */
+    DICOM,
+
+    /**
      * AI 분석 결과
      *
      * <p>AI 모델(EchoNet-Dynamic 등)이 생성한 분석 결과 파일입니다.

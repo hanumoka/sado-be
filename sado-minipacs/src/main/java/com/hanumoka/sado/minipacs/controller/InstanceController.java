@@ -4,12 +4,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hanumoka.sado.common.dto.ApiResponse;
 import com.hanumoka.sado.minipacs.domain.entity.DicomMetadataRecord;
+import com.hanumoka.sado.minipacs.domain.entity.FileAsset;
 import com.hanumoka.sado.minipacs.domain.entity.Instance;
 import com.hanumoka.sado.minipacs.domain.entity.Patient;
 import com.hanumoka.sado.minipacs.domain.entity.Series;
 import com.hanumoka.sado.minipacs.domain.entity.Study;
+import com.hanumoka.sado.minipacs.domain.enums.FileCategory;
+import com.hanumoka.sado.minipacs.domain.enums.FileStatus;
+import com.hanumoka.sado.minipacs.domain.enums.ReferenceType;
 import com.hanumoka.sado.minipacs.domain.parser.DicomMetadataExtractor;
 import com.hanumoka.sado.minipacs.domain.repository.DicomMetadataRecordRepository;
+import com.hanumoka.sado.minipacs.domain.repository.FileAssetRepository;
 import com.hanumoka.sado.minipacs.domain.service.InstanceService;
 import com.hanumoka.sado.minipacs.domain.service.PatientService;
 import com.hanumoka.sado.minipacs.domain.service.SeriesService;
@@ -44,6 +49,7 @@ public class InstanceController {
     private final PatientService patientService;
     private final DicomStorageService dicomStorageService;
     private final DicomMetadataRecordRepository dicomMetadataRecordRepository;
+    private final FileAssetRepository fileAssetRepository;
     private final ObjectMapper objectMapper;
 
     private final StorageAccessStrategy storageAccessStrategy; // Storage 접근 전략 (pre-signed url or backed proxy)
@@ -336,10 +342,30 @@ public class InstanceController {
             log.info("DicomMetadataRecord created: instanceId={}, sopInstanceUid={}",
                     savedInstance.getId(), metadata.getSopInstanceUid());
 
-            // 10. Entity → Response DTO 변환
+            // 10. FileAsset 생성 (DICOM 파일 메타데이터 관리)
+            FileAsset dicomFileAsset = FileAsset.builder()
+                    .category(FileCategory.DICOM)
+                    .referenceType(ReferenceType.INSTANCE)
+                    .referenceId(savedInstance.getId())
+                    .status(FileStatus.ACTIVE)
+                    .fileName(file.getOriginalFilename() != null ?
+                            file.getOriginalFilename() : metadata.getSopInstanceUid() + ".dcm")
+                    .storagePath(s3Key)
+                    .fileSize(file.getSize())
+                    .mimeType("application/dicom")
+                    // DICOM 파일은 영구 보관 (expiresAt = null)
+                    .storageTier("HOT")
+                    .build();
+
+            fileAssetRepository.save(dicomFileAsset);
+
+            log.info("FileAsset created: id={}, instanceId={}, storagePath={}",
+                    dicomFileAsset.getId(), savedInstance.getId(), s3Key);
+
+            // 11. Entity → Response DTO 변환
             InstanceResponse response = toResponse(savedInstance);
 
-            // 11. 성공 응답 반환
+            // 12. 성공 응답 반환
             return ApiResponse.success(response);
 
         } catch (Exception e) {
