@@ -127,8 +127,8 @@ public class BackendProxyAccessStrategy implements StorageAccessStrategy {
      * @param tenantId 테넌트 ID (멀티테넌시 격리)
      * @return Backend Proxy 엔드포인트 (Week 9+ 구현 시)
      * @throws UnsupportedOperationException Week 4-8 POC에서 호출 시 (골격만 존재)
-     * @throws com.hanumoka.sado.minipacs.exception.RateLimitException Week 9+: DLP 다운로드 횟수 제한 초과
-     * @throws com.hanumoka.sado.minipacs.exception.QuotaExceededException Week 9+: DLP 일일 다운로드 용량 초과
+     * @throws com.hanumoka.sado.minipacs.code.RateLimitException Week 9+: DLP 다운로드 횟수 제한 초과
+     * @throws com.hanumoka.sado.minipacs.code.QuotaExceededException Week 9+: DLP 일일 다운로드 용량 초과
      */
     @Override
     public FileAccessResponse getFileAccess(String fileId, Long userId, Long tenantId) {

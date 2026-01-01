@@ -171,8 +171,8 @@ class PatientServiceTest {
             assertThat(result.getId()).isEqualTo(1L);
             assertThat(result.getDicomPatientId()).isEqualTo("TEST-P001");
 
-            // Then: 새로 저장하지 않음 (save 호출 안 됨)
-            verify(patientRepository, never()).save(any(Patient.class));
+            // Then: 새로 저장하지 않음 (saveAndFlush 호출 안 됨)
+            verify(patientRepository, never()).saveAndFlush(any(Patient.class));
             verify(patientRepository, times(1))
                     .findByDicomPatientIdAndIssuerOfPatientId("TEST-P001", "TEST-HOSPITAL");
         }
@@ -187,7 +187,7 @@ class PatientServiceTest {
             // Given: 새로 생성된 환자 모킹
             Patient newPatient = TestFixtures.createPatient();
             ReflectionTestUtils.setField(newPatient, "id", 2L);
-            when(patientRepository.save(any(Patient.class))).thenReturn(newPatient);
+            when(patientRepository.saveAndFlush(any(Patient.class))).thenReturn(newPatient);
 
             // When: findOrCreate 호출
             Patient result = patientService.findOrCreatePatient(
@@ -202,8 +202,8 @@ class PatientServiceTest {
             assertThat(result).isNotNull();
             assertThat(result.getId()).isEqualTo(2L);
 
-            // Then: save 호출 확인
-            verify(patientRepository, times(1)).save(any(Patient.class));
+            // Then: saveAndFlush 호출 확인
+            verify(patientRepository, times(1)).saveAndFlush(any(Patient.class));
             verify(patientRepository, times(1))
                     .findByDicomPatientIdAndIssuerOfPatientId("NEW-P001", "NEW-HOSPITAL");
         }
@@ -215,8 +215,8 @@ class PatientServiceTest {
             when(patientRepository.findByDicomPatientIdAndIssuerOfPatientId(anyString(), anyString()))
                     .thenReturn(Optional.empty());
 
-            // Given: save 호출 시 전달받은 객체 그대로 반환 (ArgumentCaptor 대신)
-            when(patientRepository.save(any(Patient.class))).thenAnswer(invocation -> {
+            // Given: saveAndFlush 호출 시 전달받은 객체 그대로 반환 (ArgumentCaptor 대신)
+            when(patientRepository.saveAndFlush(any(Patient.class))).thenAnswer(invocation -> {
                 Patient saved = invocation.getArgument(0);
                 ReflectionTestUtils.setField(saved, "id", 3L);
                 return saved;
@@ -246,7 +246,7 @@ class PatientServiceTest {
             when(patientRepository.findByDicomPatientIdAndIssuerOfPatientId(anyString(), any()))
                     .thenReturn(Optional.empty());
 
-            when(patientRepository.save(any(Patient.class))).thenAnswer(inv -> {
+            when(patientRepository.saveAndFlush(any(Patient.class))).thenAnswer(inv -> {
                 Patient p = inv.getArgument(0);
                 ReflectionTestUtils.setField(p, "id", 4L);
                 return p;

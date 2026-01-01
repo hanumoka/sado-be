@@ -1,4 +1,4 @@
-package com.hanumoka.sado.minipacs.exception;
+package com.hanumoka.sado.minipacs.code;
 
 import com.hanumoka.sado.common.code.ApiCode;
 import lombok.Getter;

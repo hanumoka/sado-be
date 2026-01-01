@@ -6,6 +6,7 @@ import com.hanumoka.sado.minipacs.domain.entity.Study;
 import com.hanumoka.sado.minipacs.domain.repository.SeriesRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -139,31 +140,40 @@ public class SeriesService {
         Optional<Series> existingSeries = findBySeriesInstanceUid(seriesInstanceUid);
 
         if (existingSeries.isPresent()) {
-            log.info("Found existing series: id={}, seriesInstanceUid={}",
+            log.debug("Found existing series: id={}, seriesInstanceUid={}",
                     existingSeries.get().getId(),
                     seriesInstanceUid);
             return existingSeries.get();
         }
 
-        // 2. 새 Series 생성 (Builder 패턴)
-        Series newSeries = Series.builder()
-                .study(study)
-                .seriesInstanceUid(seriesInstanceUid)
-                .seriesNumber(seriesNumber)
-                .modality(modality)
-                .seriesDescription(seriesDescription)
-                .bodyPartExamined(bodyPartExamined)
-                .build();
+        // 2. 새 Series 생성 시도
+        try {
+            Series newSeries = Series.builder()
+                    .study(study)
+                    .seriesInstanceUid(seriesInstanceUid)
+                    .seriesNumber(seriesNumber)
+                    .modality(modality)
+                    .seriesDescription(seriesDescription)
+                    .bodyPartExamined(bodyPartExamined)
+                    .build();
 
-        log.info("Creating new series from DICOM: seriesInstanceUid={}, studyId={}, modality={}",
-                seriesInstanceUid,
-                study.getId(),
-                modality);
+            // 비즈니스 메서드 호출 (역정규화 필드 자동 업데이트)
+            study.addSeries(newSeries);
 
-        // 비즈니스 메서드 호출 (역정규화 필드 자동 업데이트)
-        study.addSeries(newSeries);
-
-        return seriesRepository.save(newSeries);
+            Series saved = seriesRepository.saveAndFlush(newSeries);
+            log.info("Created new series: id={}, seriesInstanceUid={}, modality={}",
+                    saved.getId(),
+                    seriesInstanceUid,
+                    modality);
+            return saved;
+        } catch (DataIntegrityViolationException e) {
+            // Race condition 발생 - 다른 스레드가 먼저 저장함
+            log.warn("Race condition detected for series: {}", seriesInstanceUid);
+            return seriesRepository
+                    .findBySeriesInstanceUid(seriesInstanceUid)
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Series should exist after DataIntegrityViolationException"));
+        }
     }
 
     /**

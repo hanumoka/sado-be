@@ -15,7 +15,8 @@ import java.util.Objects;
  * 개별 DICOM 파일 (Instance) 관리
  */
 @Entity
-@Table(name = "instance")
+@Table(name = "instance", uniqueConstraints = @UniqueConstraint(
+        name = "uk_sop_instance_uid", columnNames = {"tenant_id", "sop_instance_uid"}))
 @Getter
 @Setter
 @NoArgsConstructor

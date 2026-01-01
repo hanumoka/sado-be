@@ -1,5 +1,7 @@
 package com.hanumoka.sado.minipacs.support;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hanumoka.sado.minipacs.storage.strategy.StorageAccessStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -122,6 +124,18 @@ public abstract class BaseIntegrationTest {
         @Primary
         public S3Presigner s3Presigner() {
             return Mockito.mock(S3Presigner.class);
+        }
+
+        @Bean
+        @Primary
+        public StorageAccessStrategy storageAccessStrategy() {
+            return Mockito.mock(StorageAccessStrategy.class);
+        }
+
+        @Bean
+        @Primary
+        public ObjectMapper objectMapper() {
+            return new ObjectMapper();
         }
     }
 }

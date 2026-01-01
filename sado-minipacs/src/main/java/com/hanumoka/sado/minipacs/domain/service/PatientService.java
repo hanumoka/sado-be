@@ -5,6 +5,7 @@ import com.hanumoka.sado.minipacs.domain.entity.Patient;
 import com.hanumoka.sado.minipacs.domain.repository.PatientRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -97,26 +98,35 @@ public class PatientService {
         Optional<Patient> existingPatient = findByDicomPatientId(dicomPatientId, issuerOfPatientId);
 
         if (existingPatient.isPresent()) {
-            log.info("Found existing patient: id={}, dicomPatientId={}",
+            log.debug("Found existing patient: id={}, dicomPatientId={}",
                     existingPatient.get().getId(),
                     dicomPatientId);
             return existingPatient.get();
         }
 
-        // 2. 새 환자 생성 (Builder 패턴)
-        Patient newPatient = Patient.builder()
-                .dicomPatientId(dicomPatientId)
-                .issuerOfPatientId(issuerOfPatientId)
-                .patientName(patientName)
-                .patientBirthDate(patientBirthDate)
-                .patientSex(patientSex)
-                .build();
+        // 2. 새 환자 생성 시도
+        try {
+            Patient newPatient = Patient.builder()
+                    .dicomPatientId(dicomPatientId)
+                    .issuerOfPatientId(issuerOfPatientId)
+                    .patientName(patientName)
+                    .patientBirthDate(patientBirthDate)
+                    .patientSex(patientSex)
+                    .build();
 
-        log.info("Creating new patient from DICOM: dicomPatientId={}, issuer={}",
-                dicomPatientId,
-                issuerOfPatientId);
-
-        return patientRepository.save(newPatient);
+            Patient saved = patientRepository.saveAndFlush(newPatient);
+            log.info("Created new patient: id={}, dicomPatientId={}",
+                    saved.getId(),
+                    dicomPatientId);
+            return saved;
+        } catch (DataIntegrityViolationException e) {
+            // Race condition 발생 - 다른 스레드가 먼저 저장함
+            log.warn("Race condition detected for patient: {}/{}", dicomPatientId, issuerOfPatientId);
+            return patientRepository
+                    .findByDicomPatientIdAndIssuerOfPatientId(dicomPatientId, issuerOfPatientId)
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Patient should exist after DataIntegrityViolationException"));
+        }
     }
 
     /**

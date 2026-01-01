@@ -186,9 +186,9 @@ public class FileProxyController {
      * @param fileId 파일 ID (SeaweedFS S3 key)
      * @return 파일 스트림 (Week 9+ 구현 시)
      * @throws UnsupportedOperationException Week 4-8 POC에서 호출 시 (골격만 존재)
-     * @throws com.hanumoka.sado.minipacs.exception.ResourceNotFoundException Week 9+: 파일이 존재하지 않는 경우
-     * @throws com.hanumoka.sado.minipacs.exception.AccessDeniedException Week 9+: Tenant 불일치
-     * @throws com.hanumoka.sado.minipacs.exception.StorageException Week 9+: SeaweedFS 다운로드 실패
+     * @throws com.hanumoka.sado.minipacs.code.ResourceNotFoundException Week 9+: 파일이 존재하지 않는 경우
+     * @throws com.hanumoka.sado.minipacs.code.AccessDeniedException Week 9+: Tenant 불일치
+     * @throws com.hanumoka.sado.minipacs.code.StorageException Week 9+: SeaweedFS 다운로드 실패
      */
     @GetMapping("/{fileId}/proxy")
     public ResponseEntity<StreamingResponseBody> downloadFile(

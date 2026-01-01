@@ -6,6 +6,7 @@ import com.hanumoka.sado.minipacs.domain.entity.Study;
 import com.hanumoka.sado.minipacs.domain.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -117,25 +118,34 @@ public class StudyService {
         Optional<Study> existingStudy = findByStudyInstanceUid(studyInstanceUid);
 
         if (existingStudy.isPresent()) {
-            log.info("Found existing study: id={}, studyInstanceUid={}",
+            log.debug("Found existing study: id={}, studyInstanceUid={}",
                     existingStudy.get().getId(),
                     studyInstanceUid);
             return existingStudy.get();
         }
 
-        // 2. 새 Study 생성 (Builder 패턴)
-        Study newStudy = Study.builder()
-                .patient(patient)
-                .studyInstanceUid(studyInstanceUid)
-                .studyDate(studyDate)
-                .studyDescription(studyDescription)
-                .build();
+        // 2. 새 Study 생성 시도
+        try {
+            Study newStudy = Study.builder()
+                    .patient(patient)
+                    .studyInstanceUid(studyInstanceUid)
+                    .studyDate(studyDate)
+                    .studyDescription(studyDescription)
+                    .build();
 
-        log.info("Creating new study from DICOM: studyInstanceUid={}, patientId={}",
-                studyInstanceUid,
-                patient.getId());
-
-        return studyRepository.save(newStudy);
+            Study saved = studyRepository.saveAndFlush(newStudy);
+            log.info("Created new study: id={}, studyInstanceUid={}",
+                    saved.getId(),
+                    studyInstanceUid);
+            return saved;
+        } catch (DataIntegrityViolationException e) {
+            // Race condition 발생 - 다른 스레드가 먼저 저장함
+            log.warn("Race condition detected for study: {}", studyInstanceUid);
+            return studyRepository
+                    .findByStudyInstanceUid(studyInstanceUid)
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Study should exist after DataIntegrityViolationException"));
+        }
     }
 
     /**

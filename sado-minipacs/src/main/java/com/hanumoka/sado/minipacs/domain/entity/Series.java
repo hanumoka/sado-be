@@ -17,7 +17,8 @@ import java.util.Objects;
  * DICOM Series 단위 메타데이터 관리
  */
 @Entity
-@Table(name = "series")
+@Table(name = "series", uniqueConstraints = @UniqueConstraint(
+        name = "uk_series_instance_uid", columnNames = {"tenant_id", "series_instance_uid"}))
 @Getter
 @Setter
 @NoArgsConstructor

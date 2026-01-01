@@ -19,7 +19,8 @@ import java.util.Objects;
  * DICOM Storage Layer와 분리 (2-Layer 아키텍처)
  */
 @Entity
-@Table(name = "study")
+@Table(name = "study", uniqueConstraints = @UniqueConstraint(
+        name = "uk_study_instance_uid", columnNames = {"tenant_id", "study_instance_uid"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -94,7 +95,7 @@ public class Study extends TenantAwareEntity {
      * </ul>
      *
      * @param seriesItem 추가할 Series
-     * @throws NullPointerException seriesItem이 null인 경우
+     * @throws NullPointerException  seriesItem이 null인 경우
      * @throws IllegalStateException seriesItem이 이미 존재하거나 다른 Study에 속한 경우
      */
     public void addSeries(Series seriesItem) {
@@ -125,7 +126,7 @@ public class Study extends TenantAwareEntity {
      * </ul>
      *
      * @param seriesItem 제거할 Series
-     * @throws NullPointerException seriesItem이 null인 경우
+     * @throws NullPointerException  seriesItem이 null인 경우
      * @throws IllegalStateException seriesItem에 Instance가 남아있는 경우
      */
     public void removeSeries(Series seriesItem) {
@@ -134,8 +135,8 @@ public class Study extends TenantAwareEntity {
         // Orphan Instance 보호
         if (!seriesItem.getInstances().isEmpty()) {
             throw new IllegalStateException(
-                "Cannot remove series with " + seriesItem.getInstances().size() +
-                " instances. Delete instances first."
+                    "Cannot remove series with " + seriesItem.getInstances().size() +
+                            " instances. Delete instances first."
             );
         }
 

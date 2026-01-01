@@ -39,9 +39,9 @@ public interface StorageAccessStrategy {
      * @param userId 요청 사용자 ID (Audit Log 및 DLP 검증용)
      * @param tenantId 테넌트 ID (멀티테넌시 격리)
      * @return 파일 접근 방법 (Pre-signed URL or Backend Proxy 엔드포인트)
-     * @throws com.hanumoka.sado.minipacs.exception.ResourceNotFoundException 파일이 존재하지 않는 경우
-     * @throws com.hanumoka.sado.minipacs.exception.RateLimitException DLP: 다운로드 횟수 제한 초과 (Backend Proxy만)
-     * @throws com.hanumoka.sado.minipacs.exception.QuotaExceededException DLP: 일일 다운로드 용량 초과 (Backend Proxy만)
+     * @throws com.hanumoka.sado.minipacs.code.ResourceNotFoundException 파일이 존재하지 않는 경우
+     * @throws com.hanumoka.sado.minipacs.code.RateLimitException DLP: 다운로드 횟수 제한 초과 (Backend Proxy만)
+     * @throws com.hanumoka.sado.minipacs.code.QuotaExceededException DLP: 일일 다운로드 용량 초과 (Backend Proxy만)
      */
     FileAccessResponse getFileAccess(String fileId, Long userId, Long tenantId);
 }

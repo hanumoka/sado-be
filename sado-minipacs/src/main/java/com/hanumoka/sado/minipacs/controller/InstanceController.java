@@ -1,11 +1,15 @@
 package com.hanumoka.sado.minipacs.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hanumoka.sado.common.dto.ApiResponse;
+import com.hanumoka.sado.minipacs.domain.entity.DicomMetadataRecord;
 import com.hanumoka.sado.minipacs.domain.entity.Instance;
 import com.hanumoka.sado.minipacs.domain.entity.Patient;
 import com.hanumoka.sado.minipacs.domain.entity.Series;
 import com.hanumoka.sado.minipacs.domain.entity.Study;
 import com.hanumoka.sado.minipacs.domain.parser.DicomMetadataExtractor;
+import com.hanumoka.sado.minipacs.domain.repository.DicomMetadataRecordRepository;
 import com.hanumoka.sado.minipacs.domain.service.InstanceService;
 import com.hanumoka.sado.minipacs.domain.service.PatientService;
 import com.hanumoka.sado.minipacs.domain.service.SeriesService;
@@ -39,7 +43,8 @@ public class InstanceController {
     private final StudyService studyService;
     private final PatientService patientService;
     private final DicomStorageService dicomStorageService;
-
+    private final DicomMetadataRecordRepository dicomMetadataRecordRepository;
+    private final ObjectMapper objectMapper;
 
     private final StorageAccessStrategy storageAccessStrategy; // Storage 접근 전략 (pre-signed url or backed proxy)
 
@@ -277,9 +282,10 @@ public class InstanceController {
         log.info("Series resolved: id={}, seriesInstanceUid={}, modality={}",
                 series.getId(), series.getSeriesInstanceUid(), series.getModality());
 
-        // 6. SeaweedFS 업로드 (DICOMweb 표준 경로)
-        String s3Key;
+        // 6. SeaweedFS 업로드 (DICOMweb 표준 경로) + 보상 트랜잭션
+        String s3Key = null;
         try {
+            // 6-1. S3 업로드
             s3Key = dicomStorageService.uploadDicomFile(
                     study.getStudyInstanceUid(),
                     series.getSeriesInstanceUid(),
@@ -287,40 +293,85 @@ public class InstanceController {
                     file.getInputStream(),
                     file.getSize()
             );
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to read uploaded file", e);
+
+            log.info("DICOM file uploaded to storage: s3Key={}, originalFilename={}",
+                    s3Key, file.getOriginalFilename());
+
+            // 7. Instance 생성 (Builder 패턴)
+            Instance instance = Instance.builder()
+                    .series(series)
+                    .sopInstanceUid(metadata.getSopInstanceUid())
+                    .sopClassUid(metadata.getSopClassUid())
+                    .instanceNumber(metadata.getInstanceNumber())
+                    .imageRows(metadata.getImageRows())
+                    .imageColumns(metadata.getImageColumns())
+                    .numberOfFrames(metadata.getNumberOfFrames())
+                    .storagePath(s3Key)  // S3 Key를 storagePath로 저장 (DICOMweb 표준 경로)
+                    .fileSize(file.getSize())
+                    .build();
+
+            // 8. InstanceService로 DB 저장
+            Instance savedInstance = instanceService.createInstance(instance);
+
+            log.info("Instance created: id={}, sopInstanceUid={}, s3Key={}, seriesId={}",
+                    savedInstance.getId(),
+                    savedInstance.getSopInstanceUid(),
+                    s3Key,
+                    series.getId());
+
+            // 9. DicomMetadataRecord 생성 (WORM 정책)
+            DicomMetadataRecord metadataRecord = DicomMetadataRecord.builder()
+                    .metadata(convertMetadataToJson(metadata))
+                    .instanceId(savedInstance.getId())
+                    .studyInstanceUid(metadata.getStudyInstanceUid())
+                    .seriesInstanceUid(metadata.getSeriesInstanceUid())
+                    .sopInstanceUid(metadata.getSopInstanceUid())
+                    .filePath(s3Key)
+                    .filename(file.getOriginalFilename())
+                    .fileSize(file.getSize())
+                    .build();
+
+            dicomMetadataRecordRepository.save(metadataRecord);
+
+            log.info("DicomMetadataRecord created: instanceId={}, sopInstanceUid={}",
+                    savedInstance.getId(), metadata.getSopInstanceUid());
+
+            // 10. Entity → Response DTO 변환
+            InstanceResponse response = toResponse(savedInstance);
+
+            // 11. 성공 응답 반환
+            return ApiResponse.success(response);
+
+        } catch (Exception e) {
+            // 보상 트랜잭션: S3 파일 삭제 (DB 저장 실패 시)
+            if (s3Key != null) {
+                try {
+                    log.warn("Rolling back S3 upload due to error: {}", s3Key);
+                    dicomStorageService.deleteDicomFile(s3Key);
+                    log.info("S3 file deleted successfully: {}", s3Key);
+                } catch (Exception deleteEx) {
+                    log.error("Failed to delete orphan S3 file: {}. Will be cleaned up later.",
+                            s3Key, deleteEx);
+                }
+            }
+            // 원래 예외 재발생
+            if (e instanceof IOException) {
+                throw (IOException) e;
+            }
+            throw new RuntimeException("Failed to upload DICOM file", e);
         }
+    }
 
-        log.info("DICOM file uploaded to storage: s3Key={}, originalFilename={}",
-                s3Key, file.getOriginalFilename());
-
-        // 7. Instance 생성 (Builder 패턴)
-        Instance instance = Instance.builder()
-                .series(series)
-                .sopInstanceUid(metadata.getSopInstanceUid())
-                .sopClassUid(metadata.getSopClassUid())
-                .instanceNumber(metadata.getInstanceNumber())
-                .imageRows(metadata.getImageRows())
-                .imageColumns(metadata.getImageColumns())
-                .numberOfFrames(metadata.getNumberOfFrames())
-                .storagePath(s3Key)  // S3 Key를 storagePath로 저장 (DICOMweb 표준 경로)
-                .fileSize(file.getSize())
-                .build();
-
-        // 8. InstanceService로 DB 저장
-        Instance savedInstance = instanceService.createInstance(instance);
-
-        log.info("Instance created: id={}, sopInstanceUid={}, s3Key={}, seriesId={}",
-                savedInstance.getId(),
-                savedInstance.getSopInstanceUid(),
-                s3Key,
-                series.getId());
-
-        // 9. Entity → Response DTO 변환
-        InstanceResponse response = toResponse(savedInstance);
-
-        // 10. 성공 응답 반환
-        return ApiResponse.success(response);
+    /**
+     * DicomMetadata → JSON 문자열 변환
+     */
+    private String convertMetadataToJson(DicomMetadataExtractor.DicomMetadata metadata) {
+        try {
+            return objectMapper.writeValueAsString(metadata);
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to convert metadata to JSON, using empty object", e);
+            return "{}";
+        }
     }
 
 

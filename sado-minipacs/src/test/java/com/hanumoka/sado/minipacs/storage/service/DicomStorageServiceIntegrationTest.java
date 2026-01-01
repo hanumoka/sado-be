@@ -1,7 +1,7 @@
 package com.hanumoka.sado.minipacs.storage.service;
 
 import com.hanumoka.sado.common.exception.BusinessException;
-import com.hanumoka.sado.minipacs.exception.MiniPacsErrorCode;
+import com.hanumoka.sado.minipacs.code.MiniPacsErrorCode;
 import com.hanumoka.sado.minipacs.support.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
