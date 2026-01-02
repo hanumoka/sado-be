@@ -79,6 +79,45 @@ public enum MiniPacsErrorCode implements ApiCode {
             "파일 읽기에 실패했습니다"
     ),
 
+    // ========== 업로드 정책 에러 (400100~400199) ==========
+
+    /**
+     * 파일 개수 제한 초과
+     *
+     * <p>발생 시점: 한 번에 100개 이상 업로드 시도
+     * <p>원인: Frontend 검증 우회 시도, 직접 API 호출
+     */
+    FILE_COUNT_EXCEEDED(
+            HttpStatus.BAD_REQUEST,
+            400102,
+            "파일 개수가 제한을 초과했습니다 (최대 100개)"
+    ),
+
+    /**
+     * 전체 파일 크기 제한 초과
+     *
+     * <p>발생 시점: 전체 파일 크기가 2GB 초과
+     * <p>원인: Frontend 검증 우회 시도, 직접 API 호출
+     */
+    TOTAL_SIZE_EXCEEDED(
+            HttpStatus.BAD_REQUEST,
+            400103,
+            "전체 파일 크기가 제한을 초과했습니다 (최대 2GB)"
+    ),
+
+    /**
+     * 개별 파일 크기 제한 초과
+     *
+     * <p>발생 시점: 단일 파일이 500MB 초과
+     * <p>원인: Frontend 검증 우회 시도, 직접 API 호출
+     * <p>참고: Spring의 max-file-size 검증은 413 Payload Too Large 반환
+     */
+    FILE_SIZE_EXCEEDED(
+            HttpStatus.BAD_REQUEST,
+            400104,
+            "파일 크기가 제한을 초과했습니다 (최대 500MB)"
+    ),
+
     // ========== DICOM 에러 (400200~400299, 500200~500299) ==========
 
     /**
