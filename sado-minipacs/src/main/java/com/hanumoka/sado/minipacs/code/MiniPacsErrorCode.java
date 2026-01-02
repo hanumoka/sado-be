@@ -106,6 +106,18 @@ public enum MiniPacsErrorCode implements ApiCode {
     ),
 
     /**
+     * 지원하지 않는 파일 확장자
+     *
+     * <p>발생 시점: 파일 확장자 검증 실패
+     * <p>원인: .dcm, .dicom, 확장자 없는 파일이 아님
+     */
+    UNSUPPORTED_FILE_EXTENSION(
+            HttpStatus.BAD_REQUEST,
+            400204,
+            "지원하지 않는 파일 확장자입니다. .dcm, .dicom, 확장자 없는 파일만 허용됩니다"
+    ),
+
+    /**
      * DICOM 필수 태그 누락
      *
      * <p>발생 시점: 필수 DICOM 태그 미존재
@@ -189,6 +201,118 @@ public enum MiniPacsErrorCode implements ApiCode {
             HttpStatus.CONFLICT,
             409601,
             "이미 존재하는 영상입니다"
+    ),
+
+    // ========== Tiering 에러 (400700~400799) ==========
+
+    /**
+     * 잘못된 Tier 값
+     *
+     * <p>발생 시점: HOT/WARM/COLD가 아닌 값 입력
+     * <p>원인: 잘못된 Tier 파라미터
+     */
+    INVALID_TIER(
+            HttpStatus.BAD_REQUEST,
+            400701,
+            "유효하지 않은 Tier 값입니다"
+    ),
+
+    /**
+     * 잘못된 파일 상태
+     *
+     * <p>발생 시점: ACTIVE가 아닌 파일의 Tier 변경 시도
+     * <p>원인: 삭제/아카이브된 파일의 Tier 변경
+     */
+    INVALID_FILE_STATUS(
+            HttpStatus.BAD_REQUEST,
+            400702,
+            "현재 파일 상태에서는 Tier 변경이 불가능합니다"
+    ),
+
+    /**
+     * Tier가 이미 설정됨
+     *
+     * <p>발생 시점: 동일한 Tier로의 전환 시도
+     * <p>원인: 불필요한 Tier 전환
+     */
+    TIER_ALREADY_SET(
+            HttpStatus.BAD_REQUEST,
+            400703,
+            "파일이 이미 해당 Tier에 있습니다"
+    ),
+
+    /**
+     * 잘못된 Tiering 정책
+     *
+     * <p>발생 시점: 정책 검증 실패
+     * <p>원인: warmToColdDays <= hotToWarmDays, 범위 초과 등
+     */
+    INVALID_TIERING_POLICY(
+            HttpStatus.BAD_REQUEST,
+            400704,
+            "유효하지 않은 Tiering 정책입니다"
+    ),
+
+    // ========== SeaweedFS 에러 (500800~500899, 503800~503899) ==========
+
+    /**
+     * SeaweedFS API 호출 실패
+     *
+     * <p>발생 시점: Master/Volume/Filer API 호출 실패
+     * <p>원인: 네트워크 오류, SeaweedFS 서버 다운
+     */
+    SEAWEEDFS_API_ERROR(
+            HttpStatus.BAD_GATEWAY,
+            502801,
+            "SeaweedFS API 호출에 실패했습니다"
+    ),
+
+    /**
+     * SeaweedFS 서버 접근 불가
+     *
+     * <p>발생 시점: SeaweedFS 서버에 연결할 수 없음
+     * <p>원인: SeaweedFS 서버 다운, 네트워크 문제
+     */
+    SEAWEEDFS_UNAVAILABLE(
+            HttpStatus.SERVICE_UNAVAILABLE,
+            503801,
+            "SeaweedFS 서버에 접근할 수 없습니다"
+    ),
+
+    /**
+     * SeaweedFS 응답 파싱 실패
+     *
+     * <p>발생 시점: SeaweedFS API 응답을 JSON으로 파싱 실패
+     * <p>원인: 예상치 못한 응답 형식, API 버전 불일치
+     */
+    SEAWEEDFS_RESPONSE_PARSE_ERROR(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            500802,
+            "SeaweedFS 응답 파싱에 실패했습니다"
+    ),
+
+    /**
+     * Volume 생성 실패
+     *
+     * <p>발생 시점: Volume 생성 API 호출 실패
+     * <p>원인: 디스크 공간 부족, 잘못된 파라미터
+     */
+    VOLUME_CREATE_FAILED(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            500803,
+            "Volume 생성에 실패했습니다"
+    ),
+
+    /**
+     * Volume 삭제 실패
+     *
+     * <p>발생 시점: Volume 삭제 API 호출 실패
+     * <p>원인: Volume이 비어있지 않음, Volume이 존재하지 않음
+     */
+    VOLUME_DELETE_FAILED(
+            HttpStatus.BAD_REQUEST,
+            400805,
+            "Volume 삭제에 실패했습니다"
     );
 
     // ========== 필드 및 생성자 ==========

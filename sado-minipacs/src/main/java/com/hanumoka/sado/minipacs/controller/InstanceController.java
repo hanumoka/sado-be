@@ -14,6 +14,7 @@ import com.hanumoka.sado.minipacs.domain.enums.FileStatus;
 import com.hanumoka.sado.minipacs.domain.enums.ReferenceType;
 import com.hanumoka.sado.minipacs.domain.parser.DicomMetadataExtractor;
 import com.hanumoka.sado.minipacs.domain.repository.DicomMetadataRecordRepository;
+import com.hanumoka.sado.minipacs.domain.util.DicomFileValidator;
 import com.hanumoka.sado.minipacs.domain.repository.FileAssetRepository;
 import com.hanumoka.sado.minipacs.domain.service.InstanceService;
 import com.hanumoka.sado.minipacs.domain.service.PatientService;
@@ -242,9 +243,18 @@ public class InstanceController {
             throw new IllegalArgumentException("파일이 비어있습니다");
         }
 
-        // 2. DICOM 메타데이터 추출
+        // 2. 파일을 byte[]로 읽기 (InputStream 재사용 방지)
+        byte[] fileBytes = file.getBytes();
+
+        // 2-1. 파일 확장자 검증 (.dcm, .dicom, 확장자 없음만 허용)
+        DicomFileValidator.validateFileExtension(file.getOriginalFilename());
+
+        // 2-2. DICOM magic number 검증 (128 byte offset에서 'DICM' 확인)
+        DicomFileValidator.validateDicomMagicNumber(fileBytes);
+
+        // 3. DICOM 메타데이터 추출
         DicomMetadataExtractor.DicomMetadata metadata =
-                DicomMetadataExtractor.extract(file.getInputStream());
+                DicomMetadataExtractor.extract(new java.io.ByteArrayInputStream(fileBytes));
 
         log.info("DICOM metadata extracted: PatientID={}, StudyUID={}, SeriesUID={}, SOPInstanceUID={}",
                 metadata.getPatientId(),
@@ -252,7 +262,7 @@ public class InstanceController {
                 metadata.getSeriesInstanceUid(),
                 metadata.getSopInstanceUid());
 
-        // 3. Patient findOrCreate
+        // 4. Patient findOrCreate
         Patient patient = patientService.findOrCreatePatient(
                 metadata.getPatientId(),
                 metadata.getIssuerOfPatientId(),
@@ -264,7 +274,7 @@ public class InstanceController {
         log.info("Patient resolved: id={}, dicomPatientId={}",
                 patient.getId(), patient.getDicomPatientId());
 
-        // 4. Study findOrCreate
+        // 5. Study findOrCreate
         Study study = studyService.findOrCreateStudy(
                 metadata.getStudyInstanceUid(),
                 patient,
@@ -275,7 +285,7 @@ public class InstanceController {
         log.info("Study resolved: id={}, studyInstanceUid={}",
                 study.getId(), study.getStudyInstanceUid());
 
-        // 5. Series findOrCreate
+        // 6. Series findOrCreate
         Series series = seriesService.findOrCreateSeries(
                 metadata.getSeriesInstanceUid(),
                 study,
@@ -288,22 +298,22 @@ public class InstanceController {
         log.info("Series resolved: id={}, seriesInstanceUid={}, modality={}",
                 series.getId(), series.getSeriesInstanceUid(), series.getModality());
 
-        // 6. SeaweedFS 업로드 (DICOMweb 표준 경로) + 보상 트랜잭션
+        // 7. SeaweedFS 업로드 (DICOMweb 표준 경로) + 보상 트랜잭션
         String s3Key = null;
         try {
-            // 6-1. S3 업로드
+            // 7-1. S3 업로드 (byte[]를 InputStream으로 변환)
             s3Key = dicomStorageService.uploadDicomFile(
                     study.getStudyInstanceUid(),
                     series.getSeriesInstanceUid(),
                     metadata.getSopInstanceUid(),
-                    file.getInputStream(),
-                    file.getSize()
+                    new java.io.ByteArrayInputStream(fileBytes),
+                    fileBytes.length
             );
 
             log.info("DICOM file uploaded to storage: s3Key={}, originalFilename={}",
                     s3Key, file.getOriginalFilename());
 
-            // 7. Instance 생성 (Builder 패턴)
+            // 8. Instance 생성 (Builder 패턴)
             Instance instance = Instance.builder()
                     .series(series)
                     .sopInstanceUid(metadata.getSopInstanceUid())
@@ -313,10 +323,10 @@ public class InstanceController {
                     .imageColumns(metadata.getImageColumns())
                     .numberOfFrames(metadata.getNumberOfFrames())
                     .storagePath(s3Key)  // S3 Key를 storagePath로 저장 (DICOMweb 표준 경로)
-                    .fileSize(file.getSize())
+                    .fileSize((long) fileBytes.length)  // byte[] 길이 사용 (Long으로 캐스팅)
                     .build();
 
-            // 8. InstanceService로 DB 저장
+            // 9. InstanceService로 DB 저장
             Instance savedInstance = instanceService.createInstance(instance);
 
             log.info("Instance created: id={}, sopInstanceUid={}, s3Key={}, seriesId={}",
@@ -483,6 +493,24 @@ public class InstanceController {
      * Instance Entity → InstanceResponse 변환
      */
     private InstanceResponse toResponse(Instance instance) {
+        // storageUri 생성 (Pre-signed URL)
+        String storageUri = "";  // null 대신 빈 문자열 초기화
+        if (instance.getStoragePath() != null && !instance.getStoragePath().isEmpty()) {
+            try {
+                Long tenantId = instance.getTenantId();
+                Long userId = 1L; // TODO: 실제 User ID (Week 12+)
+
+                FileAccessResponse fileAccess = storageAccessStrategy.getFileAccess(
+                    instance.getStoragePath(), userId, tenantId
+                );
+                storageUri = fileAccess.getUrl();
+            } catch (Exception e) {
+                log.warn("Failed to generate storage URI for instance {}, using fallback: {}",
+                         instance.getId(), e.getMessage());
+                storageUri = "";  // 예외 발생 시 빈 문자열 (null 방지)
+            }
+        }
+
         return InstanceResponse.builder()
                 .id(instance.getId())
                 .seriesId(instance.getSeries().getId())
@@ -495,6 +523,7 @@ public class InstanceController {
                 .frameRateSource(instance.getFrameRateSource())
                 .instanceNumber(instance.getInstanceNumber())
                 .storagePath(instance.getStoragePath())
+                .storageUri(storageUri)  // Pre-signed URL 추가
                 .fileSize(instance.getFileSize())
                 .transcodingStatus(instance.getTranscodingStatus() != null ?
                         instance.getTranscodingStatus().name() : null)
