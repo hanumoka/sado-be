@@ -2,6 +2,8 @@ package com.hanumoka.sado.minipacs.domain.repository;
 
 import com.hanumoka.sado.minipacs.domain.entity.Instance;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -47,6 +49,26 @@ public interface InstanceRepository extends JpaRepository<Instance, Long> {
      * @return Instance 개수
      */
     long countBySeriesId(Long seriesId);
+
+    /**
+     * 검사(Study)의 모든 Instance 개수 조회
+     *
+     * <p>Study는 Instance와 직접 관계가 없으므로 Series를 통해 JOIN하여 COUNT합니다.
+     * <pre>
+     * Study (1) → (N) Series (1) → (N) Instance
+     * </pre>
+     *
+     * <p>성능 최적화:
+     * <ul>
+     *   <li>인덱스 활용: instance 테이블의 series_id 인덱스 사용</li>
+     *   <li>실행 계획: INDEX SCAN → NESTED LOOP JOIN</li>
+     * </ul>
+     *
+     * @param studyId 검사 PK
+     * @return Study에 속한 모든 Instance 개수
+     */
+    @Query("SELECT COUNT(i) FROM Instance i WHERE i.series.study.id = :studyId")
+    long countByStudyId(@Param("studyId") Long studyId);
 
     /**
      * 스토리지 경로로 조회 (중복 방지용)

@@ -29,7 +29,7 @@ import java.util.Objects;
         @Index(name = "idx_study_patient_date", columnList = "patient_id, study_date")
     }
 )
-@EntityListeners(com.hanumoka.sado.minipacs.domain.listener.PatientStatisticsListener.class)
+// @EntityListeners 제거 (2026-01-05) - PatientStatisticsListener 제거로 인한 Deadlock 해결
 @Getter
 @Setter
 @NoArgsConstructor
@@ -68,32 +68,11 @@ public class Study extends TenantAwareEntity {
     @Column(name = "study_description", length = 255)
     private String studyDescription;
 
-    /**
-     * Number of Series
-     * 역정규화: 통계용 (실시간 COUNT 대신 캐싱)
-     */
-    @Column(name = "number_of_series")
-    private Integer numberOfSeries;
-
-    /**
-     * Number of Instances
-     * 역정규화: 통계용
-     */
-    @Column(name = "number_of_instances")
-    private Integer numberOfInstances;
-
-    /**
-     * Optimistic Lock Version
-     *
-     * <p>CRITICAL: 동시성 제어
-     * - Pessimistic Lock 대신 Optimistic Lock 사용
-     * - 동시 Series 추가 시 OptimisticLockingFailureException 발생
-     * - @Retryable로 자동 재시도
-     * - Deadlock 위험 제거
-     */
-    @Version
-    @Column(name = "version")
-    private Long version;
+    // ========== 역정규화 카운터 제거 (2026-01-05) ==========
+    // numberOfSeries 필드 제거 → series.size()로 실시간 계산
+    // numberOfInstances 필드 제거 → COUNT 쿼리로 실시간 계산
+    // @Version 제거 → Optimistic Lock 충돌 완전 제거
+    // 목적: Deadlock 완전 제거 + 동시성 극대화
 
     // ========== Series 관계 ==========
 
@@ -111,7 +90,11 @@ public class Study extends TenantAwareEntity {
     // ========== 비즈니스 메서드 ==========
 
     /**
-     * Series 추가 (양방향 관계 설정 + 카운터 증가)
+     * Series 추가 (양방향 관계 설정)
+     *
+     * <p>CRITICAL: 카운터 업데이트 제거 (2026-01-05)
+     * - numberOfSeries 증가 제거 → Deadlock 방지
+     * - Series 개수는 series.size()로 실시간 계산
      *
      * <p>검증:
      * <ul>
@@ -136,14 +119,17 @@ public class Study extends TenantAwareEntity {
             throw new IllegalStateException("Series already belongs to another study");
         }
 
-        // 정상 로직
+        // 정상 로직 - 양방향 관계만 설정
         series.add(seriesItem);
         seriesItem.setStudy(this);
-        numberOfSeries = CounterManager.increment(numberOfSeries);
+        // numberOfSeries 카운터 업데이트 제거 (2026-01-05)
     }
 
     /**
-     * Series 제거 (양방향 관계 해제 + 카운터 감소)
+     * Series 제거 (양방향 관계 해제)
+     *
+     * <p>CRITICAL: 카운터 업데이트 제거 (2026-01-05)
+     * - numberOfSeries 감소 제거 → Deadlock 방지
      *
      * <p>검증:
      * <ul>
@@ -169,43 +155,59 @@ public class Study extends TenantAwareEntity {
         boolean removed = series.remove(seriesItem);
         if (removed) {
             seriesItem.setStudy(null);
-            numberOfSeries = CounterManager.decrement(numberOfSeries);
+            // numberOfSeries 카운터 업데이트 제거 (2026-01-05)
         }
     }
 
-    /**
-     * Instance 추가 시 numberOfInstances 증가
-     * Series.addInstance()에서 호출됨
-     */
-    public void incrementInstanceCount() {
-        numberOfInstances = CounterManager.increment(numberOfInstances);
-    }
+    // ========== Instance 카운터 메서드 제거 (2026-01-05) ==========
+    // incrementInstanceCount() 제거 → Instance 추가 시 Study @Version 증가 안 함
+    // decrementInstanceCount() 제거 → 동시성 충돌 원인 제거
 
     /**
-     * Instance 제거 시 numberOfInstances 감소
-     * Series.removeInstance()에서 호출됨
+     * @deprecated (2026-01-05) numberOfSeries 필드 제거로 인해 불필요
+     * Series 개수는 series.size()로 실시간 계산됨
      */
-    public void decrementInstanceCount() {
-        numberOfInstances = CounterManager.decrement(numberOfInstances);
-    }
-
-    /**
-     * 정합성 복구: 실제 데이터 기반으로 카운트 재계산
-     * 데이터 마이그레이션 또는 수동 복구 시 사용
-     */
+    @Deprecated(since = "2026-01-05", forRemoval = true)
     public void recalculateCounts() {
-        // numberOfSeries 재계산
-        numberOfSeries = CounterManager.fromCollectionSize(series);
+        // numberOfSeries 필드 제거됨 → 메서드 불필요
+        // numberOfInstances는 @Transient 메서드로 실시간 계산
+    }
 
-        // numberOfInstances 재계산 (모든 Series의 Instance 합)
-        numberOfInstances = 0;
-        if (series != null) {
-            for (Series s : series) {
-                if (s.getNumberOfInstances() != null) {
-                    numberOfInstances += s.getNumberOfInstances();
-                }
-            }
+    /**
+     * numberOfSeries 실시간 계산 (Transient)
+     *
+     * <p>역정규화 필드를 제거하고 컬렉션 기반으로 실시간 계산합니다.
+     *
+     * @return Series 개수
+     */
+    @Transient
+    public int getNumberOfSeries() {
+        return series != null ? series.size() : 0;
+    }
+
+    /**
+     * numberOfInstances 실시간 계산 (Transient)
+     *
+     * <p>역정규화 필드를 제거하고 컬렉션 기반으로 실시간 계산합니다.
+     * Hibernate가 series 컬렉션을 lazy loading하여 각 Series의 Instance 개수를 합산합니다.
+     *
+     * <p>성능 고려사항:
+     * <ul>
+     *   <li>N+1 문제 방지: JOIN FETCH로 series 로드 시 사용</li>
+     *   <li>대용량 데이터: Repository COUNT 쿼리 사용 권장</li>
+     * </ul>
+     *
+     * @return 모든 Series의 Instance 개수 합
+     */
+    @Transient
+    public int getNumberOfInstances() {
+        if (series == null || series.isEmpty()) {
+            return 0;
         }
+
+        return series.stream()
+                .mapToInt(s -> s.getNumberOfInstances())
+                .sum();
     }
 
     // ========== 컬렉션 접근 제어 ==========

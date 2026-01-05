@@ -3,6 +3,7 @@ package com.hanumoka.sado.minipacs;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
@@ -25,6 +26,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 })
 @EnableJpaAuditing  // JPA Auditing 활성화 (@CreatedDate, @LastModifiedDate)
 @EnableScheduling   // Scheduled 작업 활성화 (@Scheduled 어노테이션 사용)
+@EnableRetry        // Spring Retry 활성화 (@Retryable 어노테이션 사용)
 public class MiniPacsApplication {
 
     public static void main(String[] args) {

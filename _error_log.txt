@@ -1,1351 +1,403 @@
-
-============================
-CONDITIONS EVALUATION REPORT
-============================
-
-
-Positive matches:
------------------
-
-   AopAutoConfiguration matched:
-      - @ConditionalOnBooleanProperty (spring.aop.auto=true) matched (OnPropertyCondition)
-
-   AopAutoConfiguration.AspectJAutoProxyingConfiguration matched:
-      - @ConditionalOnClass found required class 'org.aspectj.weaver.Advice' (OnClassCondition)
-
-   AopAutoConfiguration.AspectJAutoProxyingConfiguration.CglibAutoProxyConfiguration matched:
-      - @ConditionalOnBooleanProperty (spring.aop.proxy-target-class=true) matched (OnPropertyCondition)
-
-   ApplicationAvailabilityAutoConfiguration#applicationAvailability matched:
-      - @ConditionalOnMissingBean (types: org.springframework.boot.availability.ApplicationAvailability; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   DataJpaRepositoriesAutoConfiguration matched:
-      - @ConditionalOnClass found required class 'org.springframework.data.jpa.repository.JpaRepository' (OnClassCondition)
-      - @ConditionalOnBooleanProperty (spring.data.jpa.repositories.enabled=true) matched (OnPropertyCondition)
-      - @ConditionalOnBean (types: javax.sql.DataSource; SearchStrategy: all) found bean 'dataSource'; @ConditionalOnMissingBean (types: org.springframework.data.jpa.repository.support.JpaRepositoryFactoryBean,org.springframework.data.jpa.repository.config.JpaRepositoryConfigExtension; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   DataSourceAutoConfiguration matched:
-      - @ConditionalOnClass found required classes 'javax.sql.DataSource', 'org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType' (OnClassCondition)
-      - @ConditionalOnMissingBean (types: ?; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   DataSourceAutoConfiguration.PooledDataSourceConfiguration matched:
-      - AnyNestedCondition 1 matched 1 did not; NestedCondition on DataSourceAutoConfiguration.PooledDataSourceCondition.PooledDataSourceAvailable PooledDataSource found supported DataSource; NestedCondition on DataSourceAutoConfiguration.PooledDataSourceCondition.ExplicitType @ConditionalOnProperty (spring.datasource.type) did not find property 'spring.datasource.type' (DataSourceAutoConfiguration.PooledDataSourceCondition)
-      - @ConditionalOnMissingBean (types: javax.sql.DataSource,javax.sql.XADataSource; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   DataSourceAutoConfiguration.PooledDataSourceConfiguration#jdbcConnectionDetails matched:
-      - @ConditionalOnMissingBean (types: org.springframework.boot.jdbc.autoconfigure.JdbcConnectionDetails; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   DataSourceConfiguration.Hikari matched:
-      - @ConditionalOnClass found required class 'com.zaxxer.hikari.HikariDataSource' (OnClassCondition)
-      - @ConditionalOnProperty (spring.datasource.type=com.zaxxer.hikari.HikariDataSource) matched (OnPropertyCondition)
-      - @ConditionalOnMissingBean (types: javax.sql.DataSource; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   DataSourceInitializationAutoConfiguration matched:
-      - @ConditionalOnClass found required class 'org.springframework.jdbc.datasource.init.DatabasePopulator' (OnClassCondition)
-      - SQL InitializationDatabase Initialization default value is EMBEDDED (OnSqlInitializationCondition)
-      - @ConditionalOnSingleCandidate (types: javax.sql.DataSource; SearchStrategy: all) found a single bean 'dataSource'; @ConditionalOnMissingBean (types: org.springframework.boot.sql.autoconfigure.init.ApplicationScriptDatabaseInitializer; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   DataSourcePoolMetadataProvidersConfiguration.HikariPoolDataSourceMetadataProviderConfiguration matched:
-      - @ConditionalOnClass found required class 'com.zaxxer.hikari.HikariDataSource' (OnClassCondition)
-
-   DataSourceTransactionManagerAutoConfiguration matched:
-      - @ConditionalOnClass found required classes 'javax.sql.DataSource', 'org.springframework.jdbc.core.JdbcTemplate', 'org.springframework.transaction.TransactionManager' (OnClassCondition)
-
-   DataSourceTransactionManagerAutoConfiguration.JdbcTransactionManagerConfiguration matched:
-      - @ConditionalOnSingleCandidate (types: javax.sql.DataSource; SearchStrategy: all) found a single bean 'dataSource' (OnBeanCondition)
-
-   DataWebAutoConfiguration matched:
-      - @ConditionalOnClass found required classes 'org.springframework.data.web.PageableHandlerMethodArgumentResolver', 'org.springframework.web.servlet.config.annotation.WebMvcConfigurer' (OnClassCondition)
-      - found 'session' scope (OnWebApplicationCondition)
-      - @ConditionalOnMissingBean (types: org.springframework.data.web.PageableHandlerMethodArgumentResolver; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   DataWebAutoConfiguration#pageableCustomizer matched:
-      - @ConditionalOnMissingBean (types: org.springframework.data.web.config.PageableHandlerMethodArgumentResolverCustomizer; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   DataWebAutoConfiguration#sortCustomizer matched:
-      - @ConditionalOnMissingBean (types: org.springframework.data.web.config.SortHandlerMethodArgumentResolverCustomizer; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   DataWebAutoConfiguration#springDataWebSettings matched:
-      - @ConditionalOnMissingBean (types: org.springframework.data.web.config.SpringDataWebSettings; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   DispatcherServletAutoConfiguration matched:
-      - @ConditionalOnClass found required class 'org.springframework.web.servlet.DispatcherServlet' (OnClassCondition)
-      - found 'session' scope (OnWebApplicationCondition)
-
-   DispatcherServletAutoConfiguration.DispatcherServletConfiguration matched:
-      - @ConditionalOnClass found required class 'jakarta.servlet.ServletRegistration' (OnClassCondition)
-      - Default DispatcherServlet did not find dispatcher servlet beans (DispatcherServletAutoConfiguration.DefaultDispatcherServletCondition)
-
-   DispatcherServletAutoConfiguration.DispatcherServletRegistrationConfiguration matched:
-      - @ConditionalOnClass found required class 'jakarta.servlet.ServletRegistration' (OnClassCondition)
-      - DispatcherServlet Registration did not find servlet registration bean (DispatcherServletAutoConfiguration.DispatcherServletRegistrationCondition)
-
-   DispatcherServletAutoConfiguration.DispatcherServletRegistrationConfiguration#dispatcherServletRegistration matched:
-      - @ConditionalOnBean (names: dispatcherServlet types: org.springframework.web.servlet.DispatcherServlet; SearchStrategy: all) found bean 'dispatcherServlet' (OnBeanCondition)
-
-   ErrorMvcAutoConfiguration matched:
-      - @ConditionalOnClass found required classes 'jakarta.servlet.Servlet', 'org.springframework.web.servlet.DispatcherServlet' (OnClassCondition)
-      - found 'session' scope (OnWebApplicationCondition)
-
-   ErrorMvcAutoConfiguration#basicErrorController matched:
-      - @ConditionalOnMissingBean (types: org.springframework.boot.webmvc.error.ErrorController; SearchStrategy: current) did not find any beans (OnBeanCondition)
-
-   ErrorMvcAutoConfiguration#errorAttributes matched:
-      - @ConditionalOnMissingBean (types: org.springframework.boot.webmvc.error.ErrorAttributes; SearchStrategy: current) did not find any beans (OnBeanCondition)
-
-   ErrorMvcAutoConfiguration.DefaultErrorViewResolverConfiguration#conventionErrorViewResolver matched:
-      - @ConditionalOnBean (types: org.springframework.web.servlet.DispatcherServlet; SearchStrategy: all) found bean 'dispatcherServlet'; @ConditionalOnMissingBean (types: org.springframework.boot.webmvc.autoconfigure.error.ErrorViewResolver; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   ErrorMvcAutoConfiguration.WhitelabelErrorViewConfiguration matched:
-      - @ConditionalOnBooleanProperty (spring.web.error.whitelabel.enabled=true) matched (OnPropertyCondition)
-      - ErrorTemplate Missing did not find error template view (ErrorMvcAutoConfiguration.ErrorTemplateMissingCondition)
-
-   ErrorMvcAutoConfiguration.WhitelabelErrorViewConfiguration#beanNameViewResolver matched:
-      - @ConditionalOnMissingBean (types: org.springframework.web.servlet.view.BeanNameViewResolver; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   ErrorMvcAutoConfiguration.WhitelabelErrorViewConfiguration#defaultErrorView matched:
-      - @ConditionalOnMissingBean (names: error; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   HibernateJpaAutoConfiguration matched:
-      - @ConditionalOnClass found required classes 'org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean', 'jakarta.persistence.EntityManager', 'org.hibernate.engine.spi.SessionImplementor' (OnClassCondition)
-
-   HibernateJpaConfiguration matched:
-      - @ConditionalOnSingleCandidate (types: javax.sql.DataSource; SearchStrategy: all) found a single bean 'dataSource' (OnBeanCondition)
-
-   HttpEncodingAutoConfiguration matched:
-      - @ConditionalOnClass found required class 'org.springframework.web.filter.CharacterEncodingFilter' (OnClassCondition)
-      - found 'session' scope (OnWebApplicationCondition)
-      - @ConditionalOnBooleanProperty (spring.servlet.encoding.enabled=true) matched (OnPropertyCondition)
-
-   HttpEncodingAutoConfiguration#characterEncodingFilter matched:
-      - @ConditionalOnMissingBean (types: org.springframework.web.filter.CharacterEncodingFilter; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   HttpMessageConvertersAutoConfiguration matched:
-      - @ConditionalOnClass found required class 'org.springframework.http.converter.HttpMessageConverter' (OnClassCondition)
-      - NoneNestedConditions 0 matched 1 did not; NestedCondition on HttpMessageConvertersAutoConfiguration.NotReactiveWebApplicationCondition.ReactiveWebApplication did not find reactive web application classes (HttpMessageConvertersAutoConfiguration.NotReactiveWebApplicationCondition)
-
-   HttpMessageConvertersAutoConfiguration.StringHttpMessageConverterConfiguration#stringHttpMessageConvertersCustomizer matched:
-      - @ConditionalOnMissingBean (types: org.springframework.http.converter.StringHttpMessageConverter; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   JacksonAutoConfiguration matched:
-      - @ConditionalOnClass found required class 'tools.jackson.databind.json.JsonMapper' (OnClassCondition)
-
-   JacksonAutoConfiguration#jacksonJsonMapper matched:
-      - @ConditionalOnMissingBean (types: tools.jackson.databind.json.JsonMapper; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   JacksonAutoConfiguration#jsonMapperBuilder matched:
-      - @ConditionalOnMissingBean (types: tools.jackson.databind.json.JsonMapper$Builder; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   JacksonAutoConfiguration.JsonProblemDetailsConfiguration matched:
-      - @ConditionalOnClass found required class 'org.springframework.http.ProblemDetail' (OnClassCondition)
-
-   JacksonHttpMessageConvertersConfiguration.JacksonJsonHttpMessageConverterConfiguration matched:
-      - @ConditionalOnClass found required class 'tools.jackson.databind.json.JsonMapper' (OnClassCondition)
-      - @ConditionalOnProperty (spring.http.converters.preferred-json-mapper=jackson) matched (OnPropertyCondition)
-      - @ConditionalOnBean (types: tools.jackson.databind.json.JsonMapper; SearchStrategy: all) found bean 'jacksonJsonMapper' (OnBeanCondition)
-
-   JacksonHttpMessageConvertersConfiguration.JacksonJsonHttpMessageConverterConfiguration#jacksonJsonHttpMessageConvertersCustomizer matched:
-      - @ConditionalOnMissingBean (types: org.springframework.http.converter.json.JacksonJsonHttpMessageConverter ignored: ?; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   JdbcClientAutoConfiguration matched:
-      - @ConditionalOnSingleCandidate (types: org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate; SearchStrategy: all) found a single bean 'namedParameterJdbcTemplate'; @ConditionalOnMissingBean (types: org.springframework.jdbc.core.simple.JdbcClient; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   JdbcTemplateAutoConfiguration matched:
-      - @ConditionalOnClass found required classes 'javax.sql.DataSource', 'org.springframework.jdbc.core.JdbcTemplate' (OnClassCondition)
-      - @ConditionalOnSingleCandidate (types: javax.sql.DataSource; SearchStrategy: all) found a single bean 'dataSource' (OnBeanCondition)
-
-   JdbcTemplateConfiguration matched:
-      - @ConditionalOnMissingBean (types: org.springframework.jdbc.core.JdbcOperations; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   JpaBaseConfiguration#entityManagerFactory matched:
-      - @ConditionalOnMissingBean (types: org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean,jakarta.persistence.EntityManagerFactory; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   JpaBaseConfiguration#entityManagerFactoryBuilder matched:
-      - @ConditionalOnMissingBean (types: org.springframework.boot.jpa.EntityManagerFactoryBuilder; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   JpaBaseConfiguration#jpaVendorAdapter matched:
-      - @ConditionalOnMissingBean (types: org.springframework.orm.jpa.JpaVendorAdapter; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   JpaBaseConfiguration#transactionManager matched:
-      - @ConditionalOnMissingBean (types: org.springframework.transaction.TransactionManager; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   JpaBaseConfiguration.JpaWebConfiguration matched:
-      - @ConditionalOnClass found required class 'org.springframework.web.servlet.config.annotation.WebMvcConfigurer' (OnClassCondition)
-      - found 'session' scope (OnWebApplicationCondition)
-      - @ConditionalOnBooleanProperty (spring.jpa.open-in-view=true) matched (OnPropertyCondition)
-      - @ConditionalOnMissingBean (types: org.springframework.orm.jpa.support.OpenEntityManagerInViewInterceptor,org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   JpaBaseConfiguration.PersistenceManagedTypesConfiguration matched:
-      - @ConditionalOnMissingBean (types: org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean,jakarta.persistence.EntityManagerFactory; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   JpaBaseConfiguration.PersistenceManagedTypesConfiguration#persistenceManagedTypes matched:
-      - @ConditionalOnMissingBean (types: org.springframework.orm.jpa.persistenceunit.PersistenceManagedTypes; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   JtaAutoConfiguration matched:
-      - @ConditionalOnClass found required class 'jakarta.transaction.Transaction' (OnClassCondition)
-      - @ConditionalOnBooleanProperty (spring.jta.enabled=true) matched (OnPropertyCondition)
-
-   LifecycleAutoConfiguration#defaultLifecycleProcessor matched:
-      - @ConditionalOnMissingBean (names: lifecycleProcessor; SearchStrategy: current) did not find any beans (OnBeanCondition)
-
-   MultipartAutoConfiguration matched:
-      - @ConditionalOnClass found required classes 'jakarta.servlet.Servlet', 'org.springframework.web.multipart.support.StandardServletMultipartResolver', 'jakarta.servlet.MultipartConfigElement' (OnClassCondition)
-      - found 'session' scope (OnWebApplicationCondition)
-      - @ConditionalOnBooleanProperty (spring.servlet.multipart.enabled=true) matched (OnPropertyCondition)
-
-   MultipartAutoConfiguration#multipartConfigElement matched:
-      - @ConditionalOnMissingBean (types: jakarta.servlet.MultipartConfigElement; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   MultipartAutoConfiguration#multipartResolver matched:
-      - @ConditionalOnMissingBean (types: org.springframework.web.multipart.MultipartResolver; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   NamedParameterJdbcTemplateConfiguration matched:
-      - @ConditionalOnSingleCandidate (types: org.springframework.jdbc.core.JdbcTemplate; SearchStrategy: all) found a single bean 'jdbcTemplate'; @ConditionalOnMissingBean (types: org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   PersistenceExceptionTranslationAutoConfiguration matched:
-      - @ConditionalOnClass found required class 'org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor' (OnClassCondition)
-
-   PersistenceExceptionTranslationAutoConfiguration#persistenceExceptionTranslationPostProcessor matched:
-      - @ConditionalOnBooleanProperty (spring.persistence.exceptiontranslation.enabled=true) matched (OnPropertyCondition)
-      - @ConditionalOnMissingBean (types: org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   PresignedUrlAccessStrategy matched:
-      - @ConditionalOnProperty (storage.access-strategy=presigned-url) matched (OnPropertyCondition)
-
-   PropertyPlaceholderAutoConfiguration#propertySourcesPlaceholderConfigurer matched:
-      - @ConditionalOnMissingBean (types: org.springframework.context.support.PropertySourcesPlaceholderConfigurer; SearchStrategy: current) did not find any beans (OnBeanCondition)
-
-   SpringDocConfigProperties matched:
-      - @ConditionalOnProperty (springdoc.api-docs.enabled) matched (OnPropertyCondition)
-      - @ConditionalOnBean (types: org.springdoc.core.configuration.SpringDocConfiguration; SearchStrategy: all) found bean 'org.springdoc.core.configuration.SpringDocConfiguration' (OnBeanCondition)
-
-   SpringDocConfiguration matched:
-      - @ConditionalOnWebApplication (required) found 'session' scope (OnWebApplicationCondition)
-      - @ConditionalOnProperty (springdoc.api-docs.enabled) matched (OnPropertyCondition)
-
-   SpringDocConfiguration#fileSupportConverter matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.core.converters.FileSupportConverter; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocConfiguration#globalOpenApiCustomizer matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.core.customizers.GlobalOpenApiCustomizer; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocConfiguration#openAPIBuilder matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.core.service.OpenAPIService; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocConfiguration#operationBuilder matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.core.service.OperationService; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocConfiguration#parameterBuilder matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.core.service.GenericParameterService; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocConfiguration#parameterObjectNamingStrategyCustomizer matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.core.customizers.ParameterObjectNamingStrategyCustomizer; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocConfiguration#polymorphicModelConverter matched:
-      - @ConditionalOnProperty (springdoc.model-converters.polymorphic-converter.enabled) matched (OnPropertyCondition)
-      - @ConditionalOnMissingBean (types: org.springdoc.core.converters.PolymorphicModelConverter; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocConfiguration#requestBodyBuilder matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.core.service.RequestBodyService; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocConfiguration#responseSupportConverter matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.core.converters.ResponseSupportConverter; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocConfiguration#schemaPropertyDeprecatingConverter matched:
-      - @ConditionalOnProperty (springdoc.model-converters.deprecating-converter.enabled) matched (OnPropertyCondition)
-      - @ConditionalOnMissingBean (types: org.springdoc.core.converters.SchemaPropertyDeprecatingConverter; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocConfiguration#securityParser matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.core.service.SecurityService; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocConfiguration#springDocCustomizers matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.core.customizers.SpringDocCustomizers; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocConfiguration#springDocProviders matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.core.providers.SpringDocProviders; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocConfiguration#springdocObjectMapperProvider matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.core.providers.ObjectMapperProvider; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocConfiguration.QuerydslProvider matched:
-      - @ConditionalOnClass found required class 'org.springframework.data.querydsl.binding.QuerydslBindingsFactory' (OnClassCondition)
-
-   SpringDocConfiguration.QuerydslProvider#queryDslQuerydslPredicateOperationCustomizer matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.core.customizers.QuerydslPredicateOperationCustomizer; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocConfiguration.WebConversionServiceConfiguration matched:
-      - @ConditionalOnClass found required class 'org.springframework.boot.autoconfigure.web.format.WebConversionService' (OnClassCondition)
-
-   SpringDocPageableConfiguration matched:
-      - @ConditionalOnClass found required class 'org.springframework.data.domain.Pageable' (OnClassCondition)
-      - @ConditionalOnWebApplication (required) found 'session' scope (OnWebApplicationCondition)
-      - @ConditionalOnProperty (springdoc.api-docs.enabled) matched (OnPropertyCondition)
-      - @ConditionalOnBean (types: org.springdoc.core.configuration.SpringDocConfiguration; SearchStrategy: all) found bean 'org.springdoc.core.configuration.SpringDocConfiguration' (OnBeanCondition)
-
-   SpringDocPageableConfiguration#dataRestDelegatingMethodParameterCustomizer matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.core.customizers.DataRestDelegatingMethodParameterCustomizer; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocPageableConfiguration#pageOpenAPIConverter matched:
-      - @ConditionalOnClass found required classes 'org.springframework.data.web.PagedModel', 'org.springframework.data.web.config.SpringDataWebSettings' (OnClassCondition)
-      - @ConditionalOnMissingBean (types: org.springdoc.core.converters.PageOpenAPIConverter; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocPageableConfiguration#pageableOpenAPIConverter matched:
-      - @ConditionalOnProperty (springdoc.model-converters.pageable-converter.enabled) matched (OnPropertyCondition)
-      - @ConditionalOnMissingBean (types: org.springdoc.core.converters.PageableOpenAPIConverter; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocSortConfiguration matched:
-      - @ConditionalOnClass found required class 'org.springframework.data.domain.Sort' (OnClassCondition)
-      - @ConditionalOnWebApplication (required) found 'session' scope (OnWebApplicationCondition)
-      - @ConditionalOnProperty (springdoc.api-docs.enabled) matched (OnPropertyCondition)
-      - @ConditionalOnBean (types: org.springdoc.core.configuration.SpringDocConfiguration; SearchStrategy: all) found bean 'org.springdoc.core.configuration.SpringDocConfiguration' (OnBeanCondition)
-
-   SpringDocSortConfiguration#sortOpenAPIConverter matched:
-      - @ConditionalOnProperty (springdoc.sort-converter.enabled) matched (OnPropertyCondition)
-      - @ConditionalOnMissingBean (types: org.springdoc.core.converters.SortOpenAPIConverter; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocUIConfiguration matched:
-      - @ConditionalOnWebApplication (required) found 'session' scope (OnWebApplicationCondition)
-      - @ConditionalOnBean (types: org.springdoc.core.configuration.SpringDocConfiguration; SearchStrategy: all) found bean 'org.springdoc.core.configuration.SpringDocConfiguration' (OnBeanCondition)
-
-   SpringDocWebMvcConfiguration matched:
-      - found 'session' scope (OnWebApplicationCondition)
-      - @ConditionalOnProperty (springdoc.api-docs.enabled) matched (OnPropertyCondition)
-      - @ConditionalOnBean (types: org.springdoc.core.configuration.SpringDocConfiguration; SearchStrategy: all) found bean 'org.springdoc.core.configuration.SpringDocConfiguration' (OnBeanCondition)
-
-   SpringDocWebMvcConfiguration#openApiResource matched:
-      - @ConditionalOnExpression (#{(${springdoc.use-management-port:false} == false ) and ${springdoc.enable-default-api-docs:true}}) resulted in true (OnExpressionCondition)
-      - @ConditionalOnMissingBean (types: org.springdoc.webmvc.api.OpenApiWebMvcResource; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocWebMvcConfiguration#requestBuilder matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.webmvc.core.service.RequestService; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocWebMvcConfiguration#responseBuilder matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.core.service.GenericResponseService; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocWebMvcConfiguration#springWebProvider matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.core.providers.SpringWebProvider; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SpringDocWebMvcConfiguration.SpringDocWebMvcRouterConfiguration matched:
-      - @ConditionalOnClass found required class 'org.springframework.web.servlet.function.RouterFunction' (OnClassCondition)
-
-   SpringDocWebMvcConfiguration.SpringDocWebMvcRouterConfiguration#routerFunctionProvider matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.webmvc.core.providers.RouterFunctionWebMvcProvider; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SslAutoConfiguration#sslBundleRegistry matched:
-      - @ConditionalOnMissingBean (types: org.springframework.boot.ssl.SslBundleRegistry,org.springframework.boot.ssl.SslBundles; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SwaggerConfig matched:
-      - found 'session' scope (OnWebApplicationCondition)
-      - @ConditionalOnProperty (springdoc.swagger-ui.enabled) matched (OnPropertyCondition)
-      - @ConditionalOnBean (types: org.springdoc.core.configuration.SpringDocConfiguration; SearchStrategy: all) found bean 'org.springdoc.core.configuration.SpringDocConfiguration' (OnBeanCondition)
-
-   SwaggerConfig#indexPageTransformer matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.webmvc.ui.SwaggerIndexTransformer; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SwaggerConfig#swaggerConfigResource matched:
-      - @ConditionalOnProperty (springdoc.use-management-port=false) matched (OnPropertyCondition)
-      - @ConditionalOnMissingBean (types: org.springdoc.webmvc.ui.SwaggerConfigResource; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SwaggerConfig#swaggerResourceResolver matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.webmvc.ui.SwaggerResourceResolver; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SwaggerConfig#swaggerWebMvcConfigurer matched:
-      - @ConditionalOnMissingBean (types: org.springdoc.webmvc.ui.SwaggerWebMvcConfigurer; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SwaggerConfig#swaggerWelcome matched:
-      - @ConditionalOnProperty (springdoc.use-management-port=false) matched (OnPropertyCondition)
-      - @ConditionalOnMissingBean (types: org.springdoc.webmvc.ui.SwaggerWelcomeWebMvc; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   SwaggerUiConfigProperties matched:
-      - @ConditionalOnProperty (springdoc.swagger-ui.enabled) matched (OnPropertyCondition)
-      - @ConditionalOnBean (types: org.springdoc.core.configuration.SpringDocConfiguration; SearchStrategy: all) found bean 'org.springdoc.core.configuration.SpringDocConfiguration' (OnBeanCondition)
-
-   SwaggerUiOAuthProperties matched:
-      - @ConditionalOnProperty (springdoc.swagger-ui.enabled) matched (OnPropertyCondition)
-      - @ConditionalOnBean (types: org.springdoc.core.configuration.SpringDocConfiguration; SearchStrategy: all) found bean 'org.springdoc.core.configuration.SpringDocConfiguration' (OnBeanCondition)
-
-   TaskExecutionAutoConfiguration matched:
-      - @ConditionalOnClass found required class 'org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor' (OnClassCondition)
-
-   TaskExecutorConfigurations.AsyncConfigurerConfiguration matched:
-      - @ConditionalOnMissingBean (types: org.springframework.scheduling.annotation.AsyncConfigurer; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   TaskExecutorConfigurations.SimpleAsyncTaskExecutorBuilderConfiguration#simpleAsyncTaskExecutorBuilder matched:
-      - @ConditionalOnMissingBean (types: org.springframework.boot.task.SimpleAsyncTaskExecutorBuilder; SearchStrategy: all) did not find any beans (OnBeanCondition)
-      - @ConditionalOnThreading found PLATFORM (OnThreadingCondition)
-
-   TaskExecutorConfigurations.TaskExecutorConfiguration matched:
-      - AnyNestedCondition 1 matched 1 did not; NestedCondition on TaskExecutorConfigurations.OnExecutorCondition.ModelCondition @ConditionalOnProperty (spring.task.execution.mode=force) did not find property 'spring.task.execution.mode'; NestedCondition on TaskExecutorConfigurations.OnExecutorCondition.ExecutorBeanCondition @ConditionalOnMissingBean (types: java.util.concurrent.Executor; SearchStrategy: all) did not find any beans (TaskExecutorConfigurations.OnExecutorCondition)
-
-   TaskExecutorConfigurations.TaskExecutorConfiguration#applicationTaskExecutor matched:
-      - @ConditionalOnThreading found PLATFORM (OnThreadingCondition)
-
-   TaskExecutorConfigurations.ThreadPoolTaskExecutorBuilderConfiguration#threadPoolTaskExecutorBuilder matched:
-      - @ConditionalOnMissingBean (types: org.springframework.boot.task.ThreadPoolTaskExecutorBuilder; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   TaskSchedulingAutoConfiguration matched:
-      - @ConditionalOnClass found required class 'org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler' (OnClassCondition)
-
-   TaskSchedulingConfigurations.SimpleAsyncTaskSchedulerBuilderConfiguration#simpleAsyncTaskSchedulerBuilder matched:
-      - @ConditionalOnMissingBean (types: org.springframework.boot.task.SimpleAsyncTaskSchedulerBuilder; SearchStrategy: all) did not find any beans (OnBeanCondition)
-      - @ConditionalOnThreading found PLATFORM (OnThreadingCondition)
-
-   TaskSchedulingConfigurations.ThreadPoolTaskSchedulerBuilderConfiguration#threadPoolTaskSchedulerBuilder matched:
-      - @ConditionalOnMissingBean (types: org.springframework.boot.task.ThreadPoolTaskSchedulerBuilder; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   TomcatServletWebServerAutoConfiguration matched:
-      - @ConditionalOnClass found required classes 'jakarta.servlet.ServletRequest', 'org.apache.catalina.startup.Tomcat', 'org.apache.coyote.UpgradeProtocol', 'org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory' (OnClassCondition)
-      - found 'session' scope (OnWebApplicationCondition)
-
-   TomcatServletWebServerAutoConfiguration#tomcatServletWebServerFactory matched:
-      - @ConditionalOnMissingBean (types: org.springframework.boot.web.server.servlet.ServletWebServerFactory; SearchStrategy: current) did not find any beans (OnBeanCondition)
-
-   TomcatWebServerConfiguration matched:
-      - @ConditionalOnWarDeployment the application is not deployed as a WAR file. (OnWarDeploymentCondition)
-
-   TomcatWebServerConfiguration.TomcatWebSocketConfiguration matched:
-      - @ConditionalOnClass found required class 'org.apache.tomcat.websocket.server.WsSci' (OnClassCondition)
-
-   TransactionAutoConfiguration matched:
-      - @ConditionalOnClass found required class 'org.springframework.transaction.PlatformTransactionManager' (OnClassCondition)
-
-   TransactionAutoConfiguration.EnableTransactionManagementConfiguration matched:
-      - @ConditionalOnBean (types: org.springframework.transaction.TransactionManager; SearchStrategy: all) found bean 'transactionManager'; @ConditionalOnMissingBean (types: org.springframework.transaction.annotation.AbstractTransactionManagementConfiguration; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   TransactionAutoConfiguration.EnableTransactionManagementConfiguration.CglibAutoProxyConfiguration matched:
-      - @ConditionalOnBooleanProperty (spring.aop.proxy-target-class=true) matched (OnPropertyCondition)
-
-   TransactionAutoConfiguration.TransactionTemplateConfiguration matched:
-      - @ConditionalOnSingleCandidate (types: org.springframework.transaction.PlatformTransactionManager; SearchStrategy: all) found a single bean 'transactionManager' (OnBeanCondition)
-
-   TransactionAutoConfiguration.TransactionTemplateConfiguration#transactionTemplate matched:
-      - @ConditionalOnMissingBean (types: org.springframework.transaction.support.TransactionOperations; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   TransactionManagerCustomizationAutoConfiguration matched:
-      - @ConditionalOnClass found required class 'org.springframework.transaction.PlatformTransactionManager' (OnClassCondition)
-
-   TransactionManagerCustomizationAutoConfiguration#platformTransactionManagerCustomizers matched:
-      - @ConditionalOnMissingBean (types: org.springframework.boot.transaction.autoconfigure.TransactionManagerCustomizers; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   WebMvcAutoConfiguration matched:
-      - @ConditionalOnClass found required classes 'jakarta.servlet.Servlet', 'org.springframework.web.servlet.DispatcherServlet', 'org.springframework.web.servlet.config.annotation.WebMvcConfigurer' (OnClassCondition)
-      - found 'session' scope (OnWebApplicationCondition)
-      - @ConditionalOnMissingBean (types: org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   WebMvcAutoConfiguration#formContentFilter matched:
-      - @ConditionalOnBooleanProperty (spring.mvc.formcontent.filter.enabled=true) matched (OnPropertyCondition)
-      - @ConditionalOnMissingBean (types: org.springframework.web.filter.FormContentFilter; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   WebMvcAutoConfiguration.EnableWebMvcConfiguration#flashMapManager matched:
-      - @ConditionalOnMissingBean (names: flashMapManager; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   WebMvcAutoConfiguration.EnableWebMvcConfiguration#localeResolver matched:
-      - @ConditionalOnMissingBean (names: localeResolver; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   WebMvcAutoConfiguration.EnableWebMvcConfiguration#viewNameTranslator matched:
-      - @ConditionalOnMissingBean (names: viewNameTranslator; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   WebMvcAutoConfiguration.ResourceChainCustomizerConfiguration matched:
-      - @ConditionalOnEnabledResourceChain found class org.webjars.WebJarVersionLocator (OnEnabledResourceChainCondition)
-
-   WebMvcAutoConfiguration.WebMvcAutoConfigurationAdapter#defaultViewResolver matched:
-      - @ConditionalOnMissingBean (types: org.springframework.web.servlet.view.InternalResourceViewResolver; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   WebMvcAutoConfiguration.WebMvcAutoConfigurationAdapter#requestContextFilter matched:
-      - @ConditionalOnMissingBean (types: org.springframework.web.context.request.RequestContextListener,org.springframework.web.filter.RequestContextFilter; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   WebMvcAutoConfiguration.WebMvcAutoConfigurationAdapter#viewResolver matched:
-      - @ConditionalOnBean (types: org.springframework.web.servlet.ViewResolver; SearchStrategy: all) found beans 'defaultViewResolver', 'beanNameViewResolver', 'mvcViewResolver'; @ConditionalOnMissingBean (names: viewResolver types: org.springframework.web.servlet.view.ContentNegotiatingViewResolver; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-
-Negative matches:
------------------
-
-   AopAutoConfiguration.AspectJAutoProxyingConfiguration.JdkDynamicAutoProxyConfiguration:
-      Did not match:
-         - @ConditionalOnBooleanProperty (spring.aop.proxy-target-class=false) did not find property 'spring.aop.proxy-target-class' (OnPropertyCondition)
-
-   AopAutoConfiguration.ClassProxyingConfiguration:
-      Did not match:
-         - @ConditionalOnMissingClass found unwanted class 'org.aspectj.weaver.Advice' (OnClassCondition)
-
-   BackendProxyAccessStrategy:
-      Did not match:
-         - @ConditionalOnProperty (storage.access-strategy=backend-proxy) found different value in property 'storage.access-strategy' (OnPropertyCondition)
-
-   DataJpaRepositoriesAutoConfiguration#entityManagerFactoryBootstrapExecutorCustomizer:
-      Did not match:
-         - AnyNestedCondition 0 matched 2 did not; NestedCondition on DataJpaRepositoriesAutoConfiguration.BootstrapExecutorCondition.LazyBootstrapMode @ConditionalOnProperty (spring.data.jpa.repositories.bootstrap-mode=lazy) did not find property 'spring.data.jpa.repositories.bootstrap-mode'; NestedCondition on DataJpaRepositoriesAutoConfiguration.BootstrapExecutorCondition.DeferredBootstrapMode @ConditionalOnProperty (spring.data.jpa.repositories.bootstrap-mode=deferred) did not find property 'spring.data.jpa.repositories.bootstrap-mode' (DataJpaRepositoriesAutoConfiguration.BootstrapExecutorCondition)
-
-   DataRepositoryMetricsAutoConfiguration:
-      Did not match:
-         - @ConditionalOnBean did not find required type 'io.micrometer.core.instrument.MeterRegistry' (OnBeanCondition)
-
-   DataSourceAutoConfiguration.EmbeddedDatabaseConfiguration:
-      Did not match:
-         - EmbeddedDataSource spring.datasource.url is set (DataSourceAutoConfiguration.EmbeddedDatabaseCondition)
-
-   DataSourceCheckpointRestoreConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.crac.Resource' (OnClassCondition)
-
-   DataSourceConfiguration.Dbcp2:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.apache.commons.dbcp2.BasicDataSource' (OnClassCondition)
-
-   DataSourceConfiguration.Generic:
-      Did not match:
-         - @ConditionalOnProperty (spring.datasource.type) did not find property 'spring.datasource.type' (OnPropertyCondition)
-
-   DataSourceConfiguration.OracleUcp:
-      Did not match:
-         - @ConditionalOnClass did not find required classes 'oracle.ucp.jdbc.PoolDataSourceImpl', 'oracle.jdbc.OracleConnection' (OnClassCondition)
-
-   DataSourceConfiguration.Tomcat:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.apache.tomcat.jdbc.pool.DataSource' (OnClassCondition)
-
-   DataSourceHealthContributorAutoConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.springframework.boot.health.autoconfigure.contributor.ConditionalOnEnabledHealthIndicator' (OnClassCondition)
-
-   DataSourceJmxConfiguration:
-      Did not match:
-         - @ConditionalOnBooleanProperty (spring.jmx.enabled=true) found different value in property 'spring.jmx.enabled' (OnPropertyCondition)
-
-   DataSourcePoolMetadataProvidersConfiguration.CommonsDbcp2PoolDataSourceMetadataProviderConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.apache.commons.dbcp2.BasicDataSource' (OnClassCondition)
-
-   DataSourcePoolMetadataProvidersConfiguration.OracleUcpPoolDataSourceMetadataProviderConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required classes 'oracle.ucp.jdbc.PoolDataSource', 'oracle.jdbc.OracleConnection' (OnClassCondition)
-
-   DataSourcePoolMetadataProvidersConfiguration.TomcatDataSourcePoolMetadataProviderConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.apache.tomcat.jdbc.pool.DataSource' (OnClassCondition)
-
-   DataSourcePoolMetricsAutoConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'io.micrometer.core.instrument.MeterRegistry' (OnClassCondition)
-
-   DataSourceTransactionManagerAutoConfiguration.JdbcTransactionManagerConfiguration#transactionManager:
-      Did not match:
-         - @ConditionalOnMissingBean (types: org.springframework.transaction.TransactionManager; SearchStrategy: all) found beans of type 'org.springframework.transaction.TransactionManager' transactionManager (OnBeanCondition)
-
-   DispatcherServletAutoConfiguration.DispatcherServletConfiguration#multipartResolver:
-      Did not match:
-         - @ConditionalOnBean (types: org.springframework.web.multipart.MultipartResolver; SearchStrategy: all) did not find any beans of type org.springframework.web.multipart.MultipartResolver (OnBeanCondition)
-
-   GsonHttpMessageConvertersConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'com.google.gson.Gson' (OnClassCondition)
-
-   HibernateMetricsAutoConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'io.micrometer.core.instrument.MeterRegistry' (OnClassCondition)
-
-   Jackson2HttpMessageConvertersConfiguration.MappingJackson2HttpMessageConverterConfiguration:
-      Did not match:
-         - AnyNestedCondition 0 matched 2 did not; NestedCondition on Jackson2HttpMessageConvertersConfiguration.PreferJackson2OrJacksonUnavailableCondition.JacksonUnavailable @ConditionalOnMissingBean (types: org.springframework.boot.http.converter.autoconfigure.JacksonHttpMessageConvertersConfiguration$JacksonJsonHttpMessageConvertersCustomizer; SearchStrategy: all) found beans of type 'org.springframework.boot.http.converter.autoconfigure.JacksonHttpMessageConvertersConfiguration$JacksonJsonHttpMessageConvertersCustomizer' jacksonJsonHttpMessageConvertersCustomizer; NestedCondition on Jackson2HttpMessageConvertersConfiguration.PreferJackson2OrJacksonUnavailableCondition.Jackson2Preferred @ConditionalOnProperty (spring.http.converters.preferred-json-mapper=jackson2) did not find property 'spring.http.converters.preferred-json-mapper' (Jackson2HttpMessageConvertersConfiguration.PreferJackson2OrJacksonUnavailableCondition)
-      Matched:
-         - @ConditionalOnClass found required class 'com.fasterxml.jackson.databind.ObjectMapper' (OnClassCondition)
-
-   Jackson2HttpMessageConvertersConfiguration.MappingJackson2XmlHttpMessageConverterConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'tools.jackson.dataformat.xml.XmlMapper' (OnClassCondition)
-
-   JacksonAutoConfiguration.CborConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'tools.jackson.dataformat.cbor.CBORMapper' (OnClassCondition)
-
-   JacksonAutoConfiguration.XmlConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'tools.jackson.dataformat.xml.XmlMapper' (OnClassCondition)
-
-   JacksonHttpMessageConvertersConfiguration.JacksonXmlHttpMessageConverterConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'tools.jackson.dataformat.xml.XmlMapper' (OnClassCondition)
-
-   JmxAutoConfiguration:
-      Did not match:
-         - @ConditionalOnBooleanProperty (spring.jmx.enabled=true) found different value in property 'spring.jmx.enabled' (OnPropertyCondition)
-      Matched:
-         - @ConditionalOnClass found required class 'org.springframework.jmx.export.MBeanExporter' (OnClassCondition)
-
-   JndiDataSourceAutoConfiguration:
-      Did not match:
-         - @ConditionalOnProperty (spring.datasource.jndi-name) did not find property 'spring.datasource.jndi-name' (OnPropertyCondition)
-      Matched:
-         - @ConditionalOnClass found required classes 'javax.sql.DataSource', 'org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType' (OnClassCondition)
-
-   JndiJtaConfiguration:
-      Did not match:
-         - @ConditionalOnJndi JNDI environment is not available (OnJndiCondition)
-      Matched:
-         - @ConditionalOnClass found required class 'org.springframework.transaction.jta.JtaTransactionManager' (OnClassCondition)
-
-   JsonbHttpMessageConvertersConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'jakarta.json.bind.Jsonb' (OnClassCondition)
-
-   KotlinSerializationHttpMessageConvertersConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required classes 'kotlinx.serialization.Serializable', 'kotlinx.serialization.json.Json' (OnClassCondition)
-
-   MessageSourceAutoConfiguration:
-      Did not match:
-         - ResourceBundle did not find bundle with basename messages (MessageSourceAutoConfiguration.ResourceBundleCondition)
-
-   MultipleOpenApiSupportConfiguration:
-      Did not match:
-         - AnyNestedCondition 0 matched 2 did not; NestedCondition on MultipleOpenApiSupportCondition.OnActuatorDifferentPort @ConditionalOnProperty (springdoc.show-actuator) did not find property 'springdoc.show-actuator'; NestedCondition on MultipleOpenApiSupportCondition.OnMultipleOpenApiSupportCondition AnyNestedCondition 0 matched 3 did not; NestedCondition on MultipleOpenApiGroupsCondition.OnListGroupedOpenApiBean @ConditionalOnBean (types: org.springdoc.core.models.GroupedOpenApi; SearchStrategy: all) did not find any beans of type org.springdoc.core.models.GroupedOpenApi; NestedCondition on MultipleOpenApiGroupsCondition.OnGroupConfigProperty @ConditionalOnProperty (springdoc.group-configs[0].group) did not find property 'springdoc.group-configs[0].group'; NestedCondition on MultipleOpenApiGroupsCondition.OnGroupedOpenApiBean @ConditionalOnBean (types: org.springdoc.core.models.GroupedOpenApi; SearchStrategy: all) did not find any beans of type org.springdoc.core.models.GroupedOpenApi (MultipleOpenApiSupportCondition)
-      Matched:
-         - found 'session' scope (OnWebApplicationCondition)
-         - @ConditionalOnProperty (springdoc.api-docs.enabled) matched (OnPropertyCondition)
-
-   MultipleOpenApiSupportConfiguration.SpringDocWebMvcActuatorDifferentConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.springframework.boot.actuate.endpoint.web.servlet.WebMvcEndpointHandlerMapping' (OnClassCondition)
-         - Ancestor org.springdoc.webmvc.core.configuration.MultipleOpenApiSupportConfiguration did not match (ConditionEvaluationReport.AncestorsMatchedCondition)
-
-   ProjectInfoAutoConfiguration#buildProperties:
-      Did not match:
-         - @ConditionalOnResource did not find resource '${spring.info.build.location:classpath:META-INF/build-info.properties}' (OnResourceCondition)
-
-   ProjectInfoAutoConfiguration#gitProperties:
-      Did not match:
-         - GitResource did not find git info at classpath:git.properties (ProjectInfoAutoConfiguration.GitResourceAvailableCondition)
-
-   ServletHttpExchangesAutoConfiguration:
-      Did not match:
-         - @ConditionalOnBean did not find required type 'org.springframework.boot.actuate.web.exchanges.HttpExchangeRepository' (OnBeanCondition)
-
-   ServletManagementContextAutoConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties' (OnClassCondition)
-
-   ServletMappingsAutoConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint' (OnClassCondition)
-
-   ServletWebServerConfiguration#forwardedHeaderFilter:
-      Did not match:
-         - @ConditionalOnProperty (server.forward-headers-strategy=framework) did not find property 'server.forward-headers-strategy' (OnPropertyCondition)
-
-   SpringApplicationAdminJmxAutoConfiguration:
-      Did not match:
-         - @ConditionalOnBooleanProperty (spring.application.admin.enabled=true) did not find property 'spring.application.admin.enabled' (OnPropertyCondition)
-
-   SpringDocConfiguration#propertiesResolverForSchema:
-      Did not match:
-         - @ConditionalOnProperty (springdoc.api-docs.resolve-schema-properties) did not find property 'springdoc.api-docs.resolve-schema-properties' (OnPropertyCondition)
-
-   SpringDocConfiguration#propertyCustomizingConverter:
-      Did not match:
-         - @ConditionalOnBean (types: org.springdoc.core.customizers.PropertyCustomizer; SearchStrategy: all) did not find any beans of type org.springdoc.core.customizers.PropertyCustomizer (OnBeanCondition)
-
-   SpringDocConfiguration#springdocBeanFactoryPostProcessor:
-      Did not match:
-         - AnyNestedCondition 0 matched 2 did not; NestedCondition on CacheOrGroupedOpenApiCondition.OnCacheDisabled found non-matching nested conditions @ConditionalOnProperty (springdoc.cache.disabled) did not find property 'springdoc.cache.disabled'; NestedCondition on CacheOrGroupedOpenApiCondition.OnMultipleOpenApiSupportCondition AnyNestedCondition 0 matched 2 did not; NestedCondition on MultipleOpenApiSupportCondition.OnActuatorDifferentPort @ConditionalOnProperty (springdoc.show-actuator) did not find property 'springdoc.show-actuator'; NestedCondition on MultipleOpenApiSupportCondition.OnMultipleOpenApiSupportCondition AnyNestedCondition 0 matched 3 did not; NestedCondition on MultipleOpenApiGroupsCondition.OnListGroupedOpenApiBean @ConditionalOnBean (types: org.springdoc.core.models.GroupedOpenApi; SearchStrategy: all) did not find any beans of type org.springdoc.core.models.GroupedOpenApi; NestedCondition on MultipleOpenApiGroupsCondition.OnGroupConfigProperty @ConditionalOnProperty (springdoc.group-configs[0].group) did not find property 'springdoc.group-configs[0].group'; NestedCondition on MultipleOpenApiGroupsCondition.OnGroupedOpenApiBean @ConditionalOnBean (types: org.springdoc.core.models.GroupedOpenApi; SearchStrategy: all) did not find any beans of type org.springdoc.core.models.GroupedOpenApi (CacheOrGroupedOpenApiCondition)
-      Matched:
-         - @ConditionalOnClass found required class 'org.springframework.boot.context.properties.bind.BindResult' (OnClassCondition)
-
-   SpringDocConfiguration#springdocBeanFactoryPostProcessor2:
-      Did not match:
-         - @ConditionalOnMissingClass found unwanted class 'org.springframework.boot.context.properties.bind.BindResult' (OnClassCondition)
-
-   SpringDocConfiguration.SpringDocActuatorConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties' (OnClassCondition)
-
-   SpringDocConfiguration.SpringDocRepositoryRestConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.springframework.data.rest.core.config.RepositoryRestConfiguration' (OnClassCondition)
-
-   SpringDocConfiguration.SpringDocSpringDataWebPropertiesProvider:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties' (OnClassCondition)
-
-   SpringDocConfiguration.SpringDocWebFluxSupportConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'reactor.core.publisher.Flux' (OnClassCondition)
-
-   SpringDocDataRestConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.springframework.data.rest.core.config.RepositoryRestConfiguration' (OnClassCondition)
-
-   SpringDocFunctionCatalogConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.springframework.cloud.function.web.function.FunctionEndpointInitializer' (OnClassCondition)
-
-   SpringDocGroovyConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'groovy.lang.MetaClass' (OnClassCondition)
-
-   SpringDocHateoasConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.springframework.hateoas.server.LinkRelationProvider' (OnClassCondition)
-
-   SpringDocJacksonKotlinModuleConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'com.fasterxml.jackson.module.kotlin.KotlinModule' (OnClassCondition)
-
-   SpringDocJavadocConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'com.github.therapi.runtimejavadoc.CommentFormatter' (OnClassCondition)
-
-   SpringDocKotlinConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'kotlin.coroutines.Continuation' (OnClassCondition)
-
-   SpringDocKotlinxConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'kotlinx.coroutines.flow.Flow' (OnClassCondition)
-
-   SpringDocSecurityConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.springframework.security.web.SecurityFilterChain' (OnClassCondition)
-
-   SpringDocSortConfiguration#dataRestDelegatingMethodParameterCustomizer:
-      Did not match:
-         - @ConditionalOnMissingBean (types: org.springdoc.core.customizers.DataRestDelegatingMethodParameterCustomizer; SearchStrategy: all) found beans of type 'org.springdoc.core.customizers.DataRestDelegatingMethodParameterCustomizer' dataRestDelegatingMethodParameterCustomizer (OnBeanCondition)
-
-   SpringDocWebMvcConfiguration.SpringDocWebMvcActuatorConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.springframework.boot.actuate.endpoint.web.servlet.WebMvcEndpointHandlerMapping' (OnClassCondition)
-
-   SwaggerConfig#springWebProvider:
-      Did not match:
-         - @ConditionalOnMissingBean (types: org.springdoc.core.providers.SpringWebProvider; SearchStrategy: all) found beans of type 'org.springdoc.core.providers.SpringWebProvider' springWebProvider (OnBeanCondition)
-
-   SwaggerConfig#swaggerUiHome:
-      Did not match:
-         - @ConditionalOnProperty (springdoc.swagger-ui.use-root-path=true) did not find property 'springdoc.swagger-ui.use-root-path' (OnPropertyCondition)
-
-   SwaggerConfig.SwaggerActuatorWelcomeConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.springframework.boot.actuate.endpoint.web.servlet.WebMvcEndpointHandlerMapping' (OnClassCondition)
-
-   TaskExecutorConfigurations.AsyncConfigurerWrapperConfiguration:
-      Did not match:
-         - @ConditionalOnBean (types: org.springframework.scheduling.annotation.AsyncConfigurer; SearchStrategy: all) did not find any beans of type org.springframework.scheduling.annotation.AsyncConfigurer (OnBeanCondition)
-
-   TaskExecutorConfigurations.SimpleAsyncTaskExecutorBuilderConfiguration#simpleAsyncTaskExecutorBuilderVirtualThreads:
-      Did not match:
-         - @ConditionalOnMissingBean (types: org.springframework.boot.task.SimpleAsyncTaskExecutorBuilder; SearchStrategy: all) found beans of type 'org.springframework.boot.task.SimpleAsyncTaskExecutorBuilder' simpleAsyncTaskExecutorBuilder (OnBeanCondition)
-
-   TaskExecutorConfigurations.TaskExecutorConfiguration#applicationTaskExecutorVirtualThreads:
-      Did not match:
-         - @ConditionalOnThreading did not find VIRTUAL (OnThreadingCondition)
-
-   TaskSchedulingAutoConfiguration#scheduledBeanLazyInitializationExcludeFilter:
-      Did not match:
-         - @ConditionalOnBean (names: org.springframework.scheduling.config.internalScheduledAnnotationProcessor; SearchStrategy: all) did not find any beans named org.springframework.scheduling.config.internalScheduledAnnotationProcessor (OnBeanCondition)
-
-   TaskSchedulingConfigurations.SimpleAsyncTaskSchedulerBuilderConfiguration#simpleAsyncTaskSchedulerBuilderVirtualThreads:
-      Did not match:
-         - @ConditionalOnMissingBean (types: org.springframework.boot.task.SimpleAsyncTaskSchedulerBuilder; SearchStrategy: all) found beans of type 'org.springframework.boot.task.SimpleAsyncTaskSchedulerBuilder' simpleAsyncTaskSchedulerBuilder (OnBeanCondition)
-
-   TaskSchedulingConfigurations.TaskSchedulerConfiguration:
-      Did not match:
-         - @ConditionalOnBean (names: org.springframework.scheduling.config.internalScheduledAnnotationProcessor; SearchStrategy: all) did not find any beans named org.springframework.scheduling.config.internalScheduledAnnotationProcessor (OnBeanCondition)
-
-   TomcatMetricsAutoConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'io.micrometer.core.instrument.binder.tomcat.TomcatMetrics' (OnClassCondition)
-
-   TomcatReactiveManagementContextAutoConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.springframework.boot.actuate.autoconfigure.web.server.ManagementContextFactory' (OnClassCondition)
-
-   TomcatReactiveWebServerAutoConfiguration:
-      Did not match:
-         - @ConditionalOnWebApplication did not find reactive web application classes (OnWebApplicationCondition)
-
-   TomcatServletManagementContextAutoConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.springframework.boot.actuate.autoconfigure.web.server.ManagementContextFactory' (OnClassCondition)
-
-   TomcatServletWebServerAutoConfiguration#tomcatForwardedHeaderFilterCustomizer:
-      Did not match:
-         - @ConditionalOnProperty (server.forward-headers-strategy=framework) did not find property 'server.forward-headers-strategy' (OnPropertyCondition)
-
-   TomcatWebServerConfiguration#tomcatVirtualThreadsProtocolHandlerCustomizer:
-      Did not match:
-         - @ConditionalOnThreading did not find VIRTUAL (OnThreadingCondition)
-
-   TransactionAutoConfiguration#transactionalOperator:
-      Did not match:
-         - @ConditionalOnSingleCandidate (types: org.springframework.transaction.ReactiveTransactionManager; SearchStrategy: all) did not find any beans (OnBeanCondition)
-
-   TransactionAutoConfiguration.AspectJTransactionManagementConfiguration:
-      Did not match:
-         - @ConditionalOnBean (types: org.springframework.transaction.aspectj.AbstractTransactionAspect; SearchStrategy: all) did not find any beans of type org.springframework.transaction.aspectj.AbstractTransactionAspect (OnBeanCondition)
-
-   TransactionAutoConfiguration.EnableTransactionManagementConfiguration.JdkDynamicAutoProxyConfiguration:
-      Did not match:
-         - @ConditionalOnBooleanProperty (spring.aop.proxy-target-class=false) did not find property 'spring.aop.proxy-target-class' (OnPropertyCondition)
-
-   WebMvcAutoConfiguration#hiddenHttpMethodFilter:
-      Did not match:
-         - @ConditionalOnBooleanProperty (spring.mvc.hiddenmethod.filter.enabled=true) did not find property 'spring.mvc.hiddenmethod.filter.enabled' (OnPropertyCondition)
-
-   WebMvcAutoConfiguration.ProblemDetailsErrorHandlingConfiguration:
-      Did not match:
-         - @ConditionalOnBooleanProperty (spring.mvc.problemdetails.enabled=true) did not find property 'spring.mvc.problemdetails.enabled' (OnPropertyCondition)
-
-   WebMvcAutoConfiguration.WebMvcAutoConfigurationAdapter#beanNameViewResolver:
-      Did not match:
-         - @ConditionalOnMissingBean (types: org.springframework.web.servlet.view.BeanNameViewResolver; SearchStrategy: all) found beans of type 'org.springframework.web.servlet.view.BeanNameViewResolver' beanNameViewResolver (OnBeanCondition)
-
-   WebMvcHealthEndpointExtensionAutoConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.springframework.boot.health.actuate.endpoint.HealthEndpoint' (OnClassCondition)
-
-   WebMvcMappingsAutoConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint' (OnClassCondition)
-
-   WebMvcObservationAutoConfiguration:
-      Did not match:
-         - @ConditionalOnBean (types: io.micrometer.observation.ObservationRegistry; SearchStrategy: all) did not find any beans of type io.micrometer.observation.ObservationRegistry (OnBeanCondition)
-      Matched:
-         - @ConditionalOnClass found required classes 'org.springframework.web.servlet.DispatcherServlet', 'io.micrometer.observation.Observation' (OnClassCondition)
-         - found 'session' scope (OnWebApplicationCondition)
-
-   WebMvcObservationAutoConfiguration.MeterFilterConfiguration:
-      Did not match:
-         - @ConditionalOnClass did not find required class 'io.micrometer.core.instrument.MeterRegistry' (OnClassCondition)
-         - Ancestor org.springframework.boot.webmvc.autoconfigure.WebMvcObservationAutoConfiguration did not match (ConditionEvaluationReport.AncestorsMatchedCondition)
-
-   XADataSourceAutoConfiguration:
-      Did not match:
-         - @ConditionalOnBean (types: org.springframework.boot.jdbc.XADataSourceWrapper; SearchStrategy: all) did not find any beans of type org.springframework.boot.jdbc.XADataSourceWrapper (OnBeanCondition)
-      Matched:
-         - @ConditionalOnClass found required classes 'javax.sql.DataSource', 'jakarta.transaction.TransactionManager', 'org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType' (OnClassCondition)
-
-
-Exclusions:
------------
-
-    None
-
-
-Unconditional classes:
-----------------------
-
-    org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration
-
-    org.springframework.boot.autoconfigure.ssl.SslAutoConfiguration
-
-    org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration
-
-    org.springframework.boot.autoconfigure.context.LifecycleAutoConfiguration
-
-    org.springdoc.core.configuration.SpringDocSpecPropertiesConfiguration
-
-    org.springframework.boot.autoconfigure.availability.ApplicationAvailabilityAutoConfiguration
-
-    org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration
-
-
-
-2025-12-31 16:13:17 [Test worker] INFO  o.s.b.a.l.ConditionEvaluationReportLogger -
-
-Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
-2025-12-31 16:13:17 [Test worker] ERROR o.s.b.d.LoggingFailureAnalysisReporter -
-
-***************************
-APPLICATION FAILED TO START
-***************************
-
-Description:
-
-Parameter 0 of constructor in com.hanumoka.sado.minipacs.storage.strategy.PresignedUrlAccessStrategy required a bean of type 'software.amazon.awssdk.services.s3.presigner.S3Presigner' that could not be found.
-
-
-Action:
-
-Consider defining a bean of type 'software.amazon.awssdk.services.s3.presigner.S3Presigner' in your configuration.
-
-2025-12-31 16:13:17 [Test worker] WARN  o.s.test.context.TestContextManager - Caught exception while allowing TestExecutionListener [org.springframework.test.context.support.DependencyInjectionTestExecutionListener] to prepare test instance [com.hanumoka.sado.minipacs.controller.PatientControllerTest@541c7857]
-java.lang.IllegalStateException: Failed to load ApplicationContext for [WebMergedContextConfiguration@7375e6c1 testClass = com.hanumoka.sado.minipacs.controller.PatientControllerTest.CreatePatientTests, locations = [], classes = [com.hanumoka.sado.minipacs.MiniPacsApplication], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@781a9412, [ImportsContextCustomizer@596c6c3e key = [com.hanumoka.sado.minipacs.support.BaseIntegrationTest$S3ClientTestConfig]], org.springframework.boot.test.context.PropertyMappingContextCustomizer@0, org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@272a179c, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@644abb8f, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@0, org.springframework.boot.web.server.context.SpringBootTestRandomPortContextCustomizerFactory$Customizer@3fbfa96, org.springframework.boot.test.context.SpringBootTestAnnotation@9bd5a368], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
-	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.lambda$loadContext$0(DefaultCacheAwareContextLoaderDelegate.java:195)
-	at org.springframework.test.context.cache.DefaultContextCache.put(DefaultContextCache.java:172)
-	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:160)
-	at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:128)
-	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:155)
-	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:111)
-	at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
-	at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:205)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$1(ClassBasedTestDescriptor.java:423)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.executeAndMaskThrowable(ClassBasedTestDescriptor.java:428)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$0(ClassBasedTestDescriptor.java:422)
-	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
-	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
-	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
-	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
-	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
-	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
-	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
-	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
-	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
-	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
-	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.invokeTestInstancePostProcessors(ClassBasedTestDescriptor.java:422)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$instantiateAndPostProcessTestInstance$0(ClassBasedTestDescriptor.java:334)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.instantiateAndPostProcessTestInstance(ClassBasedTestDescriptor.java:333)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$testInstancesProvider$1(ClassBasedTestDescriptor.java:322)
-	at java.base/java.util.Optional.orElseGet(Optional.java:364)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$testInstancesProvider$0(ClassBasedTestDescriptor.java:321)
-	at org.junit.jupiter.engine.descriptor.NestedClassTestDescriptor.instantiateTestClass(NestedClassTestDescriptor.java:108)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.instantiateAndPostProcessTestInstance(ClassBasedTestDescriptor.java:332)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$testInstancesProvider$1(ClassBasedTestDescriptor.java:322)
-	at java.base/java.util.Optional.orElseGet(Optional.java:364)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$testInstancesProvider$0(ClassBasedTestDescriptor.java:321)
-	at org.junit.jupiter.engine.execution.TestInstancesProvider.getTestInstances(TestInstancesProvider.java:27)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$prepare$0(TestMethodTestDescriptor.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.prepare(TestMethodTestDescriptor.java:126)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.prepare(TestMethodTestDescriptor.java:70)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$prepare$0(NodeTestTask.java:144)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.prepare(NodeTestTask.java:144)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:110)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:36)
-	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:52)
-	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:58)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:246)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:218)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:179)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:66)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:157)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:65)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:125)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:93)
-	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:48)
-	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$0(InterceptingLauncher.java:41)
-	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25)
-	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:40)
-	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:48)
-	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.processAllTestClasses(JUnitPlatformTestClassProcessor.java:135)
-	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.access$000(JUnitPlatformTestClassProcessor.java:110)
-	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.stop(JUnitPlatformTestClassProcessor.java:104)
-	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.stop(SuiteTestClassProcessor.java:64)
-	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
-	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77)
-	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28)
-	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19)
-	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
-	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88)
-	at jdk.proxy1/jdk.proxy1.$Proxy4.stop(Unknown Source)
-	at org.gradle.api.internal.tasks.testing.worker.TestWorker$3.run(TestWorker.java:194)
-	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126)
-	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
-	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
-	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
-	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
-	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
-	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
-	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
-Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'instanceController' defined in file [C:\Users\amagr\project\sado\sado_be\sado-minipacs\build\classes\java\main\com\hanumoka\sado\minipacs\controller\InstanceController.class]: Unsatisfied dependency expressed through constructor parameter 5: Error creating bean with name 'presignedUrlAccessStrategy' defined in file [C:\Users\amagr\project\sado\sado_be\sado-minipacs\build\classes\java\main\com\hanumoka\sado\minipacs\storage\strategy\PresignedUrlAccessStrategy.class]: Unsatisfied dependency expressed through constructor parameter 0: No qualifying bean of type 'software.amazon.awssdk.services.s3.presigner.S3Presigner' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
-	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:804)
-	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:240)
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1382)
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1221)
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:565)
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:525)
-	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:333)
-	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371)
-	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:331)
-	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:196)
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.instantiateSingleton(DefaultListableBeanFactory.java:1218)
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingleton(DefaultListableBeanFactory.java:1184)
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:1121)
-	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:993)
-	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:620)
-	at org.springframework.boot.web.server.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:143)
-	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:756)
-	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:445)
-	at org.springframework.boot.SpringApplication.run(SpringApplication.java:321)
-	at org.springframework.boot.test.context.SpringBootContextLoader.lambda$loadContext$2(SpringBootContextLoader.java:156)
-	at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:58)
-	at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:46)
-	at org.springframework.boot.SpringApplication.withHook(SpringApplication.java:1465)
-	at org.springframework.boot.test.context.SpringBootContextLoader$ContextLoaderHook.run(SpringBootContextLoader.java:605)
-	at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:156)
-	at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:115)
-	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContextInternal(DefaultCacheAwareContextLoaderDelegate.java:247)
-	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.lambda$loadContext$0(DefaultCacheAwareContextLoaderDelegate.java:167)
-	... 111 common frames omitted
-Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'presignedUrlAccessStrategy' defined in file [C:\Users\amagr\project\sado\sado_be\sado-minipacs\build\classes\java\main\com\hanumoka\sado\minipacs\storage\strategy\PresignedUrlAccessStrategy.class]: Unsatisfied dependency expressed through constructor parameter 0: No qualifying bean of type 'software.amazon.awssdk.services.s3.presigner.S3Presigner' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
-	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:804)
-	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:240)
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1382)
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1221)
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:565)
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:525)
-	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:333)
-	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371)
-	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:331)
-	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:201)
-	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:229)
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1762)
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1651)
-	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:912)
-	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:791)
-	... 138 common frames omitted
-Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'software.amazon.awssdk.services.s3.presigner.S3Presigner' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.raiseNoMatchingBeanFound(DefaultListableBeanFactory.java:2297)
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1725)
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1651)
-	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:912)
-	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:791)
-	... 152 common frames omitted
-2025-12-31 16:13:17 [Test worker] WARN  o.s.test.context.TestContextManager - Caught exception while allowing TestExecutionListener [org.springframework.test.context.support.DependencyInjectionTestExecutionListener] to prepare test instance [com.hanumoka.sado.minipacs.controller.PatientControllerTest$CreatePatientTests@7768ffae]
-java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@7375e6c1 testClass = com.hanumoka.sado.minipacs.controller.PatientControllerTest.CreatePatientTests, locations = [], classes = [com.hanumoka.sado.minipacs.MiniPacsApplication], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@781a9412, [ImportsContextCustomizer@596c6c3e key = [com.hanumoka.sado.minipacs.support.BaseIntegrationTest$S3ClientTestConfig]], org.springframework.boot.test.context.PropertyMappingContextCustomizer@0, org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@272a179c, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@644abb8f, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@0, org.springframework.boot.web.server.context.SpringBootTestRandomPortContextCustomizerFactory$Customizer@3fbfa96, org.springframework.boot.test.context.SpringBootTestAnnotation@9bd5a368], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
-	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:157)
-	at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:128)
-	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:155)
-	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:111)
-	at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
-	at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:205)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$1(ClassBasedTestDescriptor.java:423)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.executeAndMaskThrowable(ClassBasedTestDescriptor.java:428)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$0(ClassBasedTestDescriptor.java:422)
-	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
-	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
-	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
-	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
-	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
-	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
-	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
-	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
-	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
-	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
-	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.invokeTestInstancePostProcessors(ClassBasedTestDescriptor.java:422)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$instantiateAndPostProcessTestInstance$0(ClassBasedTestDescriptor.java:334)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.instantiateAndPostProcessTestInstance(ClassBasedTestDescriptor.java:333)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$testInstancesProvider$1(ClassBasedTestDescriptor.java:322)
-	at java.base/java.util.Optional.orElseGet(Optional.java:364)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$testInstancesProvider$0(ClassBasedTestDescriptor.java:321)
-	at org.junit.jupiter.engine.execution.TestInstancesProvider.getTestInstances(TestInstancesProvider.java:27)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$prepare$0(TestMethodTestDescriptor.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.prepare(TestMethodTestDescriptor.java:126)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.prepare(TestMethodTestDescriptor.java:70)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$prepare$0(NodeTestTask.java:144)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.prepare(NodeTestTask.java:144)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:110)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:36)
-	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:52)
-	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:58)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:246)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:218)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:179)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:66)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:157)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:65)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:125)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:93)
-	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:48)
-	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$0(InterceptingLauncher.java:41)
-	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25)
-	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:40)
-	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:48)
-	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.processAllTestClasses(JUnitPlatformTestClassProcessor.java:135)
-	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.access$000(JUnitPlatformTestClassProcessor.java:110)
-	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.stop(JUnitPlatformTestClassProcessor.java:104)
-	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.stop(SuiteTestClassProcessor.java:64)
-	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
-	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77)
-	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28)
-	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19)
-	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
-	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88)
-	at jdk.proxy1/jdk.proxy1.$Proxy4.stop(Unknown Source)
-	at org.gradle.api.internal.tasks.testing.worker.TestWorker$3.run(TestWorker.java:194)
-	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126)
-	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
-	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
-	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
-	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
-	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
-	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
-	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
-
-Failed to load ApplicationContext for [WebMergedContextConfiguration@7375e6c1 testClass = com.hanumoka.sado.minipacs.controller.PatientControllerTest.CreatePatientTests, locations = [], classes = [com.hanumoka.sado.minipacs.MiniPacsApplication], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@781a9412, [ImportsContextCustomizer@596c6c3e key = [com.hanumoka.sado.minipacs.support.BaseIntegrationTest$S3ClientTestConfig]], org.springframework.boot.test.context.PropertyMappingContextCustomizer@0, org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@272a179c, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@644abb8f, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@0, org.springframework.boot.web.server.context.SpringBootTestRandomPortContextCustomizerFactory$Customizer@3fbfa96, org.springframework.boot.test.context.SpringBootTestAnnotation@9bd5a368], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
-java.lang.IllegalStateException: Failed to load ApplicationContext for [WebMergedContextConfiguration@7375e6c1 testClass = com.hanumoka.sado.minipacs.controller.PatientControllerTest.CreatePatientTests, locations = [], classes = [com.hanumoka.sado.minipacs.MiniPacsApplication], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@781a9412, [ImportsContextCustomizer@596c6c3e key = [com.hanumoka.sado.minipacs.support.BaseIntegrationTest$S3ClientTestConfig]], org.springframework.boot.test.context.PropertyMappingContextCustomizer@0, org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@272a179c, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@644abb8f, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@0, org.springframework.boot.web.server.context.SpringBootTestRandomPortContextCustomizerFactory$Customizer@3fbfa96, org.springframework.boot.test.context.SpringBootTestAnnotation@9bd5a368], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
-	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.lambda$loadContext$0(DefaultCacheAwareContextLoaderDelegate.java:195)
-	at org.springframework.test.context.cache.DefaultContextCache.put(DefaultContextCache.java:172)
-	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:160)
-	at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:128)
-	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:155)
-	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:111)
-	at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
-	at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:205)
-	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
-	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
-	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
-	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
-	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
-	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
-	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
-	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
-	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
-	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
-	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
-	at java.base/java.util.Optional.orElseGet(Optional.java:364)
-	at java.base/java.util.Optional.orElseGet(Optional.java:364)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
-	Suppressed: java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@7375e6c1 testClass = com.hanumoka.sado.minipacs.controller.PatientControllerTest.CreatePatientTests, locations = [], classes = [com.hanumoka.sado.minipacs.MiniPacsApplication], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@781a9412, [ImportsContextCustomizer@596c6c3e key = [com.hanumoka.sado.minipacs.support.BaseIntegrationTest$S3ClientTestConfig]], org.springframework.boot.test.context.PropertyMappingContextCustomizer@0, org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@272a179c, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@644abb8f, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@0, org.springframework.boot.web.server.context.SpringBootTestRandomPortContextCustomizerFactory$Customizer@3fbfa96, org.springframework.boot.test.context.SpringBootTestAnnotation@9bd5a368], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
-		at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:157)
-		at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:128)
-		at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:155)
-		at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:111)
-		at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
-		at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:205)
-		at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
-		at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
-		at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
-		at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
-		at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
-		at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
-		at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
-		at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
-		at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
-		at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
-		at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
-		... 4 more
-Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'instanceController' defined in file [C:\Users\amagr\project\sado\sado_be\sado-minipacs\build\classes\java\main\com\hanumoka\sado\minipacs\controller\InstanceController.class]: Unsatisfied dependency expressed through constructor parameter 5: Error creating bean with name 'presignedUrlAccessStrategy' defined in file [C:\Users\amagr\project\sado\sado_be\sado-minipacs\build\classes\java\main\com\hanumoka\sado\minipacs\storage\strategy\PresignedUrlAccessStrategy.class]: Unsatisfied dependency expressed through constructor parameter 0: No qualifying bean of type 'software.amazon.awssdk.services.s3.presigner.S3Presigner' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
-	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:804)
-	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:240)
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1382)
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1221)
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:565)
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:525)
-	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:333)
-	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371)
-	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:331)
-	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:196)
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.instantiateSingleton(DefaultListableBeanFactory.java:1218)
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingleton(DefaultListableBeanFactory.java:1184)
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:1121)
-	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:993)
-	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:620)
-	at org.springframework.boot.web.server.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:143)
-	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:756)
-	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:445)
-	at org.springframework.boot.SpringApplication.run(SpringApplication.java:321)
-	at org.springframework.boot.test.context.SpringBootContextLoader.lambda$loadContext$2(SpringBootContextLoader.java:156)
-	at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:58)
-	at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:46)
-	at org.springframework.boot.SpringApplication.withHook(SpringApplication.java:1465)
-	at org.springframework.boot.test.context.SpringBootContextLoader$ContextLoaderHook.run(SpringBootContextLoader.java:605)
-	at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:156)
-	at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:115)
-	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContextInternal(DefaultCacheAwareContextLoaderDelegate.java:247)
-	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.lambda$loadContext$0(DefaultCacheAwareContextLoaderDelegate.java:167)
-	... 23 more
-Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'presignedUrlAccessStrategy' defined in file [C:\Users\amagr\project\sado\sado_be\sado-minipacs\build\classes\java\main\com\hanumoka\sado\minipacs\storage\strategy\PresignedUrlAccessStrategy.class]: Unsatisfied dependency expressed through constructor parameter 0: No qualifying bean of type 'software.amazon.awssdk.services.s3.presigner.S3Presigner' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
-	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:804)
-	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:240)
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1382)
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1221)
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:565)
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:525)
-	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:333)
-	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371)
-	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:331)
-	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:201)
-	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:229)
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1762)
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1651)
-	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:912)
-	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:791)
-	... 50 more
-Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'software.amazon.awssdk.services.s3.presigner.S3Presigner' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.raiseNoMatchingBeanFound(DefaultListableBeanFactory.java:2297)
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1725)
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1651)
-	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:912)
-	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:791)
-	... 64 more
-
-
-Error creating bean with name 'instanceController' defined in file [C:\Users\amagr\project\sado\sado_be\sado-minipacs\build\classes\java\main\com\hanumoka\sado\minipacs\controller\InstanceController.class]: Unsatisfied dependency expressed through constructor parameter 5: Error creating bean with name 'presignedUrlAccessStrategy' defined in file [C:\Users\amagr\project\sado\sado_be\sado-minipacs\build\classes\java\main\com\hanumoka\sado\minipacs\storage\strategy\PresignedUrlAccessStrategy.class]: Unsatisfied dependency expressed through constructor parameter 0: No qualifying bean of type 'software.amazon.awssdk.services.s3.presigner.S3Presigner' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
-org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'instanceController' defined in file [C:\Users\amagr\project\sado\sado_be\sado-minipacs\build\classes\java\main\com\hanumoka\sado\minipacs\controller\InstanceController.class]: Unsatisfied dependency expressed through constructor parameter 5: Error creating bean with name 'presignedUrlAccessStrategy' defined in file [C:\Users\amagr\project\sado\sado_be\sado-minipacs\build\classes\java\main\com\hanumoka\sado\minipacs\storage\strategy\PresignedUrlAccessStrategy.class]: Unsatisfied dependency expressed through constructor parameter 0: No qualifying bean of type 'software.amazon.awssdk.services.s3.presigner.S3Presigner' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
-	at app//org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:804)
-	at app//org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:240)
-	at app//org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1382)
-	at app//org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1221)
-	at app//org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:565)
-	at app//org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:525)
-	at app//org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:333)
-	at app//org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371)
-	at app//org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:331)
-	at app//org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:196)
-	at app//org.springframework.beans.factory.support.DefaultListableBeanFactory.instantiateSingleton(DefaultListableBeanFactory.java:1218)
-	at app//org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingleton(DefaultListableBeanFactory.java:1184)
-	at app//org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:1121)
-	at app//org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:993)
-	at app//org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:620)
-	at app//org.springframework.boot.web.server.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:143)
-	at app//org.springframework.boot.SpringApplication.refresh(SpringApplication.java:756)
-	at app//org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:445)
-	at app//org.springframework.boot.SpringApplication.run(SpringApplication.java:321)
-	at app//org.springframework.boot.test.context.SpringBootContextLoader.lambda$loadContext$2(SpringBootContextLoader.java:156)
-	at app//org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:58)
-	at app//org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:46)
-	at app//org.springframework.boot.SpringApplication.withHook(SpringApplication.java:1465)
-	at app//org.springframework.boot.test.context.SpringBootContextLoader$ContextLoaderHook.run(SpringBootContextLoader.java:605)
-	at app//org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:156)
-	at app//org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:115)
-	at app//org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContextInternal(DefaultCacheAwareContextLoaderDelegate.java:247)
-	at app//org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.lambda$loadContext$0(DefaultCacheAwareContextLoaderDelegate.java:167)
-	at app//org.springframework.test.context.cache.DefaultContextCache.put(DefaultContextCache.java:172)
-	at app//org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:160)
-	at app//org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:128)
-	at app//org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:155)
-	at app//org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:111)
-	at app//org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
-	at app//org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:205)
-	at java.base@21.0.2/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
-	at java.base@21.0.2/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
-	at java.base@21.0.2/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
-	at java.base@21.0.2/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
-	at java.base@21.0.2/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
-	at java.base@21.0.2/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
-	at java.base@21.0.2/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
-	at java.base@21.0.2/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
-	at java.base@21.0.2/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
-	at java.base@21.0.2/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
-	at java.base@21.0.2/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
-	at java.base@21.0.2/java.util.Optional.orElseGet(Optional.java:364)
-	at java.base@21.0.2/java.util.Optional.orElseGet(Optional.java:364)
-	at java.base@21.0.2/java.util.ArrayList.forEach(ArrayList.java:1596)
-	at java.base@21.0.2/java.util.ArrayList.forEach(ArrayList.java:1596)
-	at java.base@21.0.2/java.util.ArrayList.forEach(ArrayList.java:1596)
-Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'presignedUrlAccessStrategy' defined in file [C:\Users\amagr\project\sado\sado_be\sado-minipacs\build\classes\java\main\com\hanumoka\sado\minipacs\storage\strategy\PresignedUrlAccessStrategy.class]: Unsatisfied dependency expressed through constructor parameter 0: No qualifying bean of type 'software.amazon.awssdk.services.s3.presigner.S3Presigner' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
-	at app//org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:804)
-	at app//org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:240)
-	at app//org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1382)
-	at app//org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1221)
-	at app//org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:565)
-	at app//org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:525)
-	at app//org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:333)
-	at app//org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371)
-	at app//org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:331)
-	at app//org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:201)
-	at app//org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:229)
-	at app//org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1762)
-	at app//org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1651)
-	at app//org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:912)
-	at app//org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:791)
-	... 50 more
-Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'software.amazon.awssdk.services.s3.presigner.S3Presigner' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
-	at app//org.springframework.beans.factory.support.DefaultListableBeanFactory.raiseNoMatchingBeanFound(DefaultListableBeanFactory.java:2297)
-	at app//org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1725)
-	at app//org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1651)
-	at app//org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:912)
-	at app//org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:791)
-	... 64 more
-
-
-
-> Task :sado-minipacs:test
-PatientController Integration Tests > POST /api/patients - 환자 생성 > 정상적인 환자 생성 요청 시 200 OK와 환자 정보 반환 FAILED
-    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:195
-        Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException at ConstructorResolver.java:804
-            Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException at ConstructorResolver.java:804
-                Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException at DefaultListableBeanFactory.java:2297
-1 test completed, 1 failed
-> Task :sado-minipacs:test FAILED
-[Incubating] Problems report is available at: file:///C:/Users/amagr/project/sado/sado_be/build/reports/problems/problems-report.html
-FAILURE: Build failed with an exception.
-* What went wrong:
-Execution failed for task ':sado-minipacs:test'.
-> There were failing tests. See the report at: file:///C:/Users/amagr/project/sado/sado_be/sado-minipacs/build/reports/tests/test/index.html
-* Try:
-> Run with --scan to generate a Build Scan (powered by Develocity).
-
-Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
-
-You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
-
-For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
-BUILD FAILED in 11s
-7 actionable tasks: 1 executed, 6 up-to-date
+2026-01-05 17:55:29 [http-nio-10201-exec-2] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-01-05 17:55:29 [http-nio-10201-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - Detected StandardServletMultipartResolver
+2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - Detected AcceptHeaderLocaleResolver
+2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@79749108
+2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.support.SessionFlashMapManager@5be872b6
+2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - enableLoggingRequestDetails='false': request parameters and headers will be masked to prevent unsafe logging of potentially sensitive data
+2026-01-05 17:55:29 [http-nio-10201-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 5 ms
+2026-01-05 17:55:29 [http-nio-10201-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - POST "/dicomweb/studies", parameters={multipart}
+2026-01-05 17:55:29 [http-nio-10201-exec-3] DEBUG o.s.web.servlet.DispatcherServlet - POST "/dicomweb/studies", parameters={multipart}
+2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - POST "/dicomweb/studies", parameters={multipart}
+2026-01-05 17:55:29 [http-nio-10201-exec-3] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#storeInstance(MultipartFile)
+2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#storeInstance(MultipartFile)
+2026-01-05 17:55:29 [http-nio-10201-exec-3] INFO  c.h.s.m.c.DicomWebController - STOW-RS: Upload request - filename: ORG-2-1.2.840.113619.2.391.60843.1754902147.10.1.dcm, size: 377304 bytes
+2026-01-05 17:55:29 [http-nio-10201-exec-2] INFO  c.h.s.m.c.DicomWebController - STOW-RS: Upload request - filename: ORG-2-1.2.840.113619.2.391.60843.1754902162.12.1.512.dcm, size: 6559644 bytes
+2026-01-05 17:55:29 [http-nio-10201-exec-3] INFO  c.h.s.m.d.service.InstanceService - uploadDicomFile - filename: ORG-2-1.2.840.113619.2.391.60843.1754902147.10.1.dcm, size: 377304 bytes
+2026-01-05 17:55:29 [http-nio-10201-exec-2] INFO  c.h.s.m.d.service.InstanceService - uploadDicomFile - filename: ORG-2-1.2.840.113619.2.391.60843.1754902162.12.1.512.dcm, size: 6559644 bytes
+2026-01-05 17:55:29 [http-nio-10201-exec-3] DEBUG c.h.s.m.d.util.DicomFileValidator - 파일 확장자 검증 성공: ORG-2-1.2.840.113619.2.391.60843.1754902147.10.1.dcm
+2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG c.h.s.m.d.util.DicomFileValidator - 파일 확장자 검증 성공: ORG-2-1.2.840.113619.2.391.60843.1754902162.12.1.512.dcm
+2026-01-05 17:55:29 [http-nio-10201-exec-3] DEBUG c.h.s.m.d.util.DicomFileValidator - DICOM magic number 검증 성공
+2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG c.h.s.m.d.util.DicomFileValidator - DICOM magic number 검증 성공
+2026-01-05 17:55:29 [http-nio-10201-exec-1] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#storeInstance(MultipartFile)
+2026-01-05 17:55:29 [http-nio-10201-exec-1] INFO  c.h.s.m.c.DicomWebController - STOW-RS: Upload request - filename: ORG-2-1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm, size: 14842110 bytes
+2026-01-05 17:55:29 [http-nio-10201-exec-1] INFO  c.h.s.m.d.service.InstanceService - uploadDicomFile - filename: ORG-2-1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm, size: 14842110 bytes
+2026-01-05 17:55:29 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.util.DicomFileValidator - 파일 확장자 검증 성공: ORG-2-1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm
+2026-01-05 17:55:29 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.util.DicomFileValidator - DICOM magic number 검증 성공
+2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 19771025 with pattern: yyyyMMdd
+2026-01-05 17:55:29 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 19771025 with pattern: yyyyMMdd
+2026-01-05 17:55:29 [http-nio-10201-exec-3] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 19771025 with pattern: yyyyMMdd
+2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 20250811 with pattern: yyyyMMdd
+2026-01-05 17:55:29 [http-nio-10201-exec-3] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 20250811 with pattern: yyyyMMdd
+2026-01-05 17:55:29 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 20250811 with pattern: yyyyMMdd
+2026-01-05 17:55:29 [http-nio-10201-exec-2] INFO  c.h.s.m.d.service.InstanceService - DICOM metadata extracted: PatientID=39151975, StudyUID=1.2.410.2000010.82.2291.3915197250325002, SeriesUID=1.2.840.113619.2.391.60843.1754901917.1.1, SOPInstanceUID=1.2.840.113619.2.391.60843.1754902162.12.1.512
+2026-01-05 17:55:29 [http-nio-10201-exec-1] INFO  c.h.s.m.d.service.InstanceService - DICOM metadata extracted: PatientID=39151975, StudyUID=1.2.410.2000010.82.2291.3915197250325002, SeriesUID=1.2.840.113619.2.391.60843.1754901917.1.1, SOPInstanceUID=1.2.840.113619.2.391.60843.1754902157.11.1.512
+2026-01-05 17:55:29 [http-nio-10201-exec-3] INFO  c.h.s.m.d.service.InstanceService - DICOM metadata extracted: PatientID=39151975, StudyUID=1.2.410.2000010.82.2291.3915197250325002, SeriesUID=1.2.840.113619.2.391.60843.1754901917.1.1, SOPInstanceUID=1.2.840.113619.2.391.60843.1754902147.10.1
+2026-01-05 17:55:30 [http-nio-10201-exec-2] DEBUG org.hibernate.SQL -
+    /* insert
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Patient
+        */insert
+    into
+        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at)
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate:
+    /* insert
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Patient
+        */insert
+    into
+        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at)
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-05 17:55:30 [http-nio-10201-exec-3] DEBUG org.hibernate.SQL -
+    /* insert
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Patient
+        */insert
+    into
+        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at)
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate:
+    /* insert
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Patient
+        */insert
+    into
+        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at)
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG org.hibernate.SQL -
+    /* insert
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Patient
+        */insert
+    into
+        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at)
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate:
+    /* insert
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Patient
+        */insert
+    into
+        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at)
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.d.service.PatientService - Created new patient: id=2, dicomPatientId=39151975
+2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.service.InstanceService - Patient resolved: id=2, dicomPatientId=39151975
+2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG org.hibernate.SQL -
+    /* insert
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Study
+        */insert
+    into
+        study (created_at, patient_id, study_date, study_description, study_instance_uid, tenant_id, updated_at)
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate:
+    /* insert
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Study
+        */insert
+    into
+        study (created_at, patient_id, study_date, study_description, study_instance_uid, tenant_id, updated_at)
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.domain.service.StudyService - Created new study: id=1, studyInstanceUid=1.2.410.2000010.82.2291.3915197250325002
+2026-01-05 17:55:30 [http-nio-10201-exec-2] WARN  org.hibernate.orm.jdbc.error - HHH000247: ErrorCode: 1062, SQLState: 23000
+2026-01-05 17:55:30 [http-nio-10201-exec-3] WARN  org.hibernate.orm.jdbc.error - HHH000247: ErrorCode: 1062, SQLState: 23000
+2026-01-05 17:55:30 [http-nio-10201-exec-2] WARN  org.hibernate.orm.jdbc.error - Duplicate entry '1-39151975-' for key 'patient.uk_patient_identity'
+2026-01-05 17:55:30 [http-nio-10201-exec-3] WARN  org.hibernate.orm.jdbc.error - Duplicate entry '1-39151975-' for key 'patient.uk_patient_identity'
+2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.service.InstanceService - Study resolved: id=1, studyInstanceUid=1.2.410.2000010.82.2291.3915197250325002
+2026-01-05 17:55:30 [http-nio-10201-exec-3] DEBUG c.h.s.m.d.service.PatientService - Race condition detected for patient: 39151975, selecting existing record
+2026-01-05 17:55:30 [http-nio-10201-exec-2] DEBUG c.h.s.m.d.service.PatientService - Race condition detected for patient: 39151975, selecting existing record
+2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG org.hibernate.SQL -
+    /* insert
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Series
+        */insert
+    into
+        series (body_part_examined, created_at, manufacturer, manufacturer_model_name, modality, series_description, series_instance_uid, series_number, study_id, tenant_id, updated_at)
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate:
+    /* insert
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Series
+        */insert
+    into
+        series (body_part_examined, created_at, manufacturer, manufacturer_model_name, modality, series_description, series_instance_uid, series_number, study_id, tenant_id, updated_at)
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.domain.service.SeriesService - Created new series: id=1, seriesInstanceUid=1.2.840.113619.2.391.60843.1754901917.1.1, modality=US
+2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.service.InstanceService - Series resolved: id=1, seriesInstanceUid=1.2.840.113619.2.391.60843.1754901917.1.1, modality=US
+2026-01-05 17:55:30 [http-nio-10201-exec-2] ERROR org.hibernate.orm.core - HHH000099: an assertion failure occurred (this may indicate a bug in Hibernate, but is more likely due to unsafe use of the session): org.hibernate.AssertionFailure: Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a null identifier (this can happen if the session is flushed after an exception occurs)
+2026-01-05 17:55:30 [http-nio-10201-exec-3] ERROR org.hibernate.orm.core - HHH000099: an assertion failure occurred (this may indicate a bug in Hibernate, but is more likely due to unsafe use of the session): org.hibernate.AssertionFailure: Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a null identifier (this can happen if the session is flushed after an exception occurs)
+2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG org.hibernate.SQL -
+    /* SELECT
+        i
+    FROM
+        Instance i
+    WHERE
+        i.sopInstanceUid = :sopInstanceUid */ select
+            i1_0.id,
+            i1_0.created_at,
+            i1_0.file_size,
+            i1_0.frame_rate,
+            i1_0.frame_rate_source,
+            i1_0.image_columns,
+            i1_0.image_rows,
+            i1_0.instance_number,
+            i1_0.number_of_frames,
+            i1_0.series_id,
+            i1_0.sop_class_uid,
+            i1_0.sop_instance_uid,
+            i1_0.storage_path,
+            i1_0.storage_tier,
+            i1_0.tenant_id,
+            i1_0.thumbnail_path,
+            i1_0.transcoding_status,
+            i1_0.updated_at,
+            i1_0.video_path
+        from
+            instance i1_0
+        where
+            i1_0.sop_instance_uid=?
+Hibernate:
+    /* SELECT
+        i
+    FROM
+        Instance i
+    WHERE
+        i.sopInstanceUid = :sopInstanceUid */ select
+            i1_0.id,
+            i1_0.created_at,
+            i1_0.file_size,
+            i1_0.frame_rate,
+            i1_0.frame_rate_source,
+            i1_0.image_columns,
+            i1_0.image_rows,
+            i1_0.instance_number,
+            i1_0.number_of_frames,
+            i1_0.series_id,
+            i1_0.sop_class_uid,
+            i1_0.sop_instance_uid,
+            i1_0.storage_path,
+            i1_0.storage_tier,
+            i1_0.tenant_id,
+            i1_0.thumbnail_path,
+            i1_0.transcoding_status,
+            i1_0.updated_at,
+            i1_0.video_path
+        from
+            instance i1_0
+        where
+            i1_0.sop_instance_uid=?
+2026-01-05 17:55:30 [http-nio-10201-exec-2] WARN  c.h.s.m.c.DicomWebController - STOW-RS: Runtime exception - Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a null identifier (this can happen if the session is flushed after an exception occurs)
+2026-01-05 17:55:30 [http-nio-10201-exec-3] WARN  c.h.s.m.c.DicomWebController - STOW-RS: Runtime exception - Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a null identifier (this can happen if the session is flushed after an exception occurs)
+2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG c.h.s.m.s.s.DicomwebPathStrategy - Generated DICOMweb path: studies/1.2.410.2000010.82.2291.3915197250325002/series/1.2.840.113619.2.391.60843.1754901917.1.1/instances/1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm
+2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.s.s.SeaweedFsS3StorageService - Uploading DICOM file with metadata: bucket=minipacs, s3Key=studies/1.2.410.2000010.82.2291.3915197250325002/series/1.2.840.113619.2.391.60843.1754901917.1.1/instances/1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm, strategy=DICOMweb Standard Path Strategy
+2026-01-05 17:55:30 [http-nio-10201-exec-3] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/dicom+json', given [application/dicom+json] and supported [application/json, application/*+json, application/yaml]
+2026-01-05 17:55:30 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/dicom+json', given [application/dicom+json] and supported [application/json, application/*+json, application/yaml]
+2026-01-05 17:55:30 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{success=false, error=Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a (truncated)...]
+2026-01-05 17:55:30 [http-nio-10201-exec-3] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{success=false, error=Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a (truncated)...]
+2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG c.h.s.m.s.s.SeaweedFsS3StorageService - File size calculated: 14842110 bytes
+2026-01-05 17:55:30 [http-nio-10201-exec-3] DEBUG o.s.web.servlet.DispatcherServlet - Completed 422 UNPROCESSABLE_CONTENT
+2026-01-05 17:55:30 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - Completed 422 UNPROCESSABLE_CONTENT
+2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG o.s.web.servlet.DispatcherServlet - POST "/dicomweb/studies", parameters={multipart}
+2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#storeInstance(MultipartFile)
+2026-01-05 17:55:30 [http-nio-10201-exec-4] INFO  c.h.s.m.c.DicomWebController - STOW-RS: Upload request - filename: ORG-2-1.2.840.113619.2.391.60843.1754902173.13.1.512.dcm, size: 15736060 bytes
+2026-01-05 17:55:30 [http-nio-10201-exec-4] INFO  c.h.s.m.d.service.InstanceService - uploadDicomFile - filename: ORG-2-1.2.840.113619.2.391.60843.1754902173.13.1.512.dcm, size: 15736060 bytes
+2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG c.h.s.m.d.util.DicomFileValidator - 파일 확장자 검증 성공: ORG-2-1.2.840.113619.2.391.60843.1754902173.13.1.512.dcm
+2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG c.h.s.m.d.util.DicomFileValidator - DICOM magic number 검증 성공
+2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 19771025 with pattern: yyyyMMdd
+2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 20250811 with pattern: yyyyMMdd
+2026-01-05 17:55:30 [http-nio-10201-exec-4] INFO  c.h.s.m.d.service.InstanceService - DICOM metadata extracted: PatientID=39151975, StudyUID=1.2.410.2000010.82.2291.3915197250325002, SeriesUID=1.2.840.113619.2.391.60843.1754901917.1.1, SOPInstanceUID=1.2.840.113619.2.391.60843.1754902173.13.1.512
+2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL -
+    /* insert
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Patient
+        */insert
+    into
+        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at)
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate:
+    /* insert
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Patient
+        */insert
+    into
+        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at)
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-05 17:55:30 [http-nio-10201-exec-4] WARN  org.hibernate.orm.jdbc.error - HHH000247: ErrorCode: 1062, SQLState: 23000
+2026-01-05 17:55:30 [http-nio-10201-exec-4] WARN  org.hibernate.orm.jdbc.error - Duplicate entry '1-39151975-' for key 'patient.uk_patient_identity'
+2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG c.h.s.m.d.service.PatientService - Race condition detected for patient: 39151975, selecting existing record
+2026-01-05 17:55:30 [http-nio-10201-exec-4] ERROR org.hibernate.orm.core - HHH000099: an assertion failure occurred (this may indicate a bug in Hibernate, but is more likely due to unsafe use of the session): org.hibernate.AssertionFailure: Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a null identifier (this can happen if the session is flushed after an exception occurs)
+2026-01-05 17:55:30 [http-nio-10201-exec-4] WARN  c.h.s.m.c.DicomWebController - STOW-RS: Runtime exception - Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a null identifier (this can happen if the session is flushed after an exception occurs)
+2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/dicom+json', given [application/dicom+json] and supported [application/json, application/*+json, application/yaml]
+2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{success=false, error=Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a (truncated)...]
+2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG o.s.web.servlet.DispatcherServlet - Completed 422 UNPROCESSABLE_CONTENT
+2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.s.s.SeaweedFsS3StorageService - DICOM file uploaded successfully: s3Key=studies/1.2.410.2000010.82.2291.3915197250325002/series/1.2.840.113619.2.391.60843.1754901917.1.1/instances/1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm, size=14842110 bytes
+2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.service.InstanceService - DICOM file uploaded to storage: s3Key=studies/1.2.410.2000010.82.2291.3915197250325002/series/1.2.840.113619.2.391.60843.1754901917.1.1/instances/1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm, size=14842110 bytes
+2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.service.InstanceService - Attempting to create instance: sopInstanceUid=1.2.840.113619.2.391.60843.1754902157.11.1.512 (may retry on conflict)
+2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG org.hibernate.SQL -
+    select
+        s1_0.id,
+        s1_0.body_part_examined,
+        s1_0.created_at,
+        s1_0.manufacturer,
+        s1_0.manufacturer_model_name,
+        s1_0.modality,
+        s1_0.series_description,
+        s1_0.series_instance_uid,
+        s1_0.series_number,
+        s1_0.study_id,
+        s1_0.tenant_id,
+        s1_0.updated_at
+    from
+        series s1_0
+    where
+        s1_0.id=?
+Hibernate:
+    select
+        s1_0.id,
+        s1_0.body_part_examined,
+        s1_0.created_at,
+        s1_0.manufacturer,
+        s1_0.manufacturer_model_name,
+        s1_0.modality,
+        s1_0.series_description,
+        s1_0.series_instance_uid,
+        s1_0.series_number,
+        s1_0.study_id,
+        s1_0.tenant_id,
+        s1_0.updated_at
+    from
+        series s1_0
+    where
+        s1_0.id=?
+2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG org.hibernate.SQL -
+    /* SELECT
+        i
+    FROM
+        Instance i
+    WHERE
+        i.storagePath = :storagePath */ select
+            i1_0.id,
+            i1_0.created_at,
+            i1_0.file_size,
+            i1_0.frame_rate,
+            i1_0.frame_rate_source,
+            i1_0.image_columns,
+            i1_0.image_rows,
+            i1_0.instance_number,
+            i1_0.number_of_frames,
+            i1_0.series_id,
+            i1_0.sop_class_uid,
+            i1_0.sop_instance_uid,
+            i1_0.storage_path,
+            i1_0.storage_tier,
+            i1_0.tenant_id,
+            i1_0.thumbnail_path,
+            i1_0.transcoding_status,
+            i1_0.updated_at,
+            i1_0.video_path
+        from
+            instance i1_0
+        where
+            i1_0.storage_path=?
+Hibernate:
+    /* SELECT
+        i
+    FROM
+        Instance i
+    WHERE
+        i.storagePath = :storagePath */ select
+            i1_0.id,
+            i1_0.created_at,
+            i1_0.file_size,
+            i1_0.frame_rate,
+            i1_0.frame_rate_source,
+            i1_0.image_columns,
+            i1_0.image_rows,
+            i1_0.instance_number,
+            i1_0.number_of_frames,
+            i1_0.series_id,
+            i1_0.sop_class_uid,
+            i1_0.sop_instance_uid,
+            i1_0.storage_path,
+            i1_0.storage_tier,
+            i1_0.tenant_id,
+            i1_0.thumbnail_path,
+            i1_0.transcoding_status,
+            i1_0.updated_at,
+            i1_0.video_path
+        from
+            instance i1_0
+        where
+            i1_0.storage_path=?
+2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.d.service.InstanceService - Creating new instance: sopInstanceUid=1.2.840.113619.2.391.60843.1754902157.11.1.512, seriesId=1
+2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG org.hibernate.SQL -
+    select
+        i1_0.series_id,
+        i1_0.id,
+        i1_0.created_at,
+        i1_0.file_size,
+        i1_0.frame_rate,
+        i1_0.frame_rate_source,
+        i1_0.image_columns,
+        i1_0.image_rows,
+        i1_0.instance_number,
+        i1_0.number_of_frames,
+        i1_0.sop_class_uid,
+        i1_0.sop_instance_uid,
+        i1_0.storage_path,
+        i1_0.storage_tier,
+        i1_0.tenant_id,
+        i1_0.thumbnail_path,
+        i1_0.transcoding_status,
+        i1_0.updated_at,
+        i1_0.video_path
+    from
+        instance i1_0
+    where
+        i1_0.series_id=?
+Hibernate:
+    select
+        i1_0.series_id,
+        i1_0.id,
+        i1_0.created_at,
+        i1_0.file_size,
+        i1_0.frame_rate,
+        i1_0.frame_rate_source,
+        i1_0.image_columns,
+        i1_0.image_rows,
+        i1_0.instance_number,
+        i1_0.number_of_frames,
+        i1_0.sop_class_uid,
+        i1_0.sop_instance_uid,
+        i1_0.storage_path,
+        i1_0.storage_tier,
+        i1_0.tenant_id,
+        i1_0.thumbnail_path,
+        i1_0.transcoding_status,
+        i1_0.updated_at,
+        i1_0.video_path
+    from
+        instance i1_0
+    where
+        i1_0.series_id=?
+2026-01-05 17:55:30 [http-nio-10201-exec-1] WARN  c.h.s.m.d.service.InstanceService - Rolling back S3 upload due to non-retryable error: studies/1.2.410.2000010.82.2291.3915197250325002/series/1.2.840.113619.2.391.60843.1754901917.1.1/instances/1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm
+2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.s.s.SeaweedFsS3StorageService - Deleting DICOM file: bucket=minipacs, s3Key=studies/1.2.410.2000010.82.2291.3915197250325002/series/1.2.840.113619.2.391.60843.1754901917.1.1/instances/1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm
+2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.s.s.SeaweedFsS3StorageService - DICOM file deleted successfully: s3Key=studies/1.2.410.2000010.82.2291.3915197250325002/series/1.2.840.113619.2.391.60843.1754901917.1.1/instances/1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm
+2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.d.service.InstanceService - S3 file deleted successfully on error: studies/1.2.410.2000010.82.2291.3915197250325002/series/1.2.840.113619.2.391.60843.1754901917.1.1/instances/1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm
+2026-01-05 17:55:30 [http-nio-10201-exec-1] WARN  c.h.s.m.c.DicomWebController - STOW-RS: Runtime exception - Failed to upload DICOM file
+2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/dicom+json', given [application/dicom+json] and supported [application/json, application/*+json, application/yaml]
+2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{success=false, error=지원하지 않는 파일 형식입니다, errorCode=NOT_DICOM}]
+2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - Completed 415 UNSUPPORTED_MEDIA_TYPE

@@ -4,6 +4,7 @@ import com.hanumoka.sado.minipacs.domain.entity.Study;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,6 +21,67 @@ import java.util.Optional;
 @Repository
 public interface StudyRepository extends JpaRepository<Study, Long> {
 
+    // ========== MySQL Upsert (2026-01-05) ==========
+
+    /**
+     * MySQL Upsert: INSERT 또는 기존 ID 반환
+     *
+     * <p>동시성 문제 해결:
+     * <ul>
+     *   <li>Insert-First 패턴의 Exception Flow Control 제거</li>
+     *   <li>Hibernate Session 오염 방지</li>
+     *   <li>완전 원자적 연산 보장</li>
+     * </ul>
+     *
+     * <p>ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id) 트릭:
+     * <ul>
+     *   <li>중복 시 UPDATE를 실행하지만 실제 변경 최소화</li>
+     *   <li>LAST_INSERT_ID(id)로 기존 ID를 반환값으로 설정</li>
+     *   <li>COALESCE로 기존 값 보존 (새 값이 null이면)</li>
+     * </ul>
+     *
+     * @param tenantId 테넌트 ID
+     * @param studyInstanceUid DICOM Study Instance UID
+     * @param patientId 환자 FK
+     * @param studyDate 검사 날짜
+     * @param studyDescription 검사 설명
+     */
+    @Modifying
+    @Query(value = """
+        INSERT INTO study (tenant_id, study_instance_uid, patient_id,
+                          study_date, study_description, created_at, updated_at)
+        VALUES (:tenantId, :studyUid, :patientId, :studyDate, :description, NOW(), NOW())
+        ON DUPLICATE KEY UPDATE
+            id = LAST_INSERT_ID(id),
+            study_date = COALESCE(:studyDate, study_date),
+            study_description = COALESCE(:description, study_description),
+            updated_at = NOW()
+        """, nativeQuery = true)
+    void upsertStudy(
+        @Param("tenantId") Long tenantId,
+        @Param("studyUid") String studyInstanceUid,
+        @Param("patientId") Long patientId,
+        @Param("studyDate") LocalDate studyDate,
+        @Param("description") String studyDescription
+    );
+
+    /**
+     * LAST_INSERT_ID() 값 조회
+     *
+     * <p>주의사항:
+     * <ul>
+     *   <li>MySQL 커넥션별로 유지됨</li>
+     *   <li>같은 트랜잭션 내에서만 유효</li>
+     *   <li>Upsert 후 즉시 호출해야 함</li>
+     * </ul>
+     *
+     * @return INSERT된 ID 또는 ON DUPLICATE KEY로 설정된 기존 ID
+     */
+    @Query(value = "SELECT LAST_INSERT_ID()", nativeQuery = true)
+    Long getLastInsertId();
+
+    // ========== 기존 메서드 ==========
+
     /**
      * DICOM Study Instance UID로 조회
      *
@@ -27,6 +89,36 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
      * @return 검사 (없으면 empty)
      */
     Optional<Study> findByStudyInstanceUid(String studyInstanceUid);
+
+    /**
+     * DICOM Study Instance UID로 조회 (Pessimistic Write Lock)
+     *
+     * <p><strong>@Deprecated (2026-01-05)</strong> - Insert-first 패턴으로 변경됨
+     *
+     * <p>변경 이유:
+     * <ul>
+     *   <li>Pessimistic Lock은 기존 행만 보호, INSERT 시 Gap Lock Deadlock 발생</li>
+     *   <li>3파일 동시 업로드 시 2개 Deadlock (ErrorCode: 1213)</li>
+     *   <li>StudyService.findOrCreateStudy()에서 Insert-first 패턴으로 변경</li>
+     *   <li>InstanceService.findOrCreateInstance() 패턴으로 통일</li>
+     * </ul>
+     *
+     * <p>새로운 방식:
+     * <ul>
+     *   <li>INSERT 먼저 시도 (Lock 없이 빠른 실행)</li>
+     *   <li>Race Condition 시 DataIntegrityViolationException</li>
+     *   <li>Exception 발생 시 기존 Study SELECT</li>
+     *   <li>Deadlock 완전 제거, 66% 병렬 처리 가능</li>
+     * </ul>
+     *
+     * @param studyInstanceUid DICOM Study UID
+     * @return 검사 (없으면 empty), Lock과 함께 반환
+     * @deprecated Insert-first 패턴 사용, Lock 메서드 불필요
+     */
+    @Deprecated(since = "2026-01-05", forRemoval = false)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT s FROM Study s WHERE s.studyInstanceUid = :studyInstanceUid")
+    Optional<Study> findByStudyInstanceUidWithLock(@Param("studyInstanceUid") String studyInstanceUid);
 
     /**
      * 특정 환자의 모든 검사 조회

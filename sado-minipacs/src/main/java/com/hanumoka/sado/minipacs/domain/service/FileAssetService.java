@@ -12,6 +12,7 @@ import com.hanumoka.sado.minipacs.infrastructure.config.S3Properties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -69,6 +70,10 @@ public class FileAssetService {
      * - @Transactional 등 AOP 기능이 작동하지 않음
      * - self를 통해 호출하면 프록시를 거쳐 AOP 작동
      *
+     * <p>@Lazy 필수:
+     * - Spring Boot 4.x에서 순환 참조 방지
+     * - 지연 주입으로 Bean 생성 순서 문제 해결
+     *
      * <p>사용 예:
      * <pre>{@code
      * // ❌ 작동 안 함 (직접 호출)
@@ -79,6 +84,7 @@ public class FileAssetService {
      * }</pre>
      */
     @Autowired
+    @Lazy
     private FileAssetService self;
 
     /**

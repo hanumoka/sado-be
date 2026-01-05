@@ -20,7 +20,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -562,5 +564,149 @@ public class DicomWebController {
             valueMap.put("Value", List.of(value));
         }
         return valueMap;
+    }
+
+    // ========== STOW-RS: Store Services ==========
+
+    private static final long MAX_FILE_SIZE = 500L * 1024 * 1024; // 500MB
+
+    /**
+     * STOW-RS: DICOM 파일 업로드
+     *
+     * <p>DICOMweb 표준 STOW-RS(Store Over the Web) 엔드포인트입니다.
+     *
+     * <p>지원 Content-Type:
+     * <ul>
+     *   <li>multipart/related (DICOMweb 표준)</li>
+     *   <li>multipart/form-data (브라우저 호환성)</li>
+     * </ul>
+     *
+     * <p>응답 형식:
+     * <ul>
+     *   <li>HTTP 200 OK: 업로드 성공</li>
+     *   <li>HTTP 409 Conflict: 중복 파일</li>
+     *   <li>HTTP 413 Payload Too Large: 파일 크기 초과</li>
+     *   <li>HTTP 415 Unsupported Media Type: DICOM 형식 아님</li>
+     *   <li>HTTP 422 Unprocessable Entity: 유효하지 않은 DICOM</li>
+     * </ul>
+     *
+     * @param file DICOM 파일 (MultipartFile)
+     * @return DICOMweb 표준 응답 (application/dicom+json)
+     */
+    @PostMapping(value = "/studies",
+            consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, "multipart/related"})
+    @Operation(summary = "STOW-RS: DICOM 파일 업로드",
+            description = "DICOMweb 표준 STOW-RS 업로드")
+    public ResponseEntity<Map<String, Object>> storeInstance(
+            @RequestParam("file") MultipartFile file
+    ) throws IOException {
+        log.info("STOW-RS: Upload request - filename: {}, size: {} bytes",
+                file.getOriginalFilename(), file.getSize());
+
+        // 1. 파일 검증
+        if (file.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(createErrorResponse("EMPTY_FILE", "파일이 비어있습니다"));
+        }
+
+        // 2. 파일 크기 제한 (500MB)
+        if (file.getSize() > MAX_FILE_SIZE) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                    .body(createErrorResponse("FILE_TOO_LARGE",
+                            "파일 크기가 너무 큽니다 (최대: " + MAX_FILE_SIZE + " bytes)"));
+        }
+
+        try {
+            // 3. Service 호출 (모든 비즈니스 로직은 Service에서 처리)
+            byte[] fileBytes = file.getBytes();
+            Instance instance = instanceService.uploadDicomFile(
+                    fileBytes,
+                    file.getOriginalFilename()
+            );
+
+            // 4. DICOMweb 표준 응답 생성
+            Map<String, Object> response = createStowRsResponse(instance);
+
+            log.info("STOW-RS: Upload success - sopInstanceUid: {}",
+                    instance.getSopInstanceUid());
+
+            // 5. HTTP 200 OK 반환
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(DICOM_JSON_MEDIA_TYPE))
+                    .body(response);
+
+        } catch (IllegalArgumentException e) {
+            // 409 Conflict (중복) 또는 422 Unprocessable Entity
+            if (e.getMessage().contains("already exists")) {
+                log.warn("STOW-RS: Duplicate instance - {}", e.getMessage());
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(createErrorResponse("DUPLICATE_INSTANCE",
+                                "이미 존재하는 파일입니다"));
+            } else {
+                log.warn("STOW-RS: Invalid argument - {}", e.getMessage());
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                        .body(createErrorResponse("INVALID_ARGUMENT", e.getMessage()));
+            }
+
+        } catch (RuntimeException e) {
+            // 415 Unsupported Media Type 또는 422 Unprocessable Entity
+            log.warn("STOW-RS: Runtime exception - {}", e.getMessage());
+
+            if (e.getMessage() != null &&
+                    (e.getMessage().contains("DICOM") ||
+                            e.getMessage().contains("magic number"))) {
+                return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                        .body(createErrorResponse("NOT_DICOM",
+                                "지원하지 않는 파일 형식입니다"));
+            }
+
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(createErrorResponse("PROCESSING_FAILED", e.getMessage()));
+
+        } catch (IOException e) {
+            // 500 Internal Server Error
+            log.error("STOW-RS: Upload failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("UPLOAD_FAILED", "서버 오류가 발생했습니다"));
+        }
+    }
+
+    /**
+     * Instance → DICOMweb STOW-RS 응답 변환
+     *
+     * <p>Frontend 호환 형식 (dicomWebService.ts StowRsResponse):
+     * {
+     *   studyInstanceUid: string,
+     *   seriesInstanceUid: string,
+     *   sopInstanceUid: string,
+     *   success: boolean
+     * }
+     *
+     * <p>향후 DICOMweb Part 18 표준 응답으로 전환 가능 (OHIF Viewer 통합 시)
+     */
+    private Map<String, Object> createStowRsResponse(Instance instance) {
+        Map<String, Object> response = new LinkedHashMap<>();
+
+        Series series = instance.getSeries();
+        Study study = series.getStudy();
+
+        // Frontend 호환 형식
+        response.put("studyInstanceUid", study.getStudyInstanceUid());
+        response.put("seriesInstanceUid", series.getSeriesInstanceUid());
+        response.put("sopInstanceUid", instance.getSopInstanceUid());
+        response.put("success", true);
+
+        return response;
+    }
+
+    /**
+     * 에러 응답 생성 (Frontend 호환)
+     */
+    private Map<String, Object> createErrorResponse(String errorCode, String errorMessage) {
+        Map<String, Object> error = new LinkedHashMap<>();
+        error.put("success", false);
+        error.put("error", errorMessage);
+        error.put("errorCode", errorCode);
+        return error;
     }
 }

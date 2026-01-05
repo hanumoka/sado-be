@@ -64,7 +64,7 @@ public class DicomMetadataExtractor {
             DicomMetadata metadata = DicomMetadata.builder()
                     // Patient Level (0010,xxxx)
                     .patientId(attributes.getString(Tag.PatientID))
-                    .issuerOfPatientId(attributes.getString(Tag.IssuerOfPatientID))
+                    .issuerOfPatientId(getStringOrEmpty(attributes, Tag.IssuerOfPatientID))
                     .patientName(attributes.getString(Tag.PatientName))
                     .patientBirthDate(parseDate(attributes.getString(Tag.PatientBirthDate)))
                     .patientSex(attributes.getString(Tag.PatientSex))
@@ -95,6 +95,21 @@ public class DicomMetadataExtractor {
 
             return metadata;
         }
+    }
+
+    /**
+     * DICOM 태그에서 문자열 값을 가져오되, null이면 빈 문자열 반환
+     * <p>
+     * MySQL의 unique constraint는 NULL 값에 대해 중복을 허용하므로,
+     * issuerOfPatientId가 NULL일 때 빈 문자열을 반환하여 unique constraint가 작동하도록 합니다.
+     *
+     * @param attributes DICOM attributes
+     * @param tag 추출할 태그
+     * @return 태그 값 또는 빈 문자열 (never null)
+     */
+    private static String getStringOrEmpty(Attributes attributes, int tag) {
+        String value = attributes.getString(tag);
+        return value != null ? value : "";
     }
 
     /**

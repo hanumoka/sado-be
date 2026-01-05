@@ -1,6 +1,9 @@
 spring:
   application:
     name: sado-minipacs
+  output:
+    ansi:
+      enabled: ALWAYS
 
   # 파일 업로드 설정 (DICOM 파일 업로드)
   servlet:
@@ -13,8 +16,8 @@ spring:
   # 데이터소스 설정 (MySQL)
   datasource:
     url: jdbc:mysql://localhost:10100/sado_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: ${DB_USERNAME:sado_user}
-    password: ${DB_PASSWORD}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
     # HikariCP 커넥션 풀 설정
@@ -31,7 +34,7 @@ spring:
     database-platform: org.hibernate.dialect.MySQLDialect
     show-sql: true
     hibernate:
-      ddl-auto: update  # 개발: update, 운영: validate
+      ddl-auto: create  # 개발: update, 운영: validate
     properties:
       hibernate:
         format_sql: true

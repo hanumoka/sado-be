@@ -3,8 +3,12 @@ package com.hanumoka.sado.minipacs.storage.service;
 import com.hanumoka.sado.common.exception.BusinessException;
 import com.hanumoka.sado.minipacs.code.MiniPacsErrorCode;
 import com.hanumoka.sado.minipacs.infrastructure.config.S3Properties;
+import com.hanumoka.sado.minipacs.storage.dto.DicomFileMetadata;
+import com.hanumoka.sado.minipacs.storage.dto.StorageResult;
+import com.hanumoka.sado.minipacs.storage.strategy.StoragePathStrategy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -15,6 +19,8 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 
@@ -37,16 +43,122 @@ import java.time.Duration;
  * </pre>
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class SeaweedFsS3StorageService implements DicomStorageService {
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
     private final S3Properties s3Properties;
+    private final StoragePathStrategy pathStrategy;
 
     /**
-     * DICOM 파일 업로드
+     * 생성자 주입
+     *
+     * @param s3Client S3 클라이언트
+     * @param s3Presigner S3 Pre-signer
+     * @param s3Properties S3 설정
+     * @param pathStrategy Storage 경로 생성 전략 (DICOMweb 표준 사용)
+     */
+    public SeaweedFsS3StorageService(
+            S3Client s3Client,
+            S3Presigner s3Presigner,
+            S3Properties s3Properties,
+            @Qualifier("dicomwebPathStrategy") StoragePathStrategy pathStrategy
+    ) {
+        this.s3Client = s3Client;
+        this.s3Presigner = s3Presigner;
+        this.s3Properties = s3Properties;
+        this.pathStrategy = pathStrategy;
+    }
+
+    /**
+     * DICOM 파일 업로드 (추상화된 메타데이터 기반)
+     *
+     * <p>변경 사항 (2026-01-05):
+     * <ul>
+     *   <li>Controller가 Storage 경로를 결정하지 않음 (Separation of Concerns)</li>
+     *   <li>DicomFileMetadata (추상화된 키)만 전달</li>
+     *   <li>경로 생성은 StoragePathStrategy가 담당</li>
+     *   <li>StorageResult (Storage가 결정한 경로) 반환</li>
+     * </ul>
+     *
+     * <p>흐름:
+     * <ol>
+     *   <li>StoragePathStrategy.generatePath()로 경로 생성</li>
+     *   <li>InputStream → byte[] 변환 (파일 크기 계산)</li>
+     *   <li>S3 PutObject 요청 생성 (Content-Type: application/dicom)</li>
+     *   <li>SeaweedFS에 업로드</li>
+     *   <li>StorageResult 반환 (경로, 파일 크기 등)</li>
+     * </ol>
+     *
+     * @param inputStream DICOM 파일 InputStream
+     * @param metadata DICOM 파일 메타데이터 (추상화된 키)
+     * @return StorageResult (Storage가 결정한 경로 및 메타데이터)
+     * @throws BusinessException STORAGE_UPLOAD_FAILED - S3 업로드 실패 시
+     */
+    @Override
+    public StorageResult uploadDicomFile(
+            InputStream inputStream,
+            DicomFileMetadata metadata
+    ) {
+        // 1. StoragePathStrategy로 경로 생성
+        String storagePath = pathStrategy.generatePath(metadata);
+        String s3Key = storagePath; // S3에서는 storagePath == s3Key
+
+        log.info("Uploading DICOM file with metadata: bucket={}, s3Key={}, strategy={}",
+                s3Properties.getBucket(), s3Key, pathStrategy.getStrategyName());
+
+        try {
+            // 2. InputStream → byte[] 변환 (파일 크기 계산 필요)
+            byte[] fileBytes = inputStream.readAllBytes();
+            long fileSize = fileBytes.length;
+
+            log.debug("File size calculated: {} bytes", fileSize);
+
+            // 3. S3 PutObject 요청 생성
+            PutObjectRequest putRequest = PutObjectRequest.builder()
+                    .bucket(s3Properties.getBucket())
+                    .key(s3Key)
+                    .contentType("application/dicom")
+                    .contentLength(fileSize)
+                    .build();
+
+            // 4. SeaweedFS에 업로드
+            s3Client.putObject(putRequest, RequestBody.fromBytes(fileBytes));
+
+            log.info("DICOM file uploaded successfully: s3Key={}, size={} bytes", s3Key, fileSize);
+
+            // 5. StorageResult 반환
+            return StorageResult.builder()
+                    .storagePath(storagePath)
+                    .s3Key(s3Key)
+                    .fileSize(fileSize)
+                    .fileHash(null) // TODO: SHA-256 해시 계산 (선택사항)
+                    .build();
+
+        } catch (IOException e) {
+            log.error("Failed to read InputStream: metadata={}", metadata, e);
+
+            throw new BusinessException(
+                    MiniPacsErrorCode.STORAGE_UPLOAD_FAILED,
+                    String.format("InputStream 읽기 실패: %s", metadata.getSopInstanceUid())
+            );
+
+        } catch (S3Exception e) {
+            log.error("S3 upload failed: bucket={}, s3Key={}, metadata={}",
+                    s3Properties.getBucket(), s3Key, metadata, e);
+
+            throw new BusinessException(
+                    MiniPacsErrorCode.STORAGE_UPLOAD_FAILED,
+                    String.format("DICOM 파일 업로드 실패: %s", s3Key)
+            );
+        }
+    }
+
+    /**
+     * DICOM 파일 업로드 (레거시)
+     *
+     * @deprecated Use {@link #uploadDicomFile(InputStream, DicomFileMetadata)} instead
      *
      * <p>DICOMweb 표준 경로로 S3에 업로드합니다.
      *
@@ -58,6 +170,7 @@ public class SeaweedFsS3StorageService implements DicomStorageService {
      * @return S3 Key (저장된 파일 경로)
      * @throws BusinessException STORAGE_UPLOAD_FAILED - S3 업로드 실패 시
      */
+    @Deprecated
     @Override
     public String uploadDicomFile(
             String studyInstanceUid,

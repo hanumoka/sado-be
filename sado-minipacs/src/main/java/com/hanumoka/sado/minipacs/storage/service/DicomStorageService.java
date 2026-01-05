@@ -1,5 +1,8 @@
 package com.hanumoka.sado.minipacs.storage.service;
 
+import com.hanumoka.sado.minipacs.storage.dto.DicomFileMetadata;
+import com.hanumoka.sado.minipacs.storage.dto.StorageResult;
+
 import java.io.InputStream;
 import java.time.Duration;
 
@@ -26,7 +29,39 @@ import java.time.Duration;
 public interface DicomStorageService {
 
     /**
-     * DICOM 파일 업로드
+     * DICOM 파일 업로드 (추상화된 메타데이터 기반)
+     *
+     * <p>변경 사항 (2026-01-05):
+     * <ul>
+     *   <li>Controller가 Storage 경로를 결정하지 않음 (Separation of Concerns)</li>
+     *   <li>DicomFileMetadata (추상화된 키)만 전달</li>
+     *   <li>경로 생성은 StoragePathStrategy가 담당</li>
+     *   <li>StorageResult (Storage가 결정한 경로) 반환</li>
+     * </ul>
+     *
+     * <p>흐름:
+     * <ol>
+     *   <li>StoragePathStrategy.generatePath()로 경로 생성</li>
+     *   <li>S3 PutObject 요청 생성 (Content-Type: application/dicom)</li>
+     *   <li>InputStream → RequestBody 변환</li>
+     *   <li>SeaweedFS에 업로드</li>
+     *   <li>StorageResult 반환 (경로, 파일 크기 등)</li>
+     * </ol>
+     *
+     * @param inputStream DICOM 파일 InputStream
+     * @param metadata DICOM 파일 메타데이터 (추상화된 키)
+     * @return StorageResult (Storage가 결정한 경로 및 메타데이터)
+     * @throws com.hanumoka.sado.common.exception.BusinessException STORAGE_UPLOAD_FAILED - S3 업로드 실패 시
+     */
+    StorageResult uploadDicomFile(
+            InputStream inputStream,
+            DicomFileMetadata metadata
+    );
+
+    /**
+     * DICOM 파일 업로드 (레거시)
+     *
+     * @deprecated Use {@link #uploadDicomFile(InputStream, DicomFileMetadata)} instead
      *
      * <p>S3 Key 생성 규칙 (DICOMweb 표준):
      * <pre>
@@ -50,6 +85,7 @@ public interface DicomStorageService {
      * @return S3 Key (저장된 파일 경로)
      * @throws com.hanumoka.sado.common.exception.BusinessException STORAGE_UPLOAD_FAILED - S3 업로드 실패 시
      */
+    @Deprecated
     String uploadDicomFile(
             String studyInstanceUid,
             String seriesInstanceUid,

@@ -1,12 +1,12 @@
 package com.hanumoka.sado.minipacs.domain.service;
 
 import com.hanumoka.sado.common.exception.ResourceNotFoundException;
+import com.hanumoka.sado.common.tenant.TenantProvider;
 import com.hanumoka.sado.minipacs.domain.entity.Patient;
 import com.hanumoka.sado.minipacs.domain.entity.Study;
 import com.hanumoka.sado.minipacs.domain.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +27,7 @@ public class StudyService {
 
     private final StudyRepository studyRepository;
     private final PatientService patientService;
+    private final TenantProvider tenantProvider;
 
     /**
      * Study PK로 조회
@@ -130,9 +131,28 @@ public class StudyService {
     /**
      * Study 찾기 또는 생성
      *
-     * DICOM C-STORE 수신 시 사용:
-     * 1. Study Instance UID로 기존 Study 검색
-     * 2. 없으면 새로운 Study 생성
+     * <p>변경 사항 (2026-01-05): MySQL Native Query Upsert 패턴
+     * <ul>
+     *   <li>Insert-First + Exception Flow Control 제거</li>
+     *   <li>MySQL ON DUPLICATE KEY UPDATE로 원자적 Upsert</li>
+     *   <li>LAST_INSERT_ID(id) 트릭으로 기존/신규 ID 모두 반환</li>
+     *   <li>Exception 없음 → Hibernate Session 오염 없음</li>
+     *   <li>REQUIRES_NEW 불필요 → 상위 트랜잭션과 자연스럽게 통합</li>
+     * </ul>
+     *
+     * <p>동작 원리:
+     * <ol>
+     *   <li>MySQL Upsert 실행 (INSERT 또는 UPDATE)</li>
+     *   <li>LAST_INSERT_ID()로 ID 조회 (신규: auto_increment, 기존: 설정된 id)</li>
+     *   <li>findById()로 엔티티 반환 (1차 캐시 활용)</li>
+     * </ol>
+     *
+     * <p>이전 방식의 문제점 (Insert-First):
+     * <ul>
+     *   <li>DataIntegrityViolationException 발생 시 Session 오염</li>
+     *   <li>REQUIRES_NEW가 EntityManager를 격리하지 못함 (ThreadLocal 공유)</li>
+     *   <li>detach()/clear() 후에도 "null identifier" 오류 발생</li>
+     * </ul>
      *
      * @param studyInstanceUid DICOM Study Instance UID
      * @param patient 소속 환자
@@ -147,38 +167,26 @@ public class StudyService {
             java.time.LocalDate studyDate,
             String studyDescription) {
 
-        // 1. 기존 Study 검색
-        Optional<Study> existingStudy = findByStudyInstanceUid(studyInstanceUid);
+        // 1. MySQL Upsert 실행 (Exception 없음, 완전 원자적)
+        Long tenantId = tenantProvider.getCurrentTenantId();
+        studyRepository.upsertStudy(
+            tenantId,
+            studyInstanceUid,
+            patient.getId(),
+            studyDate,
+            studyDescription
+        );
 
-        if (existingStudy.isPresent()) {
-            log.debug("Found existing study: id={}, studyInstanceUid={}",
-                    existingStudy.get().getId(),
-                    studyInstanceUid);
-            return existingStudy.get();
-        }
+        // 2. LAST_INSERT_ID() 조회 (같은 커넥션 내에서 유효)
+        Long studyId = studyRepository.getLastInsertId();
 
-        // 2. 새 Study 생성 시도
-        try {
-            Study newStudy = Study.builder()
-                    .patient(patient)
-                    .studyInstanceUid(studyInstanceUid)
-                    .studyDate(studyDate)
-                    .studyDescription(studyDescription)
-                    .build();
+        log.debug("Upsert study completed: studyInstanceUid={}, resultId={}",
+                studyInstanceUid, studyId);
 
-            Study saved = studyRepository.saveAndFlush(newStudy);
-            log.info("Created new study: id={}, studyInstanceUid={}",
-                    saved.getId(),
-                    studyInstanceUid);
-            return saved;
-        } catch (DataIntegrityViolationException e) {
-            // Race condition 발생 - 다른 스레드가 먼저 저장함
-            log.warn("Race condition detected for study: {}", studyInstanceUid);
-            return studyRepository
-                    .findByStudyInstanceUid(studyInstanceUid)
-                    .orElseThrow(() -> new IllegalStateException(
-                            "Study should exist after DataIntegrityViolationException"));
-        }
+        // 3. 엔티티 반환 (1차 캐시 활용)
+        return studyRepository.findById(studyId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Study should exist after upsert: " + studyInstanceUid));
     }
 
     /**

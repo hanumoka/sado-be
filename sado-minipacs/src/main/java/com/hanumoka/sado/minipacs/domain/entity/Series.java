@@ -95,25 +95,9 @@ public class Series extends TenantAwareEntity {
     @Column(name = "series_number")
     private Integer seriesNumber;
 
-    /**
-     * Number of Instances
-     * 역정규화: 통계용 (실시간 COUNT 대신 캐싱)
-     */
-    @Column(name = "number_of_instances")
-    private Integer numberOfInstances;
-
-    /**
-     * Optimistic Lock Version
-     *
-     * <p>CRITICAL: 동시성 제어
-     * - Pessimistic Lock 대신 Optimistic Lock 사용
-     * - 동시 Instance 추가 시 OptimisticLockingFailureException 발생
-     * - @Retryable로 자동 재시도
-     * - Deadlock 위험 제거
-     */
-    @Version
-    @Column(name = "version")
-    private Long version;
+    // ========== 역정규화 카운터 제거 (2026-01-05) ==========
+    // numberOfInstances 필드 제거 → COUNT 쿼리로 실시간 계산
+    // @Version 제거 → Optimistic Lock 충돌 완전 제거
 
     // ========== Instance 관계 ==========
 
@@ -131,7 +115,12 @@ public class Series extends TenantAwareEntity {
     // ========== 비즈니스 메서드 ==========
 
     /**
-     * Instance 추가 (양방향 관계 설정 + 카운터 증가)
+     * Instance 추가 (양방향 관계 설정)
+     *
+     * <p>CRITICAL: 카운터 업데이트 제거 (2026-01-05)
+     * - numberOfInstances 증가 제거 → Optimistic Lock 충돌 방지
+     * - study.incrementInstanceCount() 호출 제거 → Study @Version 증가 방지
+     * - Instance 개수는 @Transient 메서드로 실시간 계산
      *
      * <p>검증:
      * <ul>
@@ -156,21 +145,23 @@ public class Series extends TenantAwareEntity {
             throw new IllegalStateException("Instance already belongs to another series");
         }
 
-        // 정상 로직
+        // 정상 로직 - 양방향 관계만 설정
         instances.add(instance);
         instance.setSeries(this);
 
-        // numberOfInstances 증가
-        numberOfInstances = CounterManager.increment(numberOfInstances);
-
-        // Study의 numberOfInstances도 증가
-        if (study != null) {
-            study.incrementInstanceCount();
-        }
+        // ✅ 카운터 업데이트 제거 → 동시성 충돌 완전 제거
+        // numberOfInstances = CounterManager.increment(numberOfInstances);  // 제거됨
+        // if (study != null) {
+        //     study.incrementInstanceCount();  // 제거됨
+        // }
     }
 
     /**
-     * Instance 제거 (양방향 관계 해제 + 카운터 감소)
+     * Instance 제거 (양방향 관계 해제)
+     *
+     * <p>CRITICAL: 카운터 업데이트 제거 (2026-01-05)
+     * - numberOfInstances 감소 제거 → Optimistic Lock 충돌 방지
+     * - study.decrementInstanceCount() 호출 제거 → Study @Version 증가 방지
      *
      * <p>검증:
      * <ul>
@@ -187,22 +178,31 @@ public class Series extends TenantAwareEntity {
         if (removed) {
             instance.setSeries(null);
 
-            // numberOfInstances 감소
-            numberOfInstances = CounterManager.decrement(numberOfInstances);
-
-            // Study의 numberOfInstances도 감소
-            if (study != null) {
-                study.decrementInstanceCount();
-            }
+            // ✅ 카운터 업데이트 제거 → 동시성 충돌 완전 제거
+            // numberOfInstances = CounterManager.decrement(numberOfInstances);  // 제거됨
+            // if (study != null) {
+            //     study.decrementInstanceCount();  // 제거됨
+            // }
         }
     }
 
     /**
-     * 정합성 복구: 실제 Instance 개수 기반으로 재계산
-     * 데이터 마이그레이션 또는 수동 복구 시 사용
+     * numberOfInstances 실시간 계산 (Transient)
+     *
+     * <p>역정규화 필드를 제거하고 컬렉션 기반으로 실시간 계산합니다.
+     * Hibernate가 instances 컬렉션을 lazy loading하여 개수를 계산합니다.
+     *
+     * <p>성능 고려사항:
+     * <ul>
+     *   <li>컬렉션이 이미 로드된 경우: O(1) - 컬렉션 크기만 반환</li>
+     *   <li>컬렉션 미로드 시: Repository COUNT 쿼리 사용 권장</li>
+     * </ul>
+     *
+     * @return Instance 개수
      */
-    public void recalculateInstanceCount() {
-        numberOfInstances = CounterManager.fromCollectionSize(instances);
+    @Transient
+    public int getNumberOfInstances() {
+        return instances != null ? instances.size() : 0;
     }
 
     // ========== 컬렉션 접근 제어 ==========

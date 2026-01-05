@@ -112,23 +112,10 @@ public class Patient extends TenantAwareEntity {
     @Column(name = "matching_status", length = 50)
     private MatchingStatus matchingStatus;
 
-    // ========== 통계 필드 (역정규화) ==========
-
-    /**
-     * 환자의 총 Study 수
-     * JPA EntityListener에 의해 자동 유지됨
-     * 목적: FE에서 환자 목록 조회 시 스터디 수 표시 (JOIN 없이)
-     */
-    @Column(name = "studies_count")
-    private Integer studiesCount;
-
-    /**
-     * 가장 최근 Study 날짜
-     * JPA EntityListener에 의해 자동 유지됨
-     * 목적: FE에서 환자 목록 정렬 및 최근 검사일 표시
-     */
-    @Column(name = "last_study_date")
-    private LocalDate lastStudyDate;
+    // ========== 통계 필드 제거 (2026-01-05) ==========
+    // studiesCount, lastStudyDate 제거 → COUNT 쿼리로 실시간 계산
+    // PatientStatisticsListener 제거 → Deadlock 원인 제거
+    // 필요시: studyRepository.countByPatientId(patientId) 사용
 
     // ========== 관계 ==========
 
@@ -300,15 +287,7 @@ public class Patient extends TenantAwareEntity {
             return this;
         }
 
-        public Builder studiesCount(Integer studiesCount) {
-            patient.studiesCount = studiesCount;
-            return this;
-        }
-
-        public Builder lastStudyDate(LocalDate lastStudyDate) {
-            patient.lastStudyDate = lastStudyDate;
-            return this;
-        }
+        // studiesCount, lastStudyDate Builder 메서드 제거 (2026-01-05)
 
         /**
          * Patient 객체 생성

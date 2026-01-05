@@ -21,6 +21,8 @@ import com.hanumoka.sado.minipacs.domain.service.PatientService;
 import com.hanumoka.sado.minipacs.domain.service.SeriesService;
 import com.hanumoka.sado.minipacs.domain.service.StudyService;
 import com.hanumoka.sado.minipacs.storage.service.DicomStorageService;
+import com.hanumoka.sado.minipacs.storage.dto.DicomFileMetadata;
+import com.hanumoka.sado.minipacs.storage.dto.StorageResult;
 import com.hanumoka.sado.minipacs.dto.request.CreateInstanceRequest;
 import com.hanumoka.sado.minipacs.dto.request.UpdateInstanceRequest;
 import com.hanumoka.sado.minipacs.dto.response.InstanceResponse;
@@ -29,10 +31,12 @@ import com.hanumoka.sado.minipacs.storage.strategy.StorageAccessStrategy;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * Instance REST API Controller
@@ -67,8 +71,8 @@ public class InstanceController {
         // 1. DTO → Entity 변환
         Instance instance = toEntity(request);
 
-        // 2. Service 호출
-        Instance savedInstance = instanceService.createInstance(instance);
+        // 2. Service 호출 (with retry support)
+        Instance savedInstance = instanceService.createInstanceWithRetry(instance);
 
         // 3. Entity → Response DTO 변환
         InstanceResponse response = toResponse(savedInstance);
@@ -232,171 +236,22 @@ public class InstanceController {
      * @throws IOException DICOM 파싱 실패 시
      * @throws com.hanumoka.sado.common.exception.BusinessException 파일 업로드 실패 시
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     @PostMapping("/upload")
     public ApiResponse<InstanceResponse> uploadDicom(
             @RequestParam("file") MultipartFile file
     ) throws IOException {
-        log.info("POST /api/instances/upload - filename: {}, size: {} bytes",
-                file.getOriginalFilename(), file.getSize());
+        log.warn("DEPRECATED API called: POST /api/instances/upload. " +
+                 "Please migrate to DICOMweb STOW-RS: POST /dicomweb/studies");
 
-        // 1. 파일 검증
-        if (file.isEmpty()) {
-            throw new IllegalArgumentException("파일이 비어있습니다");
-        }
-
-        // 2. 파일을 byte[]로 읽기 (InputStream 재사용 방지)
+        // 비즈니스 로직은 InstanceService.uploadDicomFile()로 이동됨
         byte[] fileBytes = file.getBytes();
-
-        // 2-1. 파일 확장자 검증 (.dcm, .dicom, 확장자 없음만 허용)
-        DicomFileValidator.validateFileExtension(file.getOriginalFilename());
-
-        // 2-2. DICOM magic number 검증 (128 byte offset에서 'DICM' 확인)
-        DicomFileValidator.validateDicomMagicNumber(fileBytes);
-
-        // 3. DICOM 메타데이터 추출
-        DicomMetadataExtractor.DicomMetadata metadata =
-                DicomMetadataExtractor.extract(new java.io.ByteArrayInputStream(fileBytes));
-
-        log.info("DICOM metadata extracted: PatientID={}, StudyUID={}, SeriesUID={}, SOPInstanceUID={}",
-                metadata.getPatientId(),
-                metadata.getStudyInstanceUid(),
-                metadata.getSeriesInstanceUid(),
-                metadata.getSopInstanceUid());
-
-        // 4. Patient findOrCreate
-        Patient patient = patientService.findOrCreatePatient(
-                metadata.getPatientId(),
-                metadata.getIssuerOfPatientId(),
-                metadata.getPatientName(),
-                metadata.getPatientBirthDate(),
-                metadata.getPatientSex()
+        Instance savedInstance = instanceService.uploadDicomFile(
+            fileBytes,
+            file.getOriginalFilename()
         );
 
-        log.info("Patient resolved: id={}, dicomPatientId={}",
-                patient.getId(), patient.getDicomPatientId());
-
-        // 5. Study findOrCreate
-        Study study = studyService.findOrCreateStudy(
-                metadata.getStudyInstanceUid(),
-                patient,
-                metadata.getStudyDate(),
-                metadata.getStudyDescription()
-        );
-
-        log.info("Study resolved: id={}, studyInstanceUid={}",
-                study.getId(), study.getStudyInstanceUid());
-
-        // 6. Series findOrCreate
-        Series series = seriesService.findOrCreateSeries(
-                metadata.getSeriesInstanceUid(),
-                study,
-                metadata.getSeriesNumber(),
-                metadata.getModality(),
-                metadata.getSeriesDescription(),
-                metadata.getBodyPartExamined()
-        );
-
-        log.info("Series resolved: id={}, seriesInstanceUid={}, modality={}",
-                series.getId(), series.getSeriesInstanceUid(), series.getModality());
-
-        // 7. SeaweedFS 업로드 (DICOMweb 표준 경로) + 보상 트랜잭션
-        String s3Key = null;
-        try {
-            // 7-1. S3 업로드 (byte[]를 InputStream으로 변환)
-            s3Key = dicomStorageService.uploadDicomFile(
-                    study.getStudyInstanceUid(),
-                    series.getSeriesInstanceUid(),
-                    metadata.getSopInstanceUid(),
-                    new java.io.ByteArrayInputStream(fileBytes),
-                    fileBytes.length
-            );
-
-            log.info("DICOM file uploaded to storage: s3Key={}, originalFilename={}",
-                    s3Key, file.getOriginalFilename());
-
-            // 8. Instance 생성 (Builder 패턴)
-            Instance instance = Instance.builder()
-                    .series(series)
-                    .sopInstanceUid(metadata.getSopInstanceUid())
-                    .sopClassUid(metadata.getSopClassUid())
-                    .instanceNumber(metadata.getInstanceNumber())
-                    .imageRows(metadata.getImageRows())
-                    .imageColumns(metadata.getImageColumns())
-                    .numberOfFrames(metadata.getNumberOfFrames())
-                    .storagePath(s3Key)  // S3 Key를 storagePath로 저장 (DICOMweb 표준 경로)
-                    .fileSize((long) fileBytes.length)  // byte[] 길이 사용 (Long으로 캐스팅)
-                    .build();
-
-            // 9. InstanceService로 DB 저장
-            Instance savedInstance = instanceService.createInstance(instance);
-
-            log.info("Instance created: id={}, sopInstanceUid={}, s3Key={}, seriesId={}",
-                    savedInstance.getId(),
-                    savedInstance.getSopInstanceUid(),
-                    s3Key,
-                    series.getId());
-
-            // 9. DicomMetadataRecord 생성 (WORM 정책)
-            DicomMetadataRecord metadataRecord = DicomMetadataRecord.builder()
-                    .metadata(convertMetadataToJson(metadata))
-                    .instanceId(savedInstance.getId())
-                    .studyInstanceUid(metadata.getStudyInstanceUid())
-                    .seriesInstanceUid(metadata.getSeriesInstanceUid())
-                    .sopInstanceUid(metadata.getSopInstanceUid())
-                    .filePath(s3Key)
-                    .filename(file.getOriginalFilename())
-                    .fileSize(file.getSize())
-                    .build();
-
-            dicomMetadataRecordRepository.save(metadataRecord);
-
-            log.info("DicomMetadataRecord created: instanceId={}, sopInstanceUid={}",
-                    savedInstance.getId(), metadata.getSopInstanceUid());
-
-            // 10. FileAsset 생성 (DICOM 파일 메타데이터 관리)
-            FileAsset dicomFileAsset = FileAsset.builder()
-                    .category(FileCategory.DICOM)
-                    .referenceType(ReferenceType.INSTANCE)
-                    .referenceId(savedInstance.getId())
-                    .status(FileStatus.ACTIVE)
-                    .fileName(file.getOriginalFilename() != null ?
-                            file.getOriginalFilename() : metadata.getSopInstanceUid() + ".dcm")
-                    .storagePath(s3Key)
-                    .fileSize(file.getSize())
-                    .mimeType("application/dicom")
-                    // DICOM 파일은 영구 보관 (expiresAt = null)
-                    .storageTier("HOT")
-                    .build();
-
-            fileAssetRepository.save(dicomFileAsset);
-
-            log.info("FileAsset created: id={}, instanceId={}, storagePath={}",
-                    dicomFileAsset.getId(), savedInstance.getId(), s3Key);
-
-            // 11. Entity → Response DTO 변환
-            InstanceResponse response = toResponse(savedInstance);
-
-            // 12. 성공 응답 반환
-            return ApiResponse.success(response);
-
-        } catch (Exception e) {
-            // 보상 트랜잭션: S3 파일 삭제 (DB 저장 실패 시)
-            if (s3Key != null) {
-                try {
-                    log.warn("Rolling back S3 upload due to error: {}", s3Key);
-                    dicomStorageService.deleteDicomFile(s3Key);
-                    log.info("S3 file deleted successfully: {}", s3Key);
-                } catch (Exception deleteEx) {
-                    log.error("Failed to delete orphan S3 file: {}. Will be cleaned up later.",
-                            s3Key, deleteEx);
-                }
-            }
-            // 원래 예외 재발생
-            if (e instanceof IOException) {
-                throw (IOException) e;
-            }
-            throw new RuntimeException("Failed to upload DICOM file", e);
-        }
+        return ApiResponse.success(toResponse(savedInstance));
     }
 
     /**

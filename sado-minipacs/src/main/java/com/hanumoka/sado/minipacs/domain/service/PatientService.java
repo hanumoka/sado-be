@@ -1,11 +1,11 @@
 package com.hanumoka.sado.minipacs.domain.service;
 
 import com.hanumoka.sado.common.exception.ResourceNotFoundException;
+import com.hanumoka.sado.common.tenant.TenantProvider;
 import com.hanumoka.sado.minipacs.domain.entity.Patient;
 import com.hanumoka.sado.minipacs.domain.repository.PatientRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +24,7 @@ import java.util.Optional;
 public class PatientService {
 
     private final PatientRepository patientRepository;
+    private final TenantProvider tenantProvider;
 
     /**
      * Patient PK로 조회
@@ -109,9 +110,28 @@ public class PatientService {
     /**
      * Identity Resolution: DICOM PatientID로 환자 찾기 또는 생성
      *
-     * DICOM C-STORE 수신 시 사용:
-     * 1. DICOM PatientID + Issuer로 기존 환자 검색
-     * 2. 없으면 새로운 Patient 생성
+     * <p>변경 사항 (2026-01-05): MySQL Native Query Upsert 패턴
+     * <ul>
+     *   <li>Insert-First + Exception Flow Control 제거</li>
+     *   <li>MySQL ON DUPLICATE KEY UPDATE로 원자적 Upsert</li>
+     *   <li>LAST_INSERT_ID(id) 트릭으로 기존/신규 ID 모두 반환</li>
+     *   <li>Exception 없음 → Hibernate Session 오염 없음</li>
+     *   <li>REQUIRES_NEW 불필요 → 상위 트랜잭션과 자연스럽게 통합</li>
+     * </ul>
+     *
+     * <p>동작 원리:
+     * <ol>
+     *   <li>MySQL Upsert 실행 (INSERT 또는 UPDATE)</li>
+     *   <li>LAST_INSERT_ID()로 ID 조회 (신규: auto_increment, 기존: 설정된 id)</li>
+     *   <li>findById()로 엔티티 반환 (1차 캐시 활용)</li>
+     * </ol>
+     *
+     * <p>이전 방식의 문제점 (Insert-First):
+     * <ul>
+     *   <li>DataIntegrityViolationException 발생 시 Session 오염</li>
+     *   <li>REQUIRES_NEW가 EntityManager를 격리하지 못함 (ThreadLocal 공유)</li>
+     *   <li>detach()/clear() 후에도 "null identifier" 오류 발생</li>
+     * </ul>
      *
      * @param dicomPatientId DICOM PatientID
      * @param issuerOfPatientId Issuer of PatientID
@@ -128,39 +148,32 @@ public class PatientService {
             java.time.LocalDate patientBirthDate,
             String patientSex) {
 
-        // 1. 기존 환자 검색
-        Optional<Patient> existingPatient = findByDicomPatientId(dicomPatientId, issuerOfPatientId);
+        // issuer NULL 정규화 (MySQL unique constraint 작동을 위해)
+        String normalizedIssuer = (issuerOfPatientId != null && !issuerOfPatientId.isEmpty())
+            ? issuerOfPatientId
+            : "";
 
-        if (existingPatient.isPresent()) {
-            log.debug("Found existing patient: id={}, dicomPatientId={}",
-                    existingPatient.get().getId(),
-                    dicomPatientId);
-            return existingPatient.get();
-        }
+        // 1. MySQL Upsert 실행 (Exception 없음, 완전 원자적)
+        Long tenantId = tenantProvider.getCurrentTenantId();
+        patientRepository.upsertPatient(
+            tenantId,
+            dicomPatientId,
+            normalizedIssuer,
+            patientName,
+            patientBirthDate,
+            patientSex
+        );
 
-        // 2. 새 환자 생성 시도
-        try {
-            Patient newPatient = Patient.builder()
-                    .dicomPatientId(dicomPatientId)
-                    .issuerOfPatientId(issuerOfPatientId)
-                    .patientName(patientName)
-                    .patientBirthDate(patientBirthDate)
-                    .patientSex(patientSex)
-                    .build();
+        // 2. LAST_INSERT_ID() 조회 (같은 커넥션 내에서 유효)
+        Long patientId = patientRepository.getLastInsertId();
 
-            Patient saved = patientRepository.saveAndFlush(newPatient);
-            log.info("Created new patient: id={}, dicomPatientId={}",
-                    saved.getId(),
-                    dicomPatientId);
-            return saved;
-        } catch (DataIntegrityViolationException e) {
-            // Race condition 발생 - 다른 스레드가 먼저 저장함
-            log.warn("Race condition detected for patient: {}/{}", dicomPatientId, issuerOfPatientId);
-            return patientRepository
-                    .findByDicomPatientIdAndIssuerOfPatientId(dicomPatientId, issuerOfPatientId)
-                    .orElseThrow(() -> new IllegalStateException(
-                            "Patient should exist after DataIntegrityViolationException"));
-        }
+        log.debug("Upsert patient completed: dicomPatientId={}, resultId={}",
+                dicomPatientId, patientId);
+
+        // 3. 엔티티 반환 (1차 캐시 활용)
+        return patientRepository.findById(patientId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Patient should exist after upsert: " + dicomPatientId));
     }
 
     /**

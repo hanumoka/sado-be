@@ -163,6 +163,13 @@ public class PatientController {
 
     /**
      * Patient Entity → PatientResponse 변환
+     *
+     * <p>CHANGED (2026-01-05): 통계 필드 제거
+     * <ul>
+     *   <li>studiesCount, lastStudyDate 필드 제거됨</li>
+     *   <li>필요시 studyRepository.countByPatientId()로 실시간 조회</li>
+     *   <li>Deadlock 방지 + 메모리 정합성 보장</li>
+     * </ul>
      */
     private PatientResponse toResponse(Patient patient) {
         return PatientResponse.builder()
@@ -177,8 +184,8 @@ public class PatientController {
                 .matchingConfidence(patient.getMatchingConfidence())
                 .matchingStatus(patient.getMatchingStatus() != null ?
                         patient.getMatchingStatus().name() : null)
-                .studiesCount(patient.getStudiesCount())
-                .lastStudyDate(patient.getLastStudyDate())
+                // studiesCount, lastStudyDate 제거 (2026-01-05)
+                // 필요시: studyRepository.countByPatientId(patient.getId())
                 .createdAt(patient.getCreatedAt())
                 .updatedAt(patient.getUpdatedAt())
                 .tenantId(patient.getTenantId())
