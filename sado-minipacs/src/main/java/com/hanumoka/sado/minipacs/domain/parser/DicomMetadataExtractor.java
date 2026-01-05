@@ -1,5 +1,7 @@
 package com.hanumoka.sado.minipacs.domain.parser;
 
+import com.hanumoka.sado.common.exception.BusinessException;
+import com.hanumoka.sado.minipacs.code.MiniPacsErrorCode;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -22,9 +24,34 @@ import java.time.format.DateTimeFormatter;
 public class DicomMetadataExtractor {
 
     /**
+     * DICOM 날짜 파싱 패턴 (우선순위 순)
+     * <p>재사용을 위해 static final로 선언하여 매번 배열 생성을 방지합니다.
+     */
+    private static final String[] DATE_PATTERNS = {
+        "yyyyMMdd",      // DICOM 표준: 19900315
+        "yyyy.MM.dd",    // 비표준 (점): 1990.03.15
+        "yyyy-MM-dd",    // 비표준 (하이픈): 1990-03-15
+        "yyyy/MM/dd"     // 비표준 (슬래시): 1990/03/15
+    };
+
+    /**
      * DICOM 파일에서 메타데이터 추출
      *
-     * @param inputStream DICOM 파일 InputStream
+     * <p><strong>CRITICAL - 리소스 관리 책임</strong>:
+     * 이 메서드는 inputStream의 소유권을 가져가지 않습니다.
+     * 호출자는 반드시 inputStream을 닫아야 합니다.
+     *
+     * <p>예시:
+     * <pre>{@code
+     * try (InputStream is = new FileInputStream(file)) {
+     *     DicomMetadata metadata = DicomMetadataExtractor.extract(is);
+     *     // is는 try-with-resources로 자동 닫힘
+     * }
+     * }</pre>
+     *
+     * @apiNote 호출자는 반드시 try-with-resources 또는 finally 블록에서
+     *          inputStream을 닫아야 합니다. 그렇지 않으면 파일 디스크립터가 누수됩니다.
+     * @param inputStream DICOM 파일 InputStream (호출자가 닫아야 함)
      * @return 추출된 DICOM 메타데이터
      * @throws IOException DICOM 파일 파싱 실패 시
      */
@@ -33,8 +60,8 @@ public class DicomMetadataExtractor {
             // DICOM 파일 파싱
             Attributes attributes = dis.readDataset();
 
-            // 메타데이터 추출 및 반환
-            return DicomMetadata.builder()
+            // 메타데이터 추출
+            DicomMetadata metadata = DicomMetadata.builder()
                     // Patient Level (0010,xxxx)
                     .patientId(attributes.getString(Tag.PatientID))
                     .issuerOfPatientId(attributes.getString(Tag.IssuerOfPatientID))
@@ -62,13 +89,20 @@ public class DicomMetadataExtractor {
                     .imageColumns(attributes.getInt(Tag.Columns, 0))
                     .numberOfFrames(attributes.getInt(Tag.NumberOfFrames, 1))
                     .build();
+
+            // 필수 DICOM 태그 검증
+            validateRequiredTags(metadata);
+
+            return metadata;
         }
     }
 
     /**
      * DICOM 날짜 형식 (YYYYMMDD) → LocalDate 변환
+     * <p>
+     * 표준 DICOM 형식(YYYYMMDD)과 비표준 형식(yyyy.MM.dd, yyyy-MM-dd)을 모두 지원합니다.
      *
-     * @param dicomDate DICOM 날짜 문자열 (예: "19900315")
+     * @param dicomDate DICOM 날짜 문자열 (예: "19900315", "1990.03.15", "1990-03-15")
      * @return LocalDate 객체 (파싱 실패 시 null)
      */
     private static LocalDate parseDate(String dicomDate) {
@@ -76,14 +110,82 @@ public class DicomMetadataExtractor {
             return null;
         }
 
-        try {
-            // DICOM 날짜 형식: YYYYMMDD
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-            return LocalDate.parse(dicomDate, formatter);
-        } catch (Exception e) {
-            log.warn("Failed to parse DICOM date: {}", dicomDate, e);
-            return null;
+        // static final DATE_PATTERNS 사용 (매번 배열 생성 방지)
+        // Note: yyyyMM, yyyy 패턴은 LocalDate.parse()로 파싱 불가 (YearMonth, Year 필요)
+        for (String pattern : DATE_PATTERNS) {
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+                LocalDate parsedDate = LocalDate.parse(dicomDate, formatter);
+
+                // 성공 시 로그 (DEBUG 레벨)
+                log.debug("Successfully parsed DICOM date: {} with pattern: {}",
+                          dicomDate, pattern);
+                return parsedDate;
+
+            } catch (Exception e) {
+                // 다음 패턴 시도 (로그 없음 - 정상 흐름)
+                continue;
+            }
         }
+
+        // 모든 패턴 실패 시
+        log.warn("Failed to parse DICOM date with all patterns: {}", dicomDate);
+        return null;
+    }
+
+    /**
+     * 필수 DICOM 태그 검증
+     * <p>
+     * DICOM Storage 필수 태그 (Type 1):
+     * - StudyInstanceUID (0020,000D)
+     * - SeriesInstanceUID (0020,000E)
+     * - SOPInstanceUID (0008,0018)
+     * <p>
+     * PatientID (0010,0020)는 연구용 DICOM에서 누락 가능하므로 검증하지 않음
+     *
+     * @param metadata 검증할 DICOM 메타데이터
+     * @throws BusinessException 필수 태그 누락 시
+     */
+    private static void validateRequiredTags(DicomMetadata metadata) {
+        StringBuilder missingTags = new StringBuilder();
+
+        // StudyInstanceUID (0020,000D) - Type 1
+        if (isEmpty(metadata.getStudyInstanceUid())) {
+            missingTags.append("StudyInstanceUID (0020,000D), ");
+        }
+
+        // SeriesInstanceUID (0020,000E) - Type 1
+        if (isEmpty(metadata.getSeriesInstanceUid())) {
+            missingTags.append("SeriesInstanceUID (0020,000E), ");
+        }
+
+        // SOPInstanceUID (0008,0018) - Type 1
+        if (isEmpty(metadata.getSopInstanceUid())) {
+            missingTags.append("SOPInstanceUID (0008,0018), ");
+        }
+
+        // Modality (0008,0060) - Type 1
+        if (isEmpty(metadata.getModality())) {
+            missingTags.append("Modality (0008,0060), ");
+        }
+
+        if (missingTags.length() > 0) {
+            // 마지막 ", " 제거
+            missingTags.setLength(missingTags.length() - 2);
+            String errorMessage = "Required DICOM tags are missing: " + missingTags;
+            log.error(errorMessage);
+            throw new BusinessException(MiniPacsErrorCode.DICOM_MISSING_REQUIRED_TAG, errorMessage);
+        }
+    }
+
+    /**
+     * 문자열이 null이거나 빈 문자열인지 검사
+     *
+     * @param str 검사할 문자열
+     * @return null이거나 빈 문자열이면 true
+     */
+    private static boolean isEmpty(String str) {
+        return str == null || str.trim().isEmpty();
     }
 
     /**

@@ -11,6 +11,7 @@ import com.hanumoka.sado.minipacs.domain.repository.FileAssetRepository;
 import com.hanumoka.sado.minipacs.infrastructure.config.S3Properties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +22,7 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
@@ -58,6 +60,26 @@ public class FileAssetService {
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
     private final S3Properties s3Properties;
+
+    /**
+     * CRITICAL: Self-injection for AOP proxy access
+     *
+     * <p>Self-invocation 문제 해결:
+     * - 같은 클래스 내 메서드 호출 시 AOP 프록시 우회
+     * - @Transactional 등 AOP 기능이 작동하지 않음
+     * - self를 통해 호출하면 프록시를 거쳐 AOP 작동
+     *
+     * <p>사용 예:
+     * <pre>{@code
+     * // ❌ 작동 안 함 (직접 호출)
+     * updateLastAccessedAt(id);
+     *
+     * // ✅ 작동함 (프록시 통해 호출)
+     * self.updateLastAccessedAt(id);
+     * }</pre>
+     */
+    @Autowired
+    private FileAssetService self;
 
     /**
      * FileAsset PK로 조회
@@ -131,8 +153,13 @@ public class FileAssetService {
         String checksum = null;
 
         try {
+            // CRITICAL: InputStream 재사용 불가 문제 해결
+            // MultipartFile.getInputStream()은 재사용 보장 안 됨
+            // → byte array로 한 번 읽어서 재사용
+            byte[] fileBytes = file.getBytes();
+
             // 2. 체크섬 계산 (MD5)
-            checksum = calculateChecksum(file.getInputStream());
+            checksum = calculateChecksum(new ByteArrayInputStream(fileBytes));
 
             // 3. S3에 업로드
             PutObjectRequest putRequest = PutObjectRequest.builder()
@@ -142,7 +169,7 @@ public class FileAssetService {
                     .contentLength(file.getSize())
                     .build();
 
-            s3Client.putObject(putRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+            s3Client.putObject(putRequest, RequestBody.fromBytes(fileBytes));
 
             log.info("File uploaded to S3 successfully: s3Key={}", s3Key);
 
@@ -201,8 +228,8 @@ public class FileAssetService {
 
             InputStream inputStream = s3Client.getObject(getRequest);
 
-            // 마지막 접근 시간 업데이트
-            updateLastAccessedAt(id);
+            // 마지막 접근 시간 업데이트 (self-injection으로 AOP 프록시 통과)
+            self.updateLastAccessedAt(id);
 
             log.info("File downloaded successfully: id={}", id);
             return inputStream;
@@ -245,8 +272,8 @@ public class FileAssetService {
             PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
             String url = presignedRequest.url().toString();
 
-            // 마지막 접근 시간 업데이트
-            updateLastAccessedAt(id);
+            // 마지막 접근 시간 업데이트 (self-injection으로 AOP 프록시 통과)
+            self.updateLastAccessedAt(id);
 
             log.info("Pre-signed URL generated: id={}", id);
             return url;
@@ -311,6 +338,21 @@ public class FileAssetService {
 
     /**
      * MD5 체크섬 계산
+     *
+     * <p><strong>CRITICAL - 리소스 관리 책임</strong>:
+     * 이 메서드는 inputStream의 소유권을 가져가지 않습니다.
+     * 호출자는 반드시 inputStream을 닫아야 합니다.
+     *
+     * <p>현재 사용 방식:
+     * <ul>
+     *   <li>{@code uploadFile()}: ByteArrayInputStream 사용 (close 불필요)</li>
+     *   <li>향후 변경 시: 호출자가 try-with-resources로 관리 필요</li>
+     * </ul>
+     *
+     * @param inputStream 체크섬을 계산할 입력 스트림
+     * @return MD5 체크섬 (hex 문자열), 실패 시 null
+     * @apiNote 호출자는 반드시 try-with-resources 또는 finally 블록에서
+     *          inputStream을 닫아야 합니다. 그렇지 않으면 리소스가 누수됩니다.
      */
     private String calculateChecksum(InputStream inputStream) {
         try {
@@ -348,6 +390,22 @@ public class FileAssetService {
 
     /**
      * 마지막 접근 시간 업데이트
+     *
+     * <p>CRITICAL: 이 메서드는 반드시 self를 통해 호출해야 합니다!
+     * <pre>{@code
+     * // ❌ 작동 안 함 (AOP 프록시 우회, @Transactional 무시됨)
+     * updateLastAccessedAt(id);
+     *
+     * // ✅ 올바른 사용 (AOP 프록시 통과, @Transactional 작동)
+     * self.updateLastAccessedAt(id);
+     * }</pre>
+     *
+     * <p>이유:
+     * - 같은 클래스 내부에서 메서드 호출 시 Spring AOP 프록시를 거치지 않음
+     * - @Transactional 등 AOP 기반 기능이 작동하지 않음
+     * - self를 통해 호출하면 프록시를 거쳐 정상 작동
+     *
+     * @param id FileAsset PK
      */
     @Transactional
     public void updateLastAccessedAt(Long id) {

@@ -11,6 +11,7 @@ import com.hanumoka.sado.minipacs.dto.request.CreateSeriesRequest;
 import com.hanumoka.sado.minipacs.dto.request.UpdateSeriesRequest;
 import com.hanumoka.sado.minipacs.dto.response.InstanceResponse;
 import com.hanumoka.sado.minipacs.dto.response.SeriesResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +38,7 @@ public class SeriesController {
      * POST /api/series
      */
     @PostMapping
-    public ApiResponse<SeriesResponse> createSeries(@RequestBody CreateSeriesRequest request) {
+    public ApiResponse<SeriesResponse> createSeries(@Valid @RequestBody CreateSeriesRequest request) {
         log.info("POST /api/series - studyId: {}", request.getStudyId());
 
         // 1. DTO → Entity 변환
@@ -78,7 +79,7 @@ public class SeriesController {
     @PutMapping("/{id}")
     public ApiResponse<SeriesResponse> updateSeries(
             @PathVariable Long id,
-            @RequestBody UpdateSeriesRequest request) {
+            @Valid @RequestBody UpdateSeriesRequest request) {
         log.info("PUT /api/series/{}", id);
 
         // 1. 기존 시리즈 조회

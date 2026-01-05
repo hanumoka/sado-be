@@ -55,36 +55,39 @@ public interface SeriesRepository extends JpaRepository<Series, Long> {
     /**
      * ID로 조회 (Pessimistic Write Lock)
      *
-     * <p>카운터 증감 시 동시성 문제를 해결하기 위해 사용합니다.
-     * Instance 추가/삭제 시 numberOfInstances 카운터를
-     * 안전하게 업데이트하기 위해 행 수준 잠금을 획득합니다.
+     * <p><strong>@Deprecated</strong> - Optimistic Lock으로 변경됨
      *
-     * <p>사용 예시:
-     * <pre>
-     * {@code
-     * @Transactional
-     * public Instance createInstance(Instance instance) {
-     *     // Series를 락과 함께 조회 (다른 트랜잭션은 대기)
-     *     Series series = seriesRepository.findByIdWithLock(instance.getSeries().getId())
-     *         .orElseThrow(() -> new ResourceNotFoundException("Series not found"));
+     * <p>Series 엔티티에 @Version 필드가 추가되어
+     * Optimistic Lock을 자동으로 사용합니다.
+     * 이 메서드 대신 findById()를 사용하세요.
      *
-     *     // 카운터 안전하게 증가
-     *     series.incrementInstanceCount();
-     *     return instanceRepository.save(instance);
-     * }
-     * }
-     * </pre>
-     *
-     * <p>주의사항:
+     * <p>변경 이유:
      * <ul>
-     *   <li>락 획득 중 다른 트랜잭션은 대기합니다 (성능 오버헤드)</li>
-     *   <li>데드락 방지를 위해 짧은 트랜잭션 사용 권장</li>
-     *   <li>읽기 전용 작업에서는 사용하지 마세요</li>
+     *   <li>Pessimistic Lock: Deadlock 위험, 성능 오버헤드</li>
+     *   <li>Optimistic Lock: OptimisticLockException 발생 시 재시도로 해결</li>
      * </ul>
+     *
+     * <p>마이그레이션 가이드:
+     * <pre>{@code
+     * // ❌ 기존 코드 (Pessimistic Lock)
+     * Series series = seriesRepository.findByIdWithLock(id).orElseThrow();
+     * series.incrementInstanceCount();
+     * seriesRepository.save(series);
+     *
+     * // ✅ 새 코드 (Optimistic Lock + 재시도)
+     * @Retryable(value = OptimisticLockingFailureException.class, maxAttempts = 3)
+     * public void incrementInstance(Long id) {
+     *     Series series = seriesRepository.findById(id).orElseThrow();
+     *     series.incrementInstanceCount();
+     *     seriesRepository.save(series);  // @Version 자동 증가
+     * }
+     * }</pre>
      *
      * @param id Series PK
      * @return Series (없으면 empty)
+     * @deprecated Series 엔티티에 @Version 필드 추가됨, findById() 사용 권장
      */
+    @Deprecated(since = "POC Week 8", forRemoval = true)
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT s FROM Series s WHERE s.id = :id")
     Optional<Series> findByIdWithLock(@Param("id") Long id);

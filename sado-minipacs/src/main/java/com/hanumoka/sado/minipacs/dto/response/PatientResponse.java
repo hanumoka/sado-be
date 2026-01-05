@@ -37,10 +37,14 @@ public class PatientResponse {
      private Double matchingConfidence;
      private String matchingStatus;
 
-    // 5. 감사(Audit) 필드 - BaseEntity에서 상속받는 필드들
+    // 5. 통계 필드 (역정규화)
+     private Integer studiesCount;
+     private LocalDate lastStudyDate;
+
+    // 6. 감사(Audit) 필드 - BaseEntity에서 상속받는 필드들
      private LocalDateTime createdAt;
      private LocalDateTime updatedAt;
 
-    // 6. 멀티테넌시
+    // 7. 멀티테넌시
      private Long tenantId;
 }

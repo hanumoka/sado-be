@@ -28,7 +28,11 @@ import java.util.Objects;
     uniqueConstraints = @UniqueConstraint(
         name = "uk_patient_identity",
         columnNames = {"tenant_id", "dicom_patient_id", "issuer_of_patient_id"}
-    )
+    ),
+    indexes = {
+        @Index(name = "idx_patient_emr_id", columnList = "emr_patient_id"),
+        @Index(name = "idx_patient_dicom_id", columnList = "tenant_id, dicom_patient_id")
+    }
 )
 @Getter
 @Setter
@@ -108,13 +112,43 @@ public class Patient extends TenantAwareEntity {
     @Column(name = "matching_status", length = 50)
     private MatchingStatus matchingStatus;
 
+    // ========== 통계 필드 (역정규화) ==========
+
+    /**
+     * 환자의 총 Study 수
+     * JPA EntityListener에 의해 자동 유지됨
+     * 목적: FE에서 환자 목록 조회 시 스터디 수 표시 (JOIN 없이)
+     */
+    @Column(name = "studies_count")
+    private Integer studiesCount;
+
+    /**
+     * 가장 최근 Study 날짜
+     * JPA EntityListener에 의해 자동 유지됨
+     * 목적: FE에서 환자 목록 정렬 및 최근 검사일 표시
+     */
+    @Column(name = "last_study_date")
+    private LocalDate lastStudyDate;
+
     // ========== 관계 ==========
 
     /**
      * 환자의 검사 목록
      * 1명의 환자 → N개의 검사
+     *
+     * CRITICAL: CascadeType.ALL 제거 (데이터 무결성 보호)
+     * - 의료 데이터는 WORM (Write Once Read Many) 정책 필요
+     * - Patient 삭제 시 Study/Series/Instance 연쇄 삭제 방지
+     * - orphanRemoval도 제거하여 실수로 인한 데이터 손실 방지
+     * - 명시적 삭제만 허용 (Soft Delete 권장)
+     *
+     * CRITICAL: @BatchSize 추가 (N+1 쿼리 방지)
+     * - PatientStatisticsListener에서 patient.getStudies() 호출 시
+     * - 100명 조회 시 100번 쿼리 → 10번 쿼리 (IN 절 사용)
+     * - 성능 10배 개선
      */
-    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "patient", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @org.hibernate.annotations.BatchSize(size = 10)
     private List<Study> studies = new ArrayList<>();
 
     // ========== Enum 정의 ==========
@@ -263,6 +297,16 @@ public class Patient extends TenantAwareEntity {
 
         public Builder matchingStatus(MatchingStatus matchingStatus) {
             patient.matchingStatus = matchingStatus;
+            return this;
+        }
+
+        public Builder studiesCount(Integer studiesCount) {
+            patient.studiesCount = studiesCount;
+            return this;
+        }
+
+        public Builder lastStudyDate(LocalDate lastStudyDate) {
+            patient.lastStudyDate = lastStudyDate;
             return this;
         }
 

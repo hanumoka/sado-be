@@ -78,6 +78,50 @@ public interface DicomStorageService {
     InputStream downloadDicomFile(String s3Key);
 
     /**
+     * DICOM 파일 다운로드 (Resource 반환)
+     *
+     * <p>CRITICAL: 리소스 누수 방지
+     * - Controller에서 ResponseEntity&lt;Resource&gt; 반환 시 사용
+     * - Spring Framework가 Resource.close()를 자동 호출
+     * - InputStream보다 안전한 리소스 관리
+     *
+     * <p>사용 예시:
+     * <pre>{@code
+     * // Controller
+     * Resource resource = dicomStorageService.downloadDicomFileAsResource(s3Key);
+     * return ResponseEntity.ok().body(resource);
+     * }</pre>
+     *
+     * @param s3Key S3 Key (uploadDicomFile 반환값)
+     * @return DICOM 파일 Resource (InputStreamResource)
+     * @throws com.hanumoka.sado.common.exception.BusinessException FILE_NOT_FOUND - 파일이 존재하지 않을 때
+     * @throws com.hanumoka.sado.common.exception.BusinessException STORAGE_DOWNLOAD_FAILED - S3 다운로드 실패 시
+     */
+    org.springframework.core.io.Resource downloadDicomFileAsResource(String s3Key);
+
+    /**
+     * 범용 파일 다운로드 (스트리밍)
+     *
+     * <p>DICOM뿐만 아니라 모든 FileAsset 타입의 파일을 다운로드합니다.
+     * Backend File Proxy에서 사용됩니다.
+     *
+     * <p>특징:
+     * <ul>
+     *   <li>스트리밍 지원: 대용량 파일도 메모리 효율적으로 처리</li>
+     *   <li>범용성: DICOM, AI 결과, Export 파일 등 모든 타입 지원</li>
+     *   <li>감사 로그: FileProxyController에서 호출 전후 로그 기록</li>
+     * </ul>
+     *
+     * <p>주의: 호출자는 반환된 InputStream을 반드시 닫아야 합니다
+     *
+     * @param s3Key S3 Key (FileAsset.storagePath)
+     * @return 파일 InputStream
+     * @throws com.hanumoka.sado.common.exception.BusinessException FILE_NOT_FOUND - 파일이 존재하지 않을 때
+     * @throws com.hanumoka.sado.common.exception.BusinessException STORAGE_DOWNLOAD_FAILED - S3 다운로드 실패 시
+     */
+    InputStream downloadFileStream(String s3Key);
+
+    /**
      * Pre-signed URL 생성
      *
      * <p>Frontend가 SeaweedFS에 직접 접근할 수 있는 임시 URL을 생성합니다.

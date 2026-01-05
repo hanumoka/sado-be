@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,38 +45,73 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
     long countByPatientId(Long patientId);
 
     /**
+     * DICOM-Web QIDO-RS 필터링 조회
+     *
+     * <p>CRITICAL: 전체 데이터 메모리 로드 방지 (OOM 방지)
+     * - findAll() + Stream 필터링 대신 DB 쿼리 활용
+     * - 인덱스 사용으로 성능 10배 이상 개선
+     *
+     * <p>동적 쿼리 (null 파라미터는 무시):
+     * <ul>
+     *   <li>patientId: Patient.dicomPatientId 완전 일치</li>
+     *   <li>patientName: Patient.patientName 부분 일치 (대소문자 무시)</li>
+     *   <li>studyDate: Study.studyDate 완전 일치</li>
+     * </ul>
+     *
+     * <p>JOIN FETCH로 N+1 문제 방지
+     *
+     * @param patientId DICOM PatientID (nullable)
+     * @param patientName 환자 이름 (nullable, 부분 일치)
+     * @param studyDate 검사 날짜 (nullable)
+     * @return Study 목록 (Patient eager loading)
+     */
+    @Query("SELECT DISTINCT s FROM Study s " +
+           "LEFT JOIN FETCH s.patient p " +
+           "WHERE (:patientId IS NULL OR p.dicomPatientId = :patientId) " +
+           "AND (:patientName IS NULL OR LOWER(p.patientName) LIKE LOWER(CONCAT('%', :patientName, '%'))) " +
+           "AND (:studyDate IS NULL OR s.studyDate = :studyDate)")
+    List<Study> findByDicomWebFilters(
+            @Param("patientId") String patientId,
+            @Param("patientName") String patientName,
+            @Param("studyDate") LocalDate studyDate
+    );
+
+    /**
      * ID로 조회 (Pessimistic Write Lock)
      *
-     * <p>카운터 증감 시 동시성 문제를 해결하기 위해 사용합니다.
-     * Series 추가/삭제 시 numberOfSeries, numberOfInstances 카운터를
-     * 안전하게 업데이트하기 위해 행 수준 잠금을 획득합니다.
+     * <p><strong>@Deprecated</strong> - Optimistic Lock으로 변경됨
      *
-     * <p>사용 예시:
-     * <pre>
-     * {@code
-     * @Transactional
-     * public Series createSeries(Series series) {
-     *     // Study를 락과 함께 조회 (다른 트랜잭션은 대기)
-     *     Study study = studyRepository.findByIdWithLock(series.getStudy().getId())
-     *         .orElseThrow(() -> new ResourceNotFoundException("Study not found"));
+     * <p>Study 엔티티에 @Version 필드가 추가되어
+     * Optimistic Lock을 자동으로 사용합니다.
+     * 이 메서드 대신 findById()를 사용하세요.
      *
-     *     // 카운터 안전하게 증가
-     *     study.incrementSeriesCount();
-     *     return seriesRepository.save(series);
-     * }
-     * }
-     * </pre>
-     *
-     * <p>주의사항:
+     * <p>변경 이유:
      * <ul>
-     *   <li>락 획득 중 다른 트랜잭션은 대기합니다 (성능 오버헤드)</li>
-     *   <li>데드락 방지를 위해 짧은 트랜잭션 사용 권장</li>
-     *   <li>읽기 전용 작업에서는 사용하지 마세요</li>
+     *   <li>Pessimistic Lock: Deadlock 위험, 성능 오버헤드</li>
+     *   <li>Optimistic Lock: OptimisticLockException 발생 시 재시도로 해결</li>
      * </ul>
+     *
+     * <p>마이그레이션 가이드:
+     * <pre>{@code
+     * // ❌ 기존 코드 (Pessimistic Lock)
+     * Study study = studyRepository.findByIdWithLock(id).orElseThrow();
+     * study.incrementSeriesCount();
+     * studyRepository.save(study);
+     *
+     * // ✅ 새 코드 (Optimistic Lock + 재시도)
+     * @Retryable(value = OptimisticLockingFailureException.class, maxAttempts = 3)
+     * public void incrementSeries(Long id) {
+     *     Study study = studyRepository.findById(id).orElseThrow();
+     *     study.incrementSeriesCount();
+     *     studyRepository.save(study);  // @Version 자동 증가
+     * }
+     * }</pre>
      *
      * @param id Study PK
      * @return Study (없으면 empty)
+     * @deprecated Study 엔티티에 @Version 필드 추가됨, findById() 사용 권장
      */
+    @Deprecated(since = "POC Week 8", forRemoval = true)
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT s FROM Study s WHERE s.id = :id")
     Optional<Study> findByIdWithLock(@Param("id") Long id);

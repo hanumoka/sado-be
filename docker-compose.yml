@@ -6,15 +6,15 @@ services:
     image: mysql:8.0
     container_name: sado-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: root1234
-      MYSQL_DATABASE: sado_db
-      MYSQL_USER: sado_user
-      MYSQL_PASSWORD: sado1234
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: sado_
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
       TZ: Asia/Seoul
     ports:
       - "10100:3306"
     volumes:
-      - mysql-data:/var/lib/mysql
+      - sado-mysql-data:/var/lib/mysql
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
@@ -22,34 +22,34 @@ services:
       - sado-network
 
   # Zookeeper (Kafka 의존성)
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    container_name: sado-zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "10101:2181"
-    networks:
-      - sado-network
+#  zookeeper:
+#    image: confluentinc/cp-zookeeper:7.5.0
+#    container_name: sado-zookeeper
+#    environment:
+#      ZOOKEEPER_CLIENT_PORT: 2181
+#      ZOOKEEPER_TICK_TIME: 2000
+#    ports:
+#      - "10101:2181"
+#    networks:
+#      - sado-network
 
   # Kafka
-  kafka:
-    image: confluentinc/cp-kafka:7.5.0
-    container_name: sado-kafka
-    depends_on:
-      - zookeeper
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:10102
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-    ports:
-      - "10102:9092"
-    networks:
-      - sado-network
+#  kafka:
+#    image: confluentinc/cp-kafka:7.5.0
+#    container_name: sado-kafka
+#    depends_on:
+#      - zookeeper
+#    environment:
+#      KAFKA_BROKER_ID: 1
+#      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:10102
+#      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+#      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+#      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+#    ports:
+#      - "10102:9092"
+#    networks:
+#      - sado-network
 
   # SeaweedFS Master
   seaweedfs-master:
@@ -72,7 +72,7 @@ services:
       - "10402:8080"      # HTTP API (파일 읽기/쓰기)
     command: 'volume -mserver=seaweedfs-master:9333 -port=8080'
     volumes:
-      - seaweedfs-data:/data
+      - sado-seaweedfs-data:/data
     networks:
       - sado-network
 
@@ -87,13 +87,15 @@ services:
       - "10403:8888"      # HTTP API (Filer 관리, Web UI)
       - "10404:18888"     # gRPC
       - "10405:8333"      # S3 API ⭐ (Spring Boot에서 사용)
-    command: 'filer -master=seaweedfs-master:9333 -ip=seaweedfs-filer -s3 -s3.port=8333'
+    volumes:
+      - ./seaweedfs-s3-config.json:/etc/seaweedfs/s3.json:ro
+    command: 'filer -master=seaweedfs-master:9333 -ip=seaweedfs-filer -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json'
     networks:
       - sado-network
 
 volumes:
-  mysql-data:
-  seaweedfs-data:
+  sado-mysql-data:
+  sado-seaweedfs-data:
 
 networks:
   sado-network:

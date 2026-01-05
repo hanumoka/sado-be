@@ -5,6 +5,8 @@ import com.hanumoka.sado.minipacs.code.MiniPacsErrorCode;
 import com.hanumoka.sado.minipacs.infrastructure.config.S3Properties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -148,6 +150,61 @@ public class SeaweedFsS3StorageService implements DicomStorageService {
     }
 
     /**
+     * DICOM 파일 다운로드 (Resource 반환)
+     *
+     * <p>CRITICAL: 리소스 누수 방지
+     * - InputStream 대신 Resource 반환
+     * - Spring Framework가 자동으로 close() 호출
+     * - Controller에서 안전하게 사용 가능
+     *
+     * <p>내부적으로 downloadDicomFile()과 동일한 로직 수행
+     *
+     * @param s3Key S3 Key
+     * @return DICOM 파일 Resource (InputStreamResource)
+     * @throws BusinessException FILE_NOT_FOUND - 파일이 존재하지 않을 때
+     * @throws BusinessException STORAGE_DOWNLOAD_FAILED - S3 다운로드 실패 시
+     */
+    @Override
+    public Resource downloadDicomFileAsResource(String s3Key) {
+        log.info("Downloading DICOM file as Resource: bucket={}, s3Key={}",
+                s3Properties.getBucket(), s3Key);
+
+        try {
+            // 1. S3 GetObject 요청 생성
+            GetObjectRequest getRequest = GetObjectRequest.builder()
+                    .bucket(s3Properties.getBucket())
+                    .key(s3Key)
+                    .build();
+
+            // 2. SeaweedFS에서 파일 조회 (InputStream 반환)
+            InputStream inputStream = s3Client.getObject(getRequest);
+
+            // 3. InputStreamResource로 래핑
+            // Spring Framework가 Response 전송 후 자동으로 close() 호출
+            Resource resource = new InputStreamResource(inputStream);
+
+            log.info("DICOM file Resource created successfully: s3Key={}", s3Key);
+            return resource;
+
+        } catch (NoSuchKeyException e) {
+            log.error("DICOM file not found: bucket={}, s3Key={}", s3Properties.getBucket(), s3Key, e);
+
+            throw new BusinessException(
+                    MiniPacsErrorCode.FILE_NOT_FOUND,
+                    String.format("파일을 찾을 수 없습니다: %s", s3Key)
+            );
+
+        } catch (S3Exception e) {
+            log.error("S3 download failed: bucket={}, s3Key={}", s3Properties.getBucket(), s3Key, e);
+
+            throw new BusinessException(
+                    MiniPacsErrorCode.STORAGE_DOWNLOAD_FAILED,
+                    String.format("DICOM 파일 다운로드 실패: %s", s3Key)
+            );
+        }
+    }
+
+    /**
      * Pre-signed URL 생성
      *
      * <p>Frontend가 SeaweedFS에 직접 접근할 수 있는 임시 URL을 생성합니다.
@@ -198,6 +255,26 @@ public class SeaweedFsS3StorageService implements DicomStorageService {
                     String.format("Pre-signed URL 생성 실패: %s", s3Key)
             );
         }
+    }
+
+    /**
+     * 범용 파일 다운로드 (스트리밍)
+     *
+     * <p>DICOM뿐만 아니라 모든 타입의 파일을 다운로드합니다.
+     * Backend File Proxy에서 사용됩니다.
+     *
+     * <p>내부적으로 downloadDicomFile()과 동일한 S3 GetObject를 수행합니다.
+     *
+     * @param s3Key S3 Key (FileAsset.storagePath)
+     * @return 파일 InputStream
+     * @throws BusinessException FILE_NOT_FOUND - 파일이 존재하지 않을 때
+     * @throws BusinessException STORAGE_DOWNLOAD_FAILED - S3 다운로드 실패 시
+     */
+    @Override
+    public InputStream downloadFileStream(String s3Key) {
+        log.debug("Streaming file download: bucket={}, s3Key={}", s3Properties.getBucket(), s3Key);
+        // DICOM과 동일한 S3 GetObject 로직 재사용
+        return downloadDicomFile(s3Key);
     }
 
     /**

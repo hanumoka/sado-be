@@ -100,10 +100,13 @@ docker ps
 ### 3. Run Application
 
 ```bash
-# Run gateway
+# Run Gateway
 ./gradlew :sado-gateway:bootRun
+# Application starts at http://localhost:10200
 
-# Application starts at http://localhost:8080
+# Run MiniPACS (새 터미널)
+./gradlew :sado-minipacs:bootRun
+# Application starts at http://localhost:10201
 ```
 
 ### 4. Test API

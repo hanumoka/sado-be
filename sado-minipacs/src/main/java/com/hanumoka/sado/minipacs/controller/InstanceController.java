@@ -26,6 +26,7 @@ import com.hanumoka.sado.minipacs.dto.request.UpdateInstanceRequest;
 import com.hanumoka.sado.minipacs.dto.response.InstanceResponse;
 import com.hanumoka.sado.minipacs.storage.dto.FileAccessResponse;
 import com.hanumoka.sado.minipacs.storage.strategy.StorageAccessStrategy;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -60,7 +61,7 @@ public class InstanceController {
      * POST /api/instances
      */
     @PostMapping
-    public ApiResponse<InstanceResponse> createInstance(@RequestBody CreateInstanceRequest request) {
+    public ApiResponse<InstanceResponse> createInstance(@Valid @RequestBody CreateInstanceRequest request) {
         log.info("POST /api/instances - seriesId: {}", request.getSeriesId());
 
         // 1. DTO → Entity 변환
@@ -101,7 +102,7 @@ public class InstanceController {
     @PutMapping("/{id}")
     public ApiResponse<InstanceResponse> updateInstance(
             @PathVariable Long id,
-            @RequestBody UpdateInstanceRequest request) {
+            @Valid @RequestBody UpdateInstanceRequest request) {
         log.info("PUT /api/instances/{}", id);
 
         // 1. 기존 영상 조회

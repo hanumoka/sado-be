@@ -73,11 +73,16 @@ public class BackendProxyAccessStrategy implements StorageAccessStrategy {
     // private final DlpService dlpService;
 
     /**
-     * Backend Proxy 엔드포인트 반환 (Week 9+ 구현 완성 예정)
+     * Backend Proxy 엔드포인트 반환
      *
-     * <p>현재 상태: 골격만 (UnsupportedOperationException)
+     * <p>현재 상태 (Week 8 POC):
+     * <ul>
+     *   <li>Proxy 엔드포인트만 반환</li>
+     *   <li>Audit Log는 FileProxyController에서 처리</li>
+     *   <li>DLP는 Week 9+ 구현 예정</li>
+     * </ul>
      *
-     * <p>Week 9+ 완성 흐름:
+     * <p>Week 9+ 추가 예정:
      * <ol>
      *   <li>Audit Log 기록 (ACCESS_REQUEST): tenantId, userId, fileId, IP</li>
      *   <li>DLP 검증:
@@ -87,10 +92,9 @@ public class BackendProxyAccessStrategy implements StorageAccessStrategy {
      *       <li>파일 크기 제한: 단일 파일 최대 크기 (예: 500MB)</li>
      *     </ul>
      *   </li>
-     *   <li>Proxy 엔드포인트 반환: {@code /api/files/{fileId}/proxy}</li>
      * </ol>
      *
-     * <p>Frontend 처리 (Week 9+):
+     * <p>Frontend 처리:
      * <pre>{@code
      * // React - Cornerstone3D
      * const response = await api.get(`/api/v1/instances/${instanceId}/download`);
@@ -102,41 +106,19 @@ public class BackendProxyAccessStrategy implements StorageAccessStrategy {
      * }
      * }</pre>
      *
-     * <p>Audit Log 스키마 (Week 9+ 구현):
-     * <pre>{@code
-     * CREATE TABLE audit_logs (
-     *   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-     *   tenant_id BIGINT NOT NULL,
-     *   event_type VARCHAR(50) NOT NULL, -- 'FILE_DOWNLOAD'
-     *   resource_type VARCHAR(50) NOT NULL, -- 'DICOM_INSTANCE'
-     *   resource_id VARCHAR(255) NOT NULL, -- fileId
-     *   user_id BIGINT NOT NULL,
-     *   user_name VARCHAR(255),
-     *   ip_address VARCHAR(45), -- IPv6 지원
-     *   user_agent TEXT,
-     *   timestamp DATETIME(6) NOT NULL,
-     *   status VARCHAR(20) NOT NULL, -- 'SUCCESS', 'DENIED', 'FAILED'
-     *   metadata JSON, -- 파일 크기, 다운로드 시간 등
-     *   INDEX idx_tenant_time (tenant_id, timestamp),
-     *   INDEX idx_user_time (user_id, timestamp)
-     * );
-     * }</pre>
-     *
-     * @param fileId 파일 ID (SeaweedFS S3 key)
-     * @param userId 요청 사용자 ID (Audit Log 및 DLP 검증용)
-     * @param tenantId 테넌트 ID (멀티테넌시 격리)
-     * @return Backend Proxy 엔드포인트 (Week 9+ 구현 시)
-     * @throws UnsupportedOperationException Week 4-8 POC에서 호출 시 (골격만 존재)
-     * @throws com.hanumoka.sado.minipacs.code.RateLimitException Week 9+: DLP 다운로드 횟수 제한 초과
-     * @throws com.hanumoka.sado.minipacs.code.QuotaExceededException Week 9+: DLP 일일 다운로드 용량 초과
+     * @param fileId 파일 ID (FileAsset ID)
+     * @param userId 요청 사용자 ID (현재 미사용, Week 9+ DLP 검증용)
+     * @param tenantId 테넌트 ID (현재 미사용, Week 9+ Audit Log용)
+     * @return Backend Proxy 엔드포인트
      */
     @Override
     public FileAccessResponse getFileAccess(String fileId, Long userId, Long tenantId) {
-        log.warn("BackendProxyAccessStrategy called but not implemented yet. " +
-            "Current phase: Week 4-8 POC. Implementation planned for Week 9+ KingArthur integration.");
+        log.debug("Backend Proxy URL requested: fileId={}, userId={}, tenantId={}", fileId, userId, tenantId);
 
-        // TODO(Week 9+): 구현 완성
-        // Step 1: Audit Log 기록
+        // Week 8 POC: Proxy 엔드포인트만 반환
+        // Week 9+: Audit Log 기록 + DLP 검증 추가 예정
+
+        // TODO(Week 9+): Audit Log 기록
         // auditLogService.logFileAccessRequest(
         //     tenantId,
         //     fileId,
@@ -144,16 +126,11 @@ public class BackendProxyAccessStrategy implements StorageAccessStrategy {
         //     "ACCESS_REQUEST"
         // );
 
-        // Step 2: DLP 검증
+        // TODO(Week 9+): DLP 검증
         // dlpService.validateDownloadRequest(userId, fileId);
 
-        // Step 3: Proxy 엔드포인트 반환
-        // return FileAccessResponse.proxyUrl("/api/files/" + fileId + "/proxy");
-
-        throw new UnsupportedOperationException(
-            "Backend Proxy not implemented yet. " +
-            "Use Pre-signed URL in POC (storage.access-strategy=presigned-url). " +
-            "Implementation planned for Week 9+ KingArthur integration."
-        );
+        // Proxy 엔드포인트 반환
+        String proxyEndpoint = "/api/files/" + fileId + "/proxy";
+        return FileAccessResponse.proxyUrl(proxyEndpoint);
     }
 }

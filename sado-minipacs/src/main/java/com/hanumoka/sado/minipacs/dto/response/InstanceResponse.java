@@ -35,7 +35,23 @@ public class InstanceResponse {
     private Integer instanceNumber;
 
     // 5. 스토리지
-    private String storagePath;
+    private String storagePath;  // S3 Key
+
+    /**
+     * Pre-signed URL (Frontend DICOM Viewer용)
+     * <p>
+     * <b>접근 방식:</b>
+     * <ul>
+     *   <li><b>Pre-signed URL 방식</b> (POC 기본값): 유효 기간 1시간, Frontend가 SeaweedFS에 직접 접근</li>
+     *   <li><b>Backend Proxy 방식</b> (프로덕션): 무제한, Frontend가 Backend 경유</li>
+     * </ul>
+     *
+     * <p><b>설정:</b> application.yml의 storage.access-strategy 값으로 전환 (코드 변경 0줄)
+     *
+     * <p><b>주의:</b> 예외 발생 시 빈 문자열("")로 반환되며, null이 아닙니다.
+     */
+    private String storageUri;
+
     private Long fileSize;
 
     // 6. 트랜스코딩

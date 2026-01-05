@@ -30,7 +30,30 @@ public class DicomMetadataRecord extends TenantAwareEntity {
 
     // ========== 필수 필드 (NOT NULL) ==========
 
-    // 원본 DICOM 메타데이터 (JSON 형식, 절대 수정 금지)
+    /**
+     * 원본 DICOM 메타데이터 (JSON 형식, 절대 수정 금지)
+     *
+     * <p>현재 구현: MySQL 8.0+ JSON 컬럼 사용
+     * <ul>
+     *   <li>POC 환경: MySQL 8.0 (docker-compose.yml)</li>
+     *   <li>Production: 추후 hibernate-types로 마이그레이션 권장</li>
+     * </ul>
+     *
+     * <p>TODO (P2 - 선택적 개선):
+     * <pre>{@code
+     * // hibernate-types 라이브러리 추가 시
+     * @Type(JsonBinaryType.class)
+     * @Column(name = "metadata", columnDefinition = "jsonb")
+     * private Map<String, Object> metadata;
+     * }</pre>
+     *
+     * <p>개선 효과:
+     * <ul>
+     *   <li>MariaDB 호환성 확보</li>
+     *   <li>JSON Path 쿼리 가능</li>
+     *   <li>타입 안전성 (Map vs String)</li>
+     * </ul>
+     */
     @Column(name = "metadata", columnDefinition = "JSON", nullable = false)
     private String metadata;
 

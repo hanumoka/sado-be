@@ -19,8 +19,17 @@ import java.util.Objects;
  * DICOM Storage Layer와 분리 (2-Layer 아키텍처)
  */
 @Entity
-@Table(name = "study", uniqueConstraints = @UniqueConstraint(
-        name = "uk_study_instance_uid", columnNames = {"tenant_id", "study_instance_uid"}))
+@Table(
+    name = "study",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_study_instance_uid",
+        columnNames = {"tenant_id", "study_instance_uid"}
+    ),
+    indexes = {
+        @Index(name = "idx_study_patient_date", columnList = "patient_id, study_date")
+    }
+)
+@EntityListeners(com.hanumoka.sado.minipacs.domain.listener.PatientStatisticsListener.class)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -73,13 +82,30 @@ public class Study extends TenantAwareEntity {
     @Column(name = "number_of_instances")
     private Integer numberOfInstances;
 
+    /**
+     * Optimistic Lock Version
+     *
+     * <p>CRITICAL: 동시성 제어
+     * - Pessimistic Lock 대신 Optimistic Lock 사용
+     * - 동시 Series 추가 시 OptimisticLockingFailureException 발생
+     * - @Retryable로 자동 재시도
+     * - Deadlock 위험 제거
+     */
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     // ========== Series 관계 ==========
 
     /**
      * 검사의 시리즈 목록
      * 1개의 검사 → N개의 시리즈
+     *
+     * CRITICAL: CascadeType.ALL 제거 (데이터 무결성 보호)
+     * - Study 삭제 시 Series/Instance 연쇄 삭제 방지
+     * - orphanRemoval 제거하여 실수로 인한 데이터 손실 방지
      */
-    @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "study", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Series> series = new ArrayList<>();
 
     // ========== 비즈니스 메서드 ==========

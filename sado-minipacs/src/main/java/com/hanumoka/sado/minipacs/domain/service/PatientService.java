@@ -9,6 +9,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -37,6 +38,15 @@ public class PatientService {
     }
 
     /**
+     * 전체 환자 목록 조회
+     *
+     * @return 모든 Patient 목록
+     */
+    public List<Patient> findAll() {
+        return patientRepository.findAll();
+    }
+
+    /**
      * DICOM PatientID + Issuer로 조회
      *
      * @param dicomPatientId DICOM PatientID (0010,0020)
@@ -55,6 +65,30 @@ public class PatientService {
      */
     public Optional<Patient> findByEmrPatientId(String emrPatientId) {
         return patientRepository.findByEmrPatientId(emrPatientId);
+    }
+
+    /**
+     * 환자 필터링 조회 (이름, 성별)
+     *
+     * <p>CRITICAL: OOM 방지
+     * - findAll() + Stream 필터링 대신 DB 쿼리 활용
+     * - null 파라미터는 무시 (동적 쿼리)
+     * - 인덱스 활용으로 성능 개선
+     *
+     * @param name 환자 이름 (nullable, 부분 일치)
+     * @param gender 성별 (nullable, M/F/O)
+     * @return Patient 목록
+     */
+    public List<Patient> findByFilters(String name, String gender) {
+        log.debug("Searching patients with filters: name={}, gender={}", name, gender);
+
+        // "ALL" gender 필터는 null로 처리
+        String genderFilter = (gender != null && "ALL".equals(gender)) ? null : gender;
+
+        List<Patient> patients = patientRepository.findByFilters(name, genderFilter);
+
+        log.debug("Found {} patients matching filters", patients.size());
+        return patients;
     }
 
     /**

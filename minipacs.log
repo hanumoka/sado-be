@@ -1,0 +1,3562 @@
+> Task :sado-common:compileJava UP-TO-DATE
+> Task :sado-common:processResources NO-SOURCE
+> Task :sado-common:classes UP-TO-DATE
+> Task :sado-common:jar UP-TO-DATE
+> Task :sado-minipacs:compileJava UP-TO-DATE
+> Task :sado-minipacs:processResources UP-TO-DATE
+> Task :sado-minipacs:classes UP-TO-DATE
+> Task :sado-minipacs:resolveMainClassName UP-TO-DATE
+
+> Task :sado-minipacs:bootRun
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.1)
+
+2026-01-01 22:08:51 [main] INFO  c.h.s.minipacs.MiniPacsApplication - Starting MiniPacsApplication using Java 21.0.2 with PID 40500 (C:\Users\amagr\project\sado\sado_be\sado-minipacs\build\classes\java\main started by amagr in C:\Users\amagr\project\sado\sado_be\sado-minipacs)
+2026-01-01 22:08:51 [main] DEBUG c.h.s.minipacs.MiniPacsApplication - Running with Spring Boot v4.0.1, Spring v7.0.2
+2026-01-01 22:08:51 [main] INFO  c.h.s.minipacs.MiniPacsApplication - No active profile set, falling back to 1 default profile: "default"
+2026-01-01 22:08:52 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-01-01 22:08:52 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 99 ms. Found 7 JPA repository interfaces.
+2026-01-01 22:08:53 [main] INFO  o.s.boot.tomcat.TomcatWebServer - Tomcat initialized with port 10201 (http)
+2026-01-01 22:08:53 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-01-01 22:08:53 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/11.0.15]
+2026-01-01 22:08:53 [main] INFO  o.s.b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 2178 ms
+2026-01-01 22:08:53 [main] INFO  org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-01-01 22:08:53 [main] INFO  org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.2.0.Final
+2026-01-01 22:08:54 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-01-01 22:08:54 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-01-01 22:08:54 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@3bf26810
+2026-01-01 22:08:54 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-01-01 22:08:54 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-01-01 22:08:54 [main] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:10100/sado_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.43
+	Default catalog/schema: sado_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-01-01 22:08:56 [main] INFO  org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-01-01 22:08:56 [main] DEBUG org.hibernate.SQL - 
+    alter table instance 
+       drop 
+       foreign key FKr43nt2igtsejhvqrryj7t6g69
+Hibernate: 
+    alter table instance 
+       drop 
+       foreign key FKr43nt2igtsejhvqrryj7t6g69
+2026-01-01 22:08:56 [main] DEBUG org.hibernate.SQL - 
+    alter table series 
+       drop 
+       foreign key FK24l8fb5uhc25x4tswjobe9foi
+Hibernate: 
+    alter table series 
+       drop 
+       foreign key FK24l8fb5uhc25x4tswjobe9foi
+2026-01-01 22:08:56 [main] DEBUG org.hibernate.SQL - 
+    alter table study 
+       drop 
+       foreign key FKdrg7o8kpt69qx8h28v21w0shx
+Hibernate: 
+    alter table study 
+       drop 
+       foreign key FKdrg7o8kpt69qx8h28v21w0shx
+2026-01-01 22:08:56 [main] DEBUG org.hibernate.SQL - 
+    alter table validation_log 
+       drop 
+       foreign key FKbcc8u9n7t1e5avl2kwisod0ny
+Hibernate: 
+    alter table validation_log 
+       drop 
+       foreign key FKbcc8u9n7t1e5avl2kwisod0ny
+2026-01-01 22:08:56 [main] DEBUG org.hibernate.SQL - 
+    drop table if exists dicom_metadata_record
+Hibernate: 
+    drop table if exists dicom_metadata_record
+2026-01-01 22:08:56 [main] DEBUG org.hibernate.SQL - 
+    drop table if exists file_assets
+Hibernate: 
+    drop table if exists file_assets
+2026-01-01 22:08:56 [main] DEBUG org.hibernate.SQL - 
+    drop table if exists instance
+Hibernate: 
+    drop table if exists instance
+2026-01-01 22:08:56 [main] DEBUG org.hibernate.SQL - 
+    drop table if exists patient
+Hibernate: 
+    drop table if exists patient
+2026-01-01 22:08:56 [main] DEBUG org.hibernate.SQL - 
+    drop table if exists series
+Hibernate: 
+    drop table if exists series
+2026-01-01 22:08:57 [main] DEBUG org.hibernate.SQL - 
+    drop table if exists study
+Hibernate: 
+    drop table if exists study
+2026-01-01 22:08:57 [main] DEBUG org.hibernate.SQL - 
+    drop table if exists validation_log
+Hibernate: 
+    drop table if exists validation_log
+2026-01-01 22:08:57 [main] DEBUG org.hibernate.SQL - 
+    create table dicom_metadata_record (
+        is_immutable bit not null,
+        created_at datetime(6) not null,
+        file_size bigint,
+        id bigint not null auto_increment,
+        instance_id bigint,
+        tenant_id bigint not null,
+        updated_at datetime(6) not null,
+        file_hash varchar(64),
+        series_instance_uid varchar(256),
+        sop_instance_uid varchar(256),
+        study_instance_uid varchar(256),
+        filename varchar(512),
+        file_path varchar(1024),
+        metadata JSON not null,
+        primary key (id)
+    ) engine=InnoDB
+Hibernate: 
+    create table dicom_metadata_record (
+        is_immutable bit not null,
+        created_at datetime(6) not null,
+        file_size bigint,
+        id bigint not null auto_increment,
+        instance_id bigint,
+        tenant_id bigint not null,
+        updated_at datetime(6) not null,
+        file_hash varchar(64),
+        series_instance_uid varchar(256),
+        sop_instance_uid varchar(256),
+        study_instance_uid varchar(256),
+        filename varchar(512),
+        file_path varchar(1024),
+        metadata JSON not null,
+        primary key (id)
+    ) engine=InnoDB
+2026-01-01 22:08:57 [main] DEBUG org.hibernate.SQL - 
+    create table file_assets (
+        created_at datetime(6) not null,
+        expires_at datetime(6),
+        file_size bigint not null,
+        id bigint not null auto_increment,
+        last_accessed_at datetime(6),
+        reference_id bigint not null,
+        tenant_id bigint not null,
+        updated_at datetime(6) not null,
+        storage_tier varchar(16),
+        checksum varchar(128),
+        mime_type varchar(128) not null,
+        storage_path varchar(512) not null,
+        file_name varchar(255) not null,
+        metadata TEXT,
+        category enum ('AI_RESULT','CLINICAL_DOC','DICOM','EXPORT','SYSTEM') not null,
+        reference_type enum ('AI_ANALYSIS','INSTANCE','PATIENT','SERIES','STUDY') not null,
+        status enum ('ACTIVE','ARCHIVED','DELETED','EXPIRED') not null,
+        primary key (id)
+    ) engine=InnoDB
+Hibernate: 
+    create table file_assets (
+        created_at datetime(6) not null,
+        expires_at datetime(6),
+        file_size bigint not null,
+        id bigint not null auto_increment,
+        last_accessed_at datetime(6),
+        reference_id bigint not null,
+        tenant_id bigint not null,
+        updated_at datetime(6) not null,
+        storage_tier varchar(16),
+        checksum varchar(128),
+        mime_type varchar(128) not null,
+        storage_path varchar(512) not null,
+        file_name varchar(255) not null,
+        metadata TEXT,
+        category enum ('AI_RESULT','CLINICAL_DOC','DICOM','EXPORT','SYSTEM') not null,
+        reference_type enum ('AI_ANALYSIS','INSTANCE','PATIENT','SERIES','STUDY') not null,
+        status enum ('ACTIVE','ARCHIVED','DELETED','EXPIRED') not null,
+        primary key (id)
+    ) engine=InnoDB
+2026-01-01 22:08:57 [main] DEBUG org.hibernate.SQL - 
+    create table instance (
+        frame_rate float(53),
+        image_columns integer,
+        image_rows integer,
+        instance_number integer,
+        number_of_frames integer,
+        created_at datetime(6) not null,
+        file_size bigint,
+        id bigint not null auto_increment,
+        series_id bigint not null,
+        tenant_id bigint not null,
+        updated_at datetime(6) not null,
+        frame_rate_source varchar(32),
+        sop_class_uid varchar(128),
+        sop_instance_uid varchar(256),
+        storage_path varchar(512),
+        thumbnail_path varchar(512),
+        video_path varchar(512),
+        storage_tier enum ('COLD','HOT','WARM'),
+        transcoding_status enum ('COMPLETED','FAILED','NONE','PENDING','PROCESSING'),
+        primary key (id)
+    ) engine=InnoDB
+Hibernate: 
+    create table instance (
+        frame_rate float(53),
+        image_columns integer,
+        image_rows integer,
+        instance_number integer,
+        number_of_frames integer,
+        created_at datetime(6) not null,
+        file_size bigint,
+        id bigint not null auto_increment,
+        series_id bigint not null,
+        tenant_id bigint not null,
+        updated_at datetime(6) not null,
+        frame_rate_source varchar(32),
+        sop_class_uid varchar(128),
+        sop_instance_uid varchar(256),
+        storage_path varchar(512),
+        thumbnail_path varchar(512),
+        video_path varchar(512),
+        storage_tier enum ('COLD','HOT','WARM'),
+        transcoding_status enum ('COMPLETED','FAILED','NONE','PENDING','PROCESSING'),
+        primary key (id)
+    ) engine=InnoDB
+2026-01-01 22:08:57 [main] DEBUG org.hibernate.SQL - 
+    create table patient (
+        matching_confidence float(53),
+        patient_birth_date date,
+        created_at datetime(6) not null,
+        id bigint not null auto_increment,
+        tenant_id bigint not null,
+        updated_at datetime(6) not null,
+        patient_sex varchar(16),
+        issuer_type_code varchar(64),
+        emr_patient_id varchar(100),
+        dicom_patient_id varchar(256),
+        issuer_of_patient_id varchar(256),
+        patient_name varchar(512),
+        matching_status enum ('AUTO_MATCHED','MANUALLY_CONFIRMED','REQUIRES_REVIEW','UNMAPPED'),
+        primary key (id)
+    ) engine=InnoDB
+Hibernate: 
+    create table patient (
+        matching_confidence float(53),
+        patient_birth_date date,
+        created_at datetime(6) not null,
+        id bigint not null auto_increment,
+        tenant_id bigint not null,
+        updated_at datetime(6) not null,
+        patient_sex varchar(16),
+        issuer_type_code varchar(64),
+        emr_patient_id varchar(100),
+        dicom_patient_id varchar(256),
+        issuer_of_patient_id varchar(256),
+        patient_name varchar(512),
+        matching_status enum ('AUTO_MATCHED','MANUALLY_CONFIRMED','REQUIRES_REVIEW','UNMAPPED'),
+        primary key (id)
+    ) engine=InnoDB
+2026-01-01 22:08:57 [main] DEBUG org.hibernate.SQL - 
+    create table series (
+        number_of_instances integer,
+        series_number integer,
+        created_at datetime(6) not null,
+        id bigint not null auto_increment,
+        study_id bigint not null,
+        tenant_id bigint not null,
+        updated_at datetime(6) not null,
+        modality varchar(16),
+        body_part_examined varchar(64),
+        manufacturer varchar(256),
+        manufacturer_model_name varchar(256),
+        series_instance_uid varchar(256) not null,
+        series_description varchar(512),
+        primary key (id)
+    ) engine=InnoDB
+Hibernate: 
+    create table series (
+        number_of_instances integer,
+        series_number integer,
+        created_at datetime(6) not null,
+        id bigint not null auto_increment,
+        study_id bigint not null,
+        tenant_id bigint not null,
+        updated_at datetime(6) not null,
+        modality varchar(16),
+        body_part_examined varchar(64),
+        manufacturer varchar(256),
+        manufacturer_model_name varchar(256),
+        series_instance_uid varchar(256) not null,
+        series_description varchar(512),
+        primary key (id)
+    ) engine=InnoDB
+2026-01-01 22:08:57 [main] DEBUG org.hibernate.SQL - 
+    create table study (
+        number_of_instances integer,
+        number_of_series integer,
+        study_date date,
+        created_at datetime(6) not null,
+        id bigint not null auto_increment,
+        patient_id bigint not null,
+        tenant_id bigint not null,
+        updated_at datetime(6) not null,
+        study_instance_uid varchar(256) not null,
+        study_description varchar(255),
+        primary key (id)
+    ) engine=InnoDB
+Hibernate: 
+    create table study (
+        number_of_instances integer,
+        number_of_series integer,
+        study_date date,
+        created_at datetime(6) not null,
+        id bigint not null auto_increment,
+        patient_id bigint not null,
+        tenant_id bigint not null,
+        updated_at datetime(6) not null,
+        study_instance_uid varchar(256) not null,
+        study_description varchar(255),
+        primary key (id)
+    ) engine=InnoDB
+2026-01-01 22:08:58 [main] DEBUG org.hibernate.SQL - 
+    create table validation_log (
+        created_at datetime(6) not null,
+        dicom_metadata_record_id bigint not null,
+        id bigint not null auto_increment,
+        tenant_id bigint not null,
+        updated_at datetime(6) not null,
+        validated_at datetime(6) not null,
+        validator_version varchar(32),
+        issues JSON,
+        validation_category enum ('DATA_INTEGRITY','DICOM_CONFORMANCE','DUPLICATE_CHECK','MANDATORY_TAGS') not null,
+        validation_level enum ('LEVEL_1','LEVEL_2','LEVEL_3') not null,
+        validation_status enum ('ERROR','SUCCESS','WARNING') not null,
+        primary key (id)
+    ) engine=InnoDB
+Hibernate: 
+    create table validation_log (
+        created_at datetime(6) not null,
+        dicom_metadata_record_id bigint not null,
+        id bigint not null auto_increment,
+        tenant_id bigint not null,
+        updated_at datetime(6) not null,
+        validated_at datetime(6) not null,
+        validator_version varchar(32),
+        issues JSON,
+        validation_category enum ('DATA_INTEGRITY','DICOM_CONFORMANCE','DUPLICATE_CHECK','MANDATORY_TAGS') not null,
+        validation_level enum ('LEVEL_1','LEVEL_2','LEVEL_3') not null,
+        validation_status enum ('ERROR','SUCCESS','WARNING') not null,
+        primary key (id)
+    ) engine=InnoDB
+2026-01-01 22:08:58 [main] DEBUG org.hibernate.SQL - 
+    alter table dicom_metadata_record 
+       add constraint UKt0jc9qydat1l27k5dspotox3x unique (file_hash)
+Hibernate: 
+    alter table dicom_metadata_record 
+       add constraint UKt0jc9qydat1l27k5dspotox3x unique (file_hash)
+2026-01-01 22:08:58 [main] DEBUG org.hibernate.SQL - 
+    create index idx_file_assets_reference 
+       on file_assets (reference_type, reference_id)
+Hibernate: 
+    create index idx_file_assets_reference 
+       on file_assets (reference_type, reference_id)
+2026-01-01 22:08:58 [main] DEBUG org.hibernate.SQL - 
+    create index idx_file_assets_category_status 
+       on file_assets (category, status)
+Hibernate: 
+    create index idx_file_assets_category_status 
+       on file_assets (category, status)
+2026-01-01 22:08:58 [main] DEBUG org.hibernate.SQL - 
+    create index idx_file_assets_expires_at 
+       on file_assets (expires_at)
+Hibernate: 
+    create index idx_file_assets_expires_at 
+       on file_assets (expires_at)
+2026-01-01 22:08:58 [main] DEBUG org.hibernate.SQL - 
+    create index idx_file_assets_tenant_id 
+       on file_assets (tenant_id)
+Hibernate: 
+    create index idx_file_assets_tenant_id 
+       on file_assets (tenant_id)
+2026-01-01 22:08:58 [main] DEBUG org.hibernate.SQL - 
+    alter table file_assets 
+       add constraint UKsdi9fwiwgq1kvkd1c31cwbw7n unique (storage_path)
+Hibernate: 
+    alter table file_assets 
+       add constraint UKsdi9fwiwgq1kvkd1c31cwbw7n unique (storage_path)
+2026-01-01 22:08:58 [main] DEBUG org.hibernate.SQL - 
+    alter table instance 
+       add constraint uk_sop_instance_uid unique (tenant_id, sop_instance_uid)
+Hibernate: 
+    alter table instance 
+       add constraint uk_sop_instance_uid unique (tenant_id, sop_instance_uid)
+2026-01-01 22:08:58 [main] DEBUG org.hibernate.SQL - 
+    alter table patient 
+       add constraint uk_patient_identity unique (tenant_id, dicom_patient_id, issuer_of_patient_id)
+Hibernate: 
+    alter table patient 
+       add constraint uk_patient_identity unique (tenant_id, dicom_patient_id, issuer_of_patient_id)
+2026-01-01 22:08:58 [main] DEBUG org.hibernate.SQL - 
+    alter table series 
+       add constraint uk_series_instance_uid unique (tenant_id, series_instance_uid)
+Hibernate: 
+    alter table series 
+       add constraint uk_series_instance_uid unique (tenant_id, series_instance_uid)
+2026-01-01 22:08:58 [main] DEBUG org.hibernate.SQL - 
+    alter table study 
+       add constraint uk_study_instance_uid unique (tenant_id, study_instance_uid)
+Hibernate: 
+    alter table study 
+       add constraint uk_study_instance_uid unique (tenant_id, study_instance_uid)
+2026-01-01 22:08:58 [main] DEBUG org.hibernate.SQL - 
+    alter table instance 
+       add constraint FKr43nt2igtsejhvqrryj7t6g69 
+       foreign key (series_id) 
+       references series (id)
+Hibernate: 
+    alter table instance 
+       add constraint FKr43nt2igtsejhvqrryj7t6g69 
+       foreign key (series_id) 
+       references series (id)
+2026-01-01 22:08:59 [main] DEBUG org.hibernate.SQL - 
+    alter table series 
+       add constraint FK24l8fb5uhc25x4tswjobe9foi 
+       foreign key (study_id) 
+       references study (id)
+Hibernate: 
+    alter table series 
+       add constraint FK24l8fb5uhc25x4tswjobe9foi 
+       foreign key (study_id) 
+       references study (id)
+2026-01-01 22:08:59 [main] DEBUG org.hibernate.SQL - 
+    alter table study 
+       add constraint FKdrg7o8kpt69qx8h28v21w0shx 
+       foreign key (patient_id) 
+       references patient (id)
+Hibernate: 
+    alter table study 
+       add constraint FKdrg7o8kpt69qx8h28v21w0shx 
+       foreign key (patient_id) 
+       references patient (id)
+2026-01-01 22:08:59 [main] DEBUG org.hibernate.SQL - 
+    alter table validation_log 
+       add constraint FKbcc8u9n7t1e5avl2kwisod0ny 
+       foreign key (dicom_metadata_record_id) 
+       references dicom_metadata_record (id)
+Hibernate: 
+    alter table validation_log 
+       add constraint FKbcc8u9n7t1e5avl2kwisod0ny 
+       foreign key (dicom_metadata_record_id) 
+       references dicom_metadata_record (id)
+2026-01-01 22:09:00 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-01-01 22:09:00 [main] INFO  o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-01-01 22:09:01 [main] INFO  c.h.s.m.i.config.SeaweedFsS3Config - Initializing S3Client with endpoint: http://localhost:10405, bucket: minipacs, pathStyleAccess: true
+2026-01-01 22:09:01 [main] INFO  c.h.s.m.i.config.SeaweedFsS3Config - S3Client initialized successfully
+2026-01-01 22:09:01 [main] INFO  c.h.s.m.i.config.SeaweedFsS3Config - Initializing S3Presigner with endpoint: http://localhost:10405
+2026-01-01 22:09:02 [main] INFO  c.h.s.m.i.config.SeaweedFsS3Config - S3Presigner initialized successfully
+2026-01-01 22:09:02 [main] WARN  o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-01-01 22:09:02 [main] INFO  o.s.v.b.OptionalValidatorFactoryBean - Failed to set up a Bean Validation provider: jakarta.validation.NoProviderFoundException: Unable to create a Configuration, because no Jakarta Validation provider could be found. Add a provider like Hibernate Validator (RI) to your classpath.
+2026-01-01 22:09:02 [main] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - 43 mappings in 'requestMappingHandlerMapping'
+2026-01-01 22:09:02 [main] DEBUG o.s.w.s.h.SimpleUrlHandlerMapping - Patterns [/webjars/**, /**, /swagger-ui*/*swagger-initializer.js, /swagger-ui*/**] in 'resourceHandlerMapping'
+2026-01-01 22:09:02 [main] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerAdapter - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2026-01-01 22:09:02 [main] DEBUG o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - ControllerAdvice beans: 2 @ExceptionHandler, 1 ResponseBodyAdvice
+2026-01-01 22:09:03 [main] INFO  o.s.boot.tomcat.TomcatWebServer - Tomcat started on port 10201 (http) with context path '/'
+2026-01-01 22:09:03 [main] INFO  c.h.s.minipacs.MiniPacsApplication - Started MiniPacsApplication in 12.428 seconds (process running for 13.123)
+2026-01-01 22:09:03 [main] INFO  c.h.s.m.i.config.SeaweedFsS3Config - S3 bucket already exists: minipacs
+2026-01-01 22:09:28 [http-nio-10201-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-01-01 22:09:28 [http-nio-10201-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-01-01 22:09:28 [http-nio-10201-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - Detected StandardServletMultipartResolver
+2026-01-01 22:09:28 [http-nio-10201-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - Detected AcceptHeaderLocaleResolver
+2026-01-01 22:09:28 [http-nio-10201-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@24b73741
+2026-01-01 22:09:28 [http-nio-10201-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.support.SessionFlashMapManager@713d2fe8
+2026-01-01 22:09:28 [http-nio-10201-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - enableLoggingRequestDetails='false': request parameters and headers will be masked to prevent unsafe logging of potentially sensitive data
+2026-01-01 22:09:28 [http-nio-10201-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2026-01-01 22:09:28 [http-nio-10201-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies?PatientName=MOON", parameters={masked}
+2026-01-01 22:09:28 [http-nio-10201-exec-1] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchStudies(String, String, String, String, int, int)
+2026-01-01 22:09:28 [http-nio-10201-exec-1] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search studies - PatientID=null, PatientName=MOON, StudyDate=null, StudyInstanceUID=null
+2026-01-01 22:09:28 [http-nio-10201-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+Hibernate: 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+2026-01-01 22:09:29 [http-nio-10201-exec-1] DEBUG c.h.s.m.c.DicomWebController - Filtered by PatientName=MOON: 0 studies
+2026-01-01 22:09:29 [http-nio-10201-exec-1] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Found 0 studies
+2026-01-01 22:09:29 [http-nio-10201-exec-1] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom+json' in response
+2026-01-01 22:09:29 [http-nio-10201-exec-1] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[]]
+2026-01-01 22:09:29 [http-nio-10201-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:09:41 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies", parameters={}
+2026-01-01 22:09:41 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchStudies(String, String, String, String, int, int)
+2026-01-01 22:09:41 [http-nio-10201-exec-2] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search studies - PatientID=null, PatientName=null, StudyDate=null, StudyInstanceUID=null
+2026-01-01 22:09:41 [http-nio-10201-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+Hibernate: 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+2026-01-01 22:09:41 [http-nio-10201-exec-2] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Found 0 studies
+2026-01-01 22:09:41 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom+json' in response
+2026-01-01 22:09:41 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[]]
+2026-01-01 22:09:41 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:09:57 [http-nio-10201-exec-4] DEBUG o.s.web.servlet.DispatcherServlet - POST "/api/instances/upload", parameters={multipart}
+2026-01-01 22:09:57 [http-nio-10201-exec-4] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.InstanceController#uploadDicom(MultipartFile)
+2026-01-01 22:09:57 [http-nio-10201-exec-4] INFO  c.h.s.m.c.InstanceController - POST /api/instances/upload - filename: jpeg_lossless_sel1.dcm, size: 50684 bytes
+2026-01-01 22:09:57 [http-nio-10201-exec-4] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 1989.02.03 with pattern: yyyy.MM.dd
+2026-01-01 22:09:57 [http-nio-10201-exec-4] INFO  c.h.s.m.c.InstanceController - DICOM metadata extracted: PatientID=null, StudyUID=1.2.840.113619.2.1.2.139348932.602501178, SeriesUID=1.2.840.113619.2.1.2.139348932.2.602503099, SOPInstanceUID=1.2.840.113619.2.1.2.139348932.2.9.602503126
+2026-01-01 22:09:57 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        p 
+    FROM
+        Patient p 
+    WHERE
+        p.dicomPatientId IS NULL 
+        AND p.issuerOfPatientId IS NULL */ select
+            p1_0.id,
+            p1_0.created_at,
+            p1_0.dicom_patient_id,
+            p1_0.emr_patient_id,
+            p1_0.issuer_of_patient_id,
+            p1_0.issuer_type_code,
+            p1_0.matching_confidence,
+            p1_0.matching_status,
+            p1_0.patient_birth_date,
+            p1_0.patient_name,
+            p1_0.patient_sex,
+            p1_0.tenant_id,
+            p1_0.updated_at 
+        from
+            patient p1_0 
+        where
+            p1_0.dicom_patient_id is null 
+            and p1_0.issuer_of_patient_id is null
+Hibernate: 
+    /* SELECT
+        p 
+    FROM
+        Patient p 
+    WHERE
+        p.dicomPatientId IS NULL 
+        AND p.issuerOfPatientId IS NULL */ select
+            p1_0.id,
+            p1_0.created_at,
+            p1_0.dicom_patient_id,
+            p1_0.emr_patient_id,
+            p1_0.issuer_of_patient_id,
+            p1_0.issuer_type_code,
+            p1_0.matching_confidence,
+            p1_0.matching_status,
+            p1_0.patient_birth_date,
+            p1_0.patient_name,
+            p1_0.patient_sex,
+            p1_0.tenant_id,
+            p1_0.updated_at 
+        from
+            patient p1_0 
+        where
+            p1_0.dicom_patient_id is null 
+            and p1_0.issuer_of_patient_id is null
+2026-01-01 22:09:57 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL - 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Patient
+        */insert 
+    into
+        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Patient
+        */insert 
+    into
+        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-01 22:09:57 [http-nio-10201-exec-4] INFO  c.h.s.m.d.service.PatientService - Created new patient: id=1, dicomPatientId=null
+2026-01-01 22:09:57 [http-nio-10201-exec-4] INFO  c.h.s.m.c.InstanceController - Patient resolved: id=1, dicomPatientId=null
+2026-01-01 22:09:57 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        s 
+    FROM
+        Study s 
+    WHERE
+        s.studyInstanceUid = :studyInstanceUid */ select
+            s1_0.id,
+            s1_0.created_at,
+            s1_0.number_of_instances,
+            s1_0.number_of_series,
+            s1_0.patient_id,
+            s1_0.study_date,
+            s1_0.study_description,
+            s1_0.study_instance_uid,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            study s1_0 
+        where
+            s1_0.study_instance_uid=?
+Hibernate: 
+    /* SELECT
+        s 
+    FROM
+        Study s 
+    WHERE
+        s.studyInstanceUid = :studyInstanceUid */ select
+            s1_0.id,
+            s1_0.created_at,
+            s1_0.number_of_instances,
+            s1_0.number_of_series,
+            s1_0.patient_id,
+            s1_0.study_date,
+            s1_0.study_description,
+            s1_0.study_instance_uid,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            study s1_0 
+        where
+            s1_0.study_instance_uid=?
+2026-01-01 22:09:57 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL - 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Study
+        */insert 
+    into
+        study (created_at, number_of_instances, number_of_series, patient_id, study_date, study_description, study_instance_uid, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Study
+        */insert 
+    into
+        study (created_at, number_of_instances, number_of_series, patient_id, study_date, study_description, study_instance_uid, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-01 22:09:57 [http-nio-10201-exec-4] INFO  c.h.s.m.domain.service.StudyService - Created new study: id=1, studyInstanceUid=1.2.840.113619.2.1.2.139348932.602501178
+2026-01-01 22:09:57 [http-nio-10201-exec-4] INFO  c.h.s.m.c.InstanceController - Study resolved: id=1, studyInstanceUid=1.2.840.113619.2.1.2.139348932.602501178
+2026-01-01 22:09:57 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        s 
+    FROM
+        Series s 
+    WHERE
+        s.seriesInstanceUid = :seriesInstanceUid */ select
+            s1_0.id,
+            s1_0.body_part_examined,
+            s1_0.created_at,
+            s1_0.manufacturer,
+            s1_0.manufacturer_model_name,
+            s1_0.modality,
+            s1_0.number_of_instances,
+            s1_0.series_description,
+            s1_0.series_instance_uid,
+            s1_0.series_number,
+            s1_0.study_id,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            series s1_0 
+        where
+            s1_0.series_instance_uid=?
+Hibernate: 
+    /* SELECT
+        s 
+    FROM
+        Series s 
+    WHERE
+        s.seriesInstanceUid = :seriesInstanceUid */ select
+            s1_0.id,
+            s1_0.body_part_examined,
+            s1_0.created_at,
+            s1_0.manufacturer,
+            s1_0.manufacturer_model_name,
+            s1_0.modality,
+            s1_0.number_of_instances,
+            s1_0.series_description,
+            s1_0.series_instance_uid,
+            s1_0.series_number,
+            s1_0.study_id,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            series s1_0 
+        where
+            s1_0.series_instance_uid=?
+2026-01-01 22:09:57 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL - 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Series
+        */insert 
+    into
+        series (body_part_examined, created_at, manufacturer, manufacturer_model_name, modality, number_of_instances, series_description, series_instance_uid, series_number, study_id, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Series
+        */insert 
+    into
+        series (body_part_examined, created_at, manufacturer, manufacturer_model_name, modality, number_of_instances, series_description, series_instance_uid, series_number, study_id, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-01 22:09:57 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL - 
+    /* update
+        
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Study */update study 
+    set
+        number_of_instances=?,
+        number_of_series=?,
+        patient_id=?,
+        study_date=?,
+        study_description=?,
+        study_instance_uid=?,
+        tenant_id=?,
+        updated_at=? 
+    where
+        id=?
+Hibernate: 
+    /* update
+        
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Study */update study 
+    set
+        number_of_instances=?,
+        number_of_series=?,
+        patient_id=?,
+        study_date=?,
+        study_description=?,
+        study_instance_uid=?,
+        tenant_id=?,
+        updated_at=? 
+    where
+        id=?
+2026-01-01 22:09:57 [http-nio-10201-exec-4] INFO  c.h.s.m.domain.service.SeriesService - Created new series: id=1, seriesInstanceUid=1.2.840.113619.2.1.2.139348932.2.602503099, modality=MR
+2026-01-01 22:09:57 [http-nio-10201-exec-4] INFO  c.h.s.m.c.InstanceController - Series resolved: id=1, seriesInstanceUid=1.2.840.113619.2.1.2.139348932.2.602503099, modality=MR
+2026-01-01 22:09:57 [http-nio-10201-exec-4] INFO  c.h.s.m.s.s.SeaweedFsS3StorageService - Uploading DICOM file: bucket=minipacs, s3Key=studies/1.2.840.113619.2.1.2.139348932.602501178/series/1.2.840.113619.2.1.2.139348932.2.602503099/instances/1.2.840.113619.2.1.2.139348932.2.9.602503126.dcm, size=50684 bytes
+2026-01-01 22:09:57 [http-nio-10201-exec-4] INFO  c.h.s.m.s.s.SeaweedFsS3StorageService - DICOM file uploaded successfully: s3Key=studies/1.2.840.113619.2.1.2.139348932.602501178/series/1.2.840.113619.2.1.2.139348932.2.602503099/instances/1.2.840.113619.2.1.2.139348932.2.9.602503126.dcm
+2026-01-01 22:09:57 [http-nio-10201-exec-4] INFO  c.h.s.m.c.InstanceController - DICOM file uploaded to storage: s3Key=studies/1.2.840.113619.2.1.2.139348932.602501178/series/1.2.840.113619.2.1.2.139348932.2.602503099/instances/1.2.840.113619.2.1.2.139348932.2.9.602503126.dcm, originalFilename=jpeg_lossless_sel1.dcm
+2026-01-01 22:09:57 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        i 
+    FROM
+        Instance i 
+    WHERE
+        i.storagePath = :storagePath */ select
+            i1_0.id,
+            i1_0.created_at,
+            i1_0.file_size,
+            i1_0.frame_rate,
+            i1_0.frame_rate_source,
+            i1_0.image_columns,
+            i1_0.image_rows,
+            i1_0.instance_number,
+            i1_0.number_of_frames,
+            i1_0.series_id,
+            i1_0.sop_class_uid,
+            i1_0.sop_instance_uid,
+            i1_0.storage_path,
+            i1_0.storage_tier,
+            i1_0.tenant_id,
+            i1_0.thumbnail_path,
+            i1_0.transcoding_status,
+            i1_0.updated_at,
+            i1_0.video_path 
+        from
+            instance i1_0 
+        where
+            i1_0.storage_path=?
+Hibernate: 
+    /* SELECT
+        i 
+    FROM
+        Instance i 
+    WHERE
+        i.storagePath = :storagePath */ select
+            i1_0.id,
+            i1_0.created_at,
+            i1_0.file_size,
+            i1_0.frame_rate,
+            i1_0.frame_rate_source,
+            i1_0.image_columns,
+            i1_0.image_rows,
+            i1_0.instance_number,
+            i1_0.number_of_frames,
+            i1_0.series_id,
+            i1_0.sop_class_uid,
+            i1_0.sop_instance_uid,
+            i1_0.storage_path,
+            i1_0.storage_tier,
+            i1_0.tenant_id,
+            i1_0.thumbnail_path,
+            i1_0.transcoding_status,
+            i1_0.updated_at,
+            i1_0.video_path 
+        from
+            instance i1_0 
+        where
+            i1_0.storage_path=?
+2026-01-01 22:09:57 [http-nio-10201-exec-4] INFO  c.h.s.m.d.service.InstanceService - Creating new instance: sopInstanceUid=1.2.840.113619.2.1.2.139348932.2.9.602503126, seriesId=1
+2026-01-01 22:09:57 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL - 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Instance
+        */insert 
+    into
+        instance (created_at, file_size, frame_rate, frame_rate_source, image_columns, image_rows, instance_number, number_of_frames, series_id, sop_class_uid, sop_instance_uid, storage_path, storage_tier, tenant_id, thumbnail_path, transcoding_status, updated_at, video_path) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Instance
+        */insert 
+    into
+        instance (created_at, file_size, frame_rate, frame_rate_source, image_columns, image_rows, instance_number, number_of_frames, series_id, sop_class_uid, sop_instance_uid, storage_path, storage_tier, tenant_id, thumbnail_path, transcoding_status, updated_at, video_path) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-01 22:09:57 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL - 
+    /* update
+        
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Study */update study 
+    set
+        number_of_instances=?,
+        number_of_series=?,
+        patient_id=?,
+        study_date=?,
+        study_description=?,
+        study_instance_uid=?,
+        tenant_id=?,
+        updated_at=? 
+    where
+        id=?
+Hibernate: 
+    /* update
+        
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Study */update study 
+    set
+        number_of_instances=?,
+        number_of_series=?,
+        patient_id=?,
+        study_date=?,
+        study_description=?,
+        study_instance_uid=?,
+        tenant_id=?,
+        updated_at=? 
+    where
+        id=?
+2026-01-01 22:09:57 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL - 
+    /* update
+        
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Series */update series 
+    set
+        body_part_examined=?,
+        manufacturer=?,
+        manufacturer_model_name=?,
+        modality=?,
+        number_of_instances=?,
+        series_description=?,
+        series_instance_uid=?,
+        series_number=?,
+        study_id=?,
+        tenant_id=?,
+        updated_at=? 
+    where
+        id=?
+Hibernate: 
+    /* update
+        
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Series */update series 
+    set
+        body_part_examined=?,
+        manufacturer=?,
+        manufacturer_model_name=?,
+        modality=?,
+        number_of_instances=?,
+        series_description=?,
+        series_instance_uid=?,
+        series_number=?,
+        study_id=?,
+        tenant_id=?,
+        updated_at=? 
+    where
+        id=?
+2026-01-01 22:09:57 [http-nio-10201-exec-4] INFO  c.h.s.m.c.InstanceController - Instance created: id=1, sopInstanceUid=1.2.840.113619.2.1.2.139348932.2.9.602503126, s3Key=studies/1.2.840.113619.2.1.2.139348932.602501178/series/1.2.840.113619.2.1.2.139348932.2.602503099/instances/1.2.840.113619.2.1.2.139348932.2.9.602503126.dcm, seriesId=1
+2026-01-01 22:09:58 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL - 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.DicomMetadataRecord
+        */insert 
+    into
+        dicom_metadata_record (created_at, file_hash, file_path, file_size, filename, is_immutable, instance_id, metadata, series_instance_uid, sop_instance_uid, study_instance_uid, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.DicomMetadataRecord
+        */insert 
+    into
+        dicom_metadata_record (created_at, file_hash, file_path, file_size, filename, is_immutable, instance_id, metadata, series_instance_uid, sop_instance_uid, study_instance_uid, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-01 22:09:58 [http-nio-10201-exec-4] INFO  c.h.s.m.c.InstanceController - DicomMetadataRecord created: instanceId=1, sopInstanceUid=1.2.840.113619.2.1.2.139348932.2.9.602503126
+2026-01-01 22:09:58 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL - 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.FileAsset
+        */insert 
+    into
+        file_assets (category, checksum, created_at, expires_at, file_name, file_size, last_accessed_at, metadata, mime_type, reference_id, reference_type, status, storage_path, storage_tier, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.FileAsset
+        */insert 
+    into
+        file_assets (category, checksum, created_at, expires_at, file_name, file_size, last_accessed_at, metadata, mime_type, reference_id, reference_type, status, storage_path, storage_tier, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-01 22:09:58 [http-nio-10201-exec-4] INFO  c.h.s.m.c.InstanceController - FileAsset created: id=1, instanceId=1, storagePath=studies/1.2.840.113619.2.1.2.139348932.602501178/series/1.2.840.113619.2.1.2.139348932.2.602503099/instances/1.2.840.113619.2.1.2.139348932.2.9.602503126.dcm
+2026-01-01 22:09:58 [http-nio-10201-exec-4] DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/yaml]
+2026-01-01 22:09:58 [http-nio-10201-exec-4] DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Writing [com.hanumoka.sado.common.dto.ApiResponse@604e157e]
+2026-01-01 22:09:58 [http-nio-10201-exec-4] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:10:05 [http-nio-10201-exec-6] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies", parameters={}
+2026-01-01 22:10:05 [http-nio-10201-exec-6] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchStudies(String, String, String, String, int, int)
+2026-01-01 22:10:05 [http-nio-10201-exec-6] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search studies - PatientID=null, PatientName=null, StudyDate=null, StudyInstanceUID=null
+2026-01-01 22:10:05 [http-nio-10201-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+Hibernate: 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+2026-01-01 22:10:05 [http-nio-10201-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+2026-01-01 22:10:05 [http-nio-10201-exec-6] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Found 1 studies
+2026-01-01 22:10:05 [http-nio-10201-exec-6] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom+json' in response
+2026-01-01 22:10:05 [http-nio-10201-exec-6] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[{0020000D={vr=UI, Value=[1.2.840.113619.2.1.2.139348932.602501178]}, 00080020={vr=DA, Value=[198902 (truncated)...]
+2026-01-01 22:10:05 [http-nio-10201-exec-6] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:10:11 [http-nio-10201-exec-8] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies?PatientName=Anonym", parameters={masked}
+2026-01-01 22:10:11 [http-nio-10201-exec-8] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchStudies(String, String, String, String, int, int)
+2026-01-01 22:10:11 [http-nio-10201-exec-8] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search studies - PatientID=null, PatientName=Anonym, StudyDate=null, StudyInstanceUID=null
+2026-01-01 22:10:11 [http-nio-10201-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+Hibernate: 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+2026-01-01 22:10:11 [http-nio-10201-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+2026-01-01 22:10:11 [http-nio-10201-exec-8] DEBUG c.h.s.m.c.DicomWebController - Filtered by PatientName=Anonym: 1 studies
+2026-01-01 22:10:11 [http-nio-10201-exec-8] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Found 1 studies
+2026-01-01 22:10:11 [http-nio-10201-exec-8] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom+json' in response
+2026-01-01 22:10:11 [http-nio-10201-exec-8] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[{0020000D={vr=UI, Value=[1.2.840.113619.2.1.2.139348932.602501178]}, 00080020={vr=DA, Value=[198902 (truncated)...]
+2026-01-01 22:10:11 [http-nio-10201-exec-8] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:10:18 [http-nio-10201-exec-9] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies?StudyDate=19890203", parameters={masked}
+2026-01-01 22:10:18 [http-nio-10201-exec-9] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchStudies(String, String, String, String, int, int)
+2026-01-01 22:10:18 [http-nio-10201-exec-9] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search studies - PatientID=null, PatientName=null, StudyDate=19890203, StudyInstanceUID=null
+2026-01-01 22:10:18 [http-nio-10201-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+Hibernate: 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+2026-01-01 22:10:18 [http-nio-10201-exec-9] DEBUG c.h.s.m.c.DicomWebController - Filtered by StudyDate=19890203: 1 studies
+2026-01-01 22:10:18 [http-nio-10201-exec-9] DEBUG org.hibernate.SQL - 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+2026-01-01 22:10:18 [http-nio-10201-exec-9] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Found 1 studies
+2026-01-01 22:10:18 [http-nio-10201-exec-9] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom+json' in response
+2026-01-01 22:10:18 [http-nio-10201-exec-9] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[{0020000D={vr=UI, Value=[1.2.840.113619.2.1.2.139348932.602501178]}, 00080020={vr=DA, Value=[198902 (truncated)...]
+2026-01-01 22:10:18 [http-nio-10201-exec-9] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:15:34 [http-nio-10201-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - GET "/api/patients", parameters={}
+2026-01-01 22:15:34 [http-nio-10201-exec-1] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.PatientController#getAllPatients(String, String)
+2026-01-01 22:15:34 [http-nio-10201-exec-1] INFO  c.h.s.m.controller.PatientController - GET /api/patients?name=null&gender=null
+2026-01-01 22:15:34 [http-nio-10201-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0
+Hibernate: 
+    /* <criteria> */ select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0
+2026-01-01 22:15:34 [http-nio-10201-exec-1] DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/yaml]
+2026-01-01 22:15:34 [http-nio-10201-exec-1] DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Writing [com.hanumoka.sado.common.dto.ApiResponse@79278f65]
+2026-01-01 22:15:34 [http-nio-10201-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:15:35 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies", parameters={}
+2026-01-01 22:15:35 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchStudies(String, String, String, String, int, int)
+2026-01-01 22:15:35 [http-nio-10201-exec-2] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search studies - PatientID=null, PatientName=null, StudyDate=null, StudyInstanceUID=null
+2026-01-01 22:15:35 [http-nio-10201-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+Hibernate: 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+2026-01-01 22:15:35 [http-nio-10201-exec-2] DEBUG org.hibernate.SQL - 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+2026-01-01 22:15:35 [http-nio-10201-exec-2] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Found 1 studies
+2026-01-01 22:15:35 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom+json' in response
+2026-01-01 22:15:35 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[{0020000D={vr=UI, Value=[1.2.840.113619.2.1.2.139348932.602501178]}, 00080020={vr=DA, Value=[198902 (truncated)...]
+2026-01-01 22:15:35 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:15:36 [http-nio-10201-exec-3] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies", parameters={}
+2026-01-01 22:15:36 [http-nio-10201-exec-3] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchStudies(String, String, String, String, int, int)
+2026-01-01 22:15:36 [http-nio-10201-exec-3] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search studies - PatientID=null, PatientName=null, StudyDate=null, StudyInstanceUID=null
+2026-01-01 22:15:36 [http-nio-10201-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+Hibernate: 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+2026-01-01 22:15:36 [http-nio-10201-exec-3] DEBUG org.hibernate.SQL - 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+2026-01-01 22:15:36 [http-nio-10201-exec-3] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Found 1 studies
+2026-01-01 22:15:36 [http-nio-10201-exec-3] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom+json' in response
+2026-01-01 22:15:36 [http-nio-10201-exec-3] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[{0020000D={vr=UI, Value=[1.2.840.113619.2.1.2.139348932.602501178]}, 00080020={vr=DA, Value=[198902 (truncated)...]
+2026-01-01 22:15:36 [http-nio-10201-exec-3] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:15:38 [http-nio-10201-exec-4] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies", parameters={}
+2026-01-01 22:15:38 [http-nio-10201-exec-4] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchStudies(String, String, String, String, int, int)
+2026-01-01 22:15:38 [http-nio-10201-exec-4] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search studies - PatientID=null, PatientName=null, StudyDate=null, StudyInstanceUID=null
+2026-01-01 22:15:38 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+Hibernate: 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+2026-01-01 22:15:38 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL - 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+2026-01-01 22:15:38 [http-nio-10201-exec-4] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Found 1 studies
+2026-01-01 22:15:38 [http-nio-10201-exec-4] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom+json' in response
+2026-01-01 22:15:38 [http-nio-10201-exec-4] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[{0020000D={vr=UI, Value=[1.2.840.113619.2.1.2.139348932.602501178]}, 00080020={vr=DA, Value=[198902 (truncated)...]
+2026-01-01 22:15:38 [http-nio-10201-exec-4] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:15:57 [http-nio-10201-exec-5] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies", parameters={}
+2026-01-01 22:15:57 [http-nio-10201-exec-5] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchStudies(String, String, String, String, int, int)
+2026-01-01 22:15:57 [http-nio-10201-exec-5] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search studies - PatientID=null, PatientName=null, StudyDate=null, StudyInstanceUID=null
+2026-01-01 22:15:57 [http-nio-10201-exec-5] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+Hibernate: 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+2026-01-01 22:15:57 [http-nio-10201-exec-5] DEBUG org.hibernate.SQL - 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+2026-01-01 22:15:57 [http-nio-10201-exec-5] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Found 1 studies
+2026-01-01 22:15:57 [http-nio-10201-exec-5] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom+json' in response
+2026-01-01 22:15:57 [http-nio-10201-exec-5] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[{0020000D={vr=UI, Value=[1.2.840.113619.2.1.2.139348932.602501178]}, 00080020={vr=DA, Value=[198902 (truncated)...]
+2026-01-01 22:15:57 [http-nio-10201-exec-5] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:15:58 [http-nio-10201-exec-6] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies", parameters={}
+2026-01-01 22:15:58 [http-nio-10201-exec-6] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchStudies(String, String, String, String, int, int)
+2026-01-01 22:15:58 [http-nio-10201-exec-6] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search studies - PatientID=null, PatientName=null, StudyDate=null, StudyInstanceUID=null
+2026-01-01 22:15:58 [http-nio-10201-exec-6] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+Hibernate: 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+2026-01-01 22:15:58 [http-nio-10201-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+2026-01-01 22:15:58 [http-nio-10201-exec-6] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Found 1 studies
+2026-01-01 22:15:58 [http-nio-10201-exec-6] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom+json' in response
+2026-01-01 22:15:58 [http-nio-10201-exec-6] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[{0020000D={vr=UI, Value=[1.2.840.113619.2.1.2.139348932.602501178]}, 00080020={vr=DA, Value=[198902 (truncated)...]
+2026-01-01 22:15:58 [http-nio-10201-exec-6] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:16:03 [http-nio-10201-exec-7] DEBUG o.s.web.servlet.DispatcherServlet - GET "/api/patients", parameters={}
+2026-01-01 22:16:03 [http-nio-10201-exec-7] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.PatientController#getAllPatients(String, String)
+2026-01-01 22:16:03 [http-nio-10201-exec-7] INFO  c.h.s.m.controller.PatientController - GET /api/patients?name=null&gender=null
+2026-01-01 22:16:03 [http-nio-10201-exec-7] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0
+Hibernate: 
+    /* <criteria> */ select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0
+2026-01-01 22:16:03 [http-nio-10201-exec-7] WARN  org.hibernate.orm.jdbc.error - HHH000247: ErrorCode: 1146, SQLState: 42S02
+2026-01-01 22:16:03 [http-nio-10201-exec-7] WARN  org.hibernate.orm.jdbc.error - Table 'sado_db.patient' doesn't exist
+2026-01-01 22:16:03 [http-nio-10201-exec-7] DEBUG o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Using @ExceptionHandler com.hanumoka.sado.common.exception.GlobalExceptionHandler#handleException(Exception)
+2026-01-01 22:16:03 [http-nio-10201-exec-7] ERROR c.h.s.c.e.GlobalExceptionHandler - Unexpected Error
+org.springframework.dao.InvalidDataAccessResourceUsageException: JDBC exception executing SQL [Table 'sado_db.patient' doesn't exist] [/* <criteria> */ select p1_0.id,p1_0.created_at,p1_0.dicom_patient_id,p1_0.emr_patient_id,p1_0.issuer_of_patient_id,p1_0.issuer_type_code,p1_0.matching_confidence,p1_0.matching_status,p1_0.patient_birth_date,p1_0.patient_name,p1_0.patient_sex,p1_0.tenant_id,p1_0.updated_at from patient p1_0]; SQL [/* <criteria> */ select p1_0.id,p1_0.created_at,p1_0.dicom_patient_id,p1_0.emr_patient_id,p1_0.issuer_of_patient_id,p1_0.issuer_type_code,p1_0.matching_confidence,p1_0.matching_status,p1_0.patient_birth_date,p1_0.patient_name,p1_0.patient_sex,p1_0.tenant_id,p1_0.updated_at from patient p1_0]
+	at org.springframework.orm.jpa.hibernate.HibernateExceptionTranslator.convertHibernateAccessException(HibernateExceptionTranslator.java:156)
+	at org.springframework.orm.jpa.hibernate.HibernateExceptionTranslator.convertHibernateAccessException(HibernateExceptionTranslator.java:131)
+	at org.springframework.orm.jpa.hibernate.HibernateExceptionTranslator.translateExceptionIfPossible(HibernateExceptionTranslator.java:105)
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.translateExceptionIfPossible(HibernateJpaDialect.java:199)
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.translateExceptionIfPossible(AbstractEntityManagerFactoryBean.java:556)
+	at org.springframework.dao.support.ChainedPersistenceExceptionTranslator.translateExceptionIfPossible(ChainedPersistenceExceptionTranslator.java:61)
+	at org.springframework.dao.support.DataAccessUtils.translateIfNecessary(DataAccessUtils.java:346)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:157)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodInterceptor.invoke(CrudMethodMetadataPostProcessor.java:166)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:222)
+	at jdk.proxy2/jdk.proxy2.$Proxy171.findAll(Unknown Source)
+	at com.hanumoka.sado.minipacs.domain.service.PatientService.findAll(PatientService.java:46)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:370)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:118)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719)
+	at com.hanumoka.sado.minipacs.domain.service.PatientService$$SpringCGLIB$$0.findAll(<generated>)
+	at com.hanumoka.sado.minipacs.controller.PatientController.getAllPatients(PatientController.java:42)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:258)
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:190)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:934)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:853)
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:86)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:963)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:866)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1003)
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:892)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:622)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:874)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:710)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:128)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:199)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:77)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:341)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1778)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:946)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:480)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:57)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.hibernate.exception.SQLGrammarException: JDBC exception executing SQL [Table 'sado_db.patient' doesn't exist] [/* <criteria> */ select p1_0.id,p1_0.created_at,p1_0.dicom_patient_id,p1_0.emr_patient_id,p1_0.issuer_of_patient_id,p1_0.issuer_type_code,p1_0.matching_confidence,p1_0.matching_status,p1_0.patient_birth_date,p1_0.patient_name,p1_0.patient_sex,p1_0.tenant_id,p1_0.updated_at from patient p1_0]
+	at org.hibernate.exception.internal.SQLExceptionTypeDelegate.convert(SQLExceptionTypeDelegate.java:64)
+	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:34)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:115)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.executeQuery(DeferredResultSetAccess.java:290)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.getResultSet(DeferredResultSetAccess.java:190)
+	at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.<init>(JdbcValuesResultSetImpl.java:71)
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.resolveJdbcValues(JdbcSelectExecutorStandardImpl.java:393)
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.resolveJdbcValuesSource(JdbcSelectExecutorStandardImpl.java:354)
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.doExecuteQuery(JdbcSelectExecutorStandardImpl.java:135)
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.executeQuery(JdbcSelectExecutorStandardImpl.java:100)
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.executeQuery(JdbcSelectExecutor.java:63)
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:137)
+	at org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.lambda$new$1(ConcreteSqmSelectQueryPlan.java:128)
+	at org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.withCacheableSqmInterpretation(ConcreteSqmSelectQueryPlan.java:427)
+	at org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.performList(ConcreteSqmSelectQueryPlan.java:355)
+	at org.hibernate.query.sqm.internal.SqmQueryImpl.doList(SqmQueryImpl.java:374)
+	at org.hibernate.query.spi.AbstractSelectionQuery.list(AbstractSelectionQuery.java:153)
+	at org.hibernate.query.Query.getResultList(Query.java:121)
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.findAll(SimpleJpaRepository.java:414)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker$RepositoryFragmentMethodInvoker.lambda$new$0(RepositoryMethodInvoker.java:278)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.doInvoke(RepositoryMethodInvoker.java:169)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.invoke(RepositoryMethodInvoker.java:158)
+	at org.springframework.data.repository.core.support.RepositoryComposition$RepositoryFragments.invoke(RepositoryComposition.java:545)
+	at org.springframework.data.repository.core.support.RepositoryComposition.invoke(RepositoryComposition.java:290)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$ImplementationMethodExecutionInterceptor.invoke(RepositoryFactorySupport.java:690)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.doInvoke(QueryExecutorMethodInterceptor.java:171)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.invoke(QueryExecutorMethodInterceptor.java:146)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor.invoke(DefaultMethodInvokingMethodInterceptor.java:69)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:370)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:118)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:135)
+	... 60 common frames omitted
+Caused by: java.sql.SQLSyntaxErrorException: Table 'sado_db.patient' doesn't exist
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:121)
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:916)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeQuery(ClientPreparedStatement.java:972)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeQuery(ProxyPreparedStatement.java:52)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeQuery(HikariProxyPreparedStatement.java)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.executeQuery(DeferredResultSetAccess.java:271)
+	... 94 common frames omitted
+2026-01-01 22:16:03 [http-nio-10201-exec-7] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/yaml]
+2026-01-01 22:16:03 [http-nio-10201-exec-7] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.hanumoka.sado.common.dto.ApiResponse@2ff0e64b]
+2026-01-01 22:16:03 [http-nio-10201-exec-7] DEBUG o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.dao.InvalidDataAccessResourceUsageException: JDBC exception executing SQL [Table 'sado_db.patient' doesn't exist] [/* <criteria> */ select p1_0.id,p1_0.created_at,p1_0.dicom_patient_id,p1_0.emr_patient_id,p1_0.issuer_of_patient_id,p1_0.issuer_type_code,p1_0.matching_confidence,p1_0.matching_status,p1_0.patient_birth_date,p1_0.patient_name,p1_0.patient_sex,p1_0.tenant_id,p1_0.updated_at from patient p1_0]; SQL [/* <criteria> */ select p1_0.id,p1_0.created_at,p1_0.dicom_patient_id,p1_0.emr_patient_id,p1_0.issuer_of_patient_id,p1_0.issuer_type_code,p1_0.matching_confidence,p1_0.matching_status,p1_0.patient_birth_date,p1_0.patient_name,p1_0.patient_sex,p1_0.tenant_id,p1_0.updated_at from patient p1_0]]
+2026-01-01 22:16:03 [http-nio-10201-exec-7] DEBUG o.s.web.servlet.DispatcherServlet - Completed 500 INTERNAL_SERVER_ERROR
+2026-01-01 22:16:04 [http-nio-10201-exec-8] DEBUG o.s.web.servlet.DispatcherServlet - GET "/api/patients", parameters={}
+2026-01-01 22:16:04 [http-nio-10201-exec-8] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.PatientController#getAllPatients(String, String)
+2026-01-01 22:16:04 [http-nio-10201-exec-8] INFO  c.h.s.m.controller.PatientController - GET /api/patients?name=null&gender=null
+2026-01-01 22:16:04 [http-nio-10201-exec-8] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0
+Hibernate: 
+    /* <criteria> */ select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0
+2026-01-01 22:16:04 [http-nio-10201-exec-8] DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/yaml]
+2026-01-01 22:16:04 [http-nio-10201-exec-8] DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Writing [com.hanumoka.sado.common.dto.ApiResponse@2d64a346]
+2026-01-01 22:16:04 [http-nio-10201-exec-8] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:16:12 [http-nio-10201-exec-9] DEBUG o.s.web.servlet.DispatcherServlet - POST "/api/instances/upload", parameters={multipart}
+2026-01-01 22:16:12 [http-nio-10201-exec-10] DEBUG o.s.web.servlet.DispatcherServlet - POST "/api/instances/upload", parameters={multipart}
+2026-01-01 22:16:12 [http-nio-10201-exec-10] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.InstanceController#uploadDicom(MultipartFile)
+2026-01-01 22:16:12 [http-nio-10201-exec-9] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.InstanceController#uploadDicom(MultipartFile)
+2026-01-01 22:16:12 [http-nio-10201-exec-9] INFO  c.h.s.m.c.InstanceController - POST /api/instances/upload - filename: ORG-2-1.2.840.113619.2.391.88964.1760345305.5620.2.512.dcm, size: 12694122 bytes
+2026-01-01 22:16:12 [http-nio-10201-exec-10] INFO  c.h.s.m.c.InstanceController - POST /api/instances/upload - filename: ORG-2-1.2.840.113619.2.391.88964.1760345313.5620.3.512.dcm, size: 6017714 bytes
+2026-01-01 22:16:12 [http-nio-10201-exec-10] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 19581014 with pattern: yyyyMMdd
+2026-01-01 22:16:12 [http-nio-10201-exec-10] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 20251013 with pattern: yyyyMMdd
+2026-01-01 22:16:12 [http-nio-10201-exec-10] INFO  c.h.s.m.c.InstanceController - DICOM metadata extracted: PatientID=11151612, StudyUID=1.2.410.2000010.82.2291.1115161250421034, SeriesUID=1.2.840.113619.2.391.88964.1760345262.5620.1, SOPInstanceUID=1.2.840.113619.2.391.88964.1760345313.5620.3.512
+2026-01-01 22:16:12 [http-nio-10201-exec-9] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 19581014 with pattern: yyyyMMdd
+2026-01-01 22:16:12 [http-nio-10201-exec-9] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 20251013 with pattern: yyyyMMdd
+2026-01-01 22:16:12 [http-nio-10201-exec-9] INFO  c.h.s.m.c.InstanceController - DICOM metadata extracted: PatientID=11151612, StudyUID=1.2.410.2000010.82.2291.1115161250421034, SeriesUID=1.2.840.113619.2.391.88964.1760345262.5620.1, SOPInstanceUID=1.2.840.113619.2.391.88964.1760345305.5620.2.512
+2026-01-01 22:16:12 [http-nio-10201-exec-9] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        p 
+    FROM
+        Patient p 
+    WHERE
+        p.dicomPatientId = :dicomPatientId 
+        AND p.issuerOfPatientId IS NULL */ select
+            p1_0.id,
+            p1_0.created_at,
+            p1_0.dicom_patient_id,
+            p1_0.emr_patient_id,
+            p1_0.issuer_of_patient_id,
+            p1_0.issuer_type_code,
+            p1_0.matching_confidence,
+            p1_0.matching_status,
+            p1_0.patient_birth_date,
+            p1_0.patient_name,
+            p1_0.patient_sex,
+            p1_0.tenant_id,
+            p1_0.updated_at 
+        from
+            patient p1_0 
+        where
+            p1_0.dicom_patient_id=? 
+            and p1_0.issuer_of_patient_id is null
+Hibernate: 
+    /* SELECT
+        p 
+    FROM
+        Patient p 
+    WHERE
+        p.dicomPatientId = :dicomPatientId 
+        AND p.issuerOfPatientId IS NULL */ select
+            p1_0.id,
+            p1_0.created_at,
+            p1_0.dicom_patient_id,
+            p1_0.emr_patient_id,
+            p1_0.issuer_of_patient_id,
+            p1_0.issuer_type_code,
+            p1_0.matching_confidence,
+            p1_0.matching_status,
+            p1_0.patient_birth_date,
+            p1_0.patient_name,
+            p1_0.patient_sex,
+            p1_0.tenant_id,
+            p1_0.updated_at 
+        from
+            patient p1_0 
+        where
+            p1_0.dicom_patient_id=? 
+            and p1_0.issuer_of_patient_id is null
+2026-01-01 22:16:12 [http-nio-10201-exec-10] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        p 
+    FROM
+        Patient p 
+    WHERE
+        p.dicomPatientId = :dicomPatientId 
+        AND p.issuerOfPatientId IS NULL */ select
+            p1_0.id,
+            p1_0.created_at,
+            p1_0.dicom_patient_id,
+            p1_0.emr_patient_id,
+            p1_0.issuer_of_patient_id,
+            p1_0.issuer_type_code,
+            p1_0.matching_confidence,
+            p1_0.matching_status,
+            p1_0.patient_birth_date,
+            p1_0.patient_name,
+            p1_0.patient_sex,
+            p1_0.tenant_id,
+            p1_0.updated_at 
+        from
+            patient p1_0 
+        where
+            p1_0.dicom_patient_id=? 
+            and p1_0.issuer_of_patient_id is null
+Hibernate: 
+    /* SELECT
+        p 
+    FROM
+        Patient p 
+    WHERE
+        p.dicomPatientId = :dicomPatientId 
+        AND p.issuerOfPatientId IS NULL */ select
+            p1_0.id,
+            p1_0.created_at,
+            p1_0.dicom_patient_id,
+            p1_0.emr_patient_id,
+            p1_0.issuer_of_patient_id,
+            p1_0.issuer_type_code,
+            p1_0.matching_confidence,
+            p1_0.matching_status,
+            p1_0.patient_birth_date,
+            p1_0.patient_name,
+            p1_0.patient_sex,
+            p1_0.tenant_id,
+            p1_0.updated_at 
+        from
+            patient p1_0 
+        where
+            p1_0.dicom_patient_id=? 
+            and p1_0.issuer_of_patient_id is null
+2026-01-01 22:16:12 [http-nio-10201-exec-9] DEBUG org.hibernate.SQL - 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Patient
+        */insert 
+    into
+        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Patient
+        */insert 
+    into
+        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-01 22:16:12 [http-nio-10201-exec-10] DEBUG org.hibernate.SQL - 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Patient
+        */insert 
+    into
+        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Patient
+        */insert 
+    into
+        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-01 22:16:12 [http-nio-10201-exec-9] INFO  c.h.s.m.d.service.PatientService - Created new patient: id=2, dicomPatientId=11151612
+2026-01-01 22:16:12 [http-nio-10201-exec-10] INFO  c.h.s.m.d.service.PatientService - Created new patient: id=1, dicomPatientId=11151612
+2026-01-01 22:16:12 [http-nio-10201-exec-9] INFO  c.h.s.m.c.InstanceController - Patient resolved: id=2, dicomPatientId=11151612
+2026-01-01 22:16:12 [http-nio-10201-exec-10] INFO  c.h.s.m.c.InstanceController - Patient resolved: id=1, dicomPatientId=11151612
+2026-01-01 22:16:12 [http-nio-10201-exec-9] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        s 
+    FROM
+        Study s 
+    WHERE
+        s.studyInstanceUid = :studyInstanceUid */ select
+            s1_0.id,
+            s1_0.created_at,
+            s1_0.number_of_instances,
+            s1_0.number_of_series,
+            s1_0.patient_id,
+            s1_0.study_date,
+            s1_0.study_description,
+            s1_0.study_instance_uid,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            study s1_0 
+        where
+            s1_0.study_instance_uid=?
+Hibernate: 
+    /* SELECT
+        s 
+    FROM
+        Study s 
+    WHERE
+        s.studyInstanceUid = :studyInstanceUid */ select
+            s1_0.id,
+            s1_0.created_at,
+            s1_0.number_of_instances,
+            s1_0.number_of_series,
+            s1_0.patient_id,
+            s1_0.study_date,
+            s1_0.study_description,
+            s1_0.study_instance_uid,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            study s1_0 
+        where
+            s1_0.study_instance_uid=?
+2026-01-01 22:16:12 [http-nio-10201-exec-10] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        s 
+    FROM
+        Study s 
+    WHERE
+        s.studyInstanceUid = :studyInstanceUid */ select
+            s1_0.id,
+            s1_0.created_at,
+            s1_0.number_of_instances,
+            s1_0.number_of_series,
+            s1_0.patient_id,
+            s1_0.study_date,
+            s1_0.study_description,
+            s1_0.study_instance_uid,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            study s1_0 
+        where
+            s1_0.study_instance_uid=?
+Hibernate: 
+    /* SELECT
+        s 
+    FROM
+        Study s 
+    WHERE
+        s.studyInstanceUid = :studyInstanceUid */ select
+            s1_0.id,
+            s1_0.created_at,
+            s1_0.number_of_instances,
+            s1_0.number_of_series,
+            s1_0.patient_id,
+            s1_0.study_date,
+            s1_0.study_description,
+            s1_0.study_instance_uid,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            study s1_0 
+        where
+            s1_0.study_instance_uid=?
+2026-01-01 22:16:12 [http-nio-10201-exec-9] DEBUG org.hibernate.SQL - 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Study
+        */insert 
+    into
+        study (created_at, number_of_instances, number_of_series, patient_id, study_date, study_description, study_instance_uid, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Study
+        */insert 
+    into
+        study (created_at, number_of_instances, number_of_series, patient_id, study_date, study_description, study_instance_uid, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-01 22:16:12 [http-nio-10201-exec-10] DEBUG org.hibernate.SQL - 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Study
+        */insert 
+    into
+        study (created_at, number_of_instances, number_of_series, patient_id, study_date, study_description, study_instance_uid, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Study
+        */insert 
+    into
+        study (created_at, number_of_instances, number_of_series, patient_id, study_date, study_description, study_instance_uid, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-01 22:16:12 [http-nio-10201-exec-10] INFO  c.h.s.m.domain.service.StudyService - Created new study: id=2, studyInstanceUid=1.2.410.2000010.82.2291.1115161250421034
+2026-01-01 22:16:12 [http-nio-10201-exec-10] INFO  c.h.s.m.c.InstanceController - Study resolved: id=2, studyInstanceUid=1.2.410.2000010.82.2291.1115161250421034
+2026-01-01 22:16:12 [http-nio-10201-exec-9] WARN  org.hibernate.orm.jdbc.error - HHH000247: ErrorCode: 1062, SQLState: 23000
+2026-01-01 22:16:12 [http-nio-10201-exec-9] WARN  org.hibernate.orm.jdbc.error - Duplicate entry '1-1.2.410.2000010.82.2291.1115161250421034' for key 'study.uk_study_instance_uid'
+2026-01-01 22:16:12 [http-nio-10201-exec-10] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        s 
+    FROM
+        Series s 
+    WHERE
+        s.seriesInstanceUid = :seriesInstanceUid */ select
+            s1_0.id,
+            s1_0.body_part_examined,
+            s1_0.created_at,
+            s1_0.manufacturer,
+            s1_0.manufacturer_model_name,
+            s1_0.modality,
+            s1_0.number_of_instances,
+            s1_0.series_description,
+            s1_0.series_instance_uid,
+            s1_0.series_number,
+            s1_0.study_id,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            series s1_0 
+        where
+            s1_0.series_instance_uid=?
+Hibernate: 
+    /* SELECT
+        s 
+    FROM
+        Series s 
+    WHERE
+        s.seriesInstanceUid = :seriesInstanceUid */ select
+            s1_0.id,
+            s1_0.body_part_examined,
+            s1_0.created_at,
+            s1_0.manufacturer,
+            s1_0.manufacturer_model_name,
+            s1_0.modality,
+            s1_0.number_of_instances,
+            s1_0.series_description,
+            s1_0.series_instance_uid,
+            s1_0.series_number,
+            s1_0.study_id,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            series s1_0 
+        where
+            s1_0.series_instance_uid=?
+2026-01-01 22:16:12 [http-nio-10201-exec-9] WARN  c.h.s.m.domain.service.StudyService - Race condition detected for study: 1.2.410.2000010.82.2291.1115161250421034
+2026-01-01 22:16:12 [http-nio-10201-exec-10] DEBUG org.hibernate.SQL - 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Series
+        */insert 
+    into
+        series (body_part_examined, created_at, manufacturer, manufacturer_model_name, modality, number_of_instances, series_description, series_instance_uid, series_number, study_id, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Series
+        */insert 
+    into
+        series (body_part_examined, created_at, manufacturer, manufacturer_model_name, modality, number_of_instances, series_description, series_instance_uid, series_number, study_id, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-01 22:16:12 [http-nio-10201-exec-9] ERROR org.hibernate.orm.core - HHH000099: an assertion failure occurred (this may indicate a bug in Hibernate, but is more likely due to unsafe use of the session): org.hibernate.AssertionFailure: Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Study' has a null identifier (this can happen if the session is flushed after an exception occurs)
+2026-01-01 22:16:12 [http-nio-10201-exec-10] DEBUG org.hibernate.SQL - 
+    /* update
+        
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Study */update study 
+    set
+        number_of_instances=?,
+        number_of_series=?,
+        patient_id=?,
+        study_date=?,
+        study_description=?,
+        study_instance_uid=?,
+        tenant_id=?,
+        updated_at=? 
+    where
+        id=?
+Hibernate: 
+    /* update
+        
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Study */update study 
+    set
+        number_of_instances=?,
+        number_of_series=?,
+        patient_id=?,
+        study_date=?,
+        study_description=?,
+        study_instance_uid=?,
+        tenant_id=?,
+        updated_at=? 
+    where
+        id=?
+2026-01-01 22:16:12 [http-nio-10201-exec-10] INFO  c.h.s.m.domain.service.SeriesService - Created new series: id=1, seriesInstanceUid=1.2.840.113619.2.391.88964.1760345262.5620.1, modality=US
+2026-01-01 22:16:12 [http-nio-10201-exec-9] DEBUG o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Using @ExceptionHandler com.hanumoka.sado.common.exception.GlobalExceptionHandler#handleException(Exception)
+2026-01-01 22:16:12 [http-nio-10201-exec-9] ERROR c.h.s.c.e.GlobalExceptionHandler - Unexpected Error
+org.hibernate.AssertionFailure: Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Study' has a null identifier (this can happen if the session is flushed after an exception occurs)
+	at org.hibernate.event.internal.DefaultFlushEntityEventListener.checkId(DefaultFlushEntityEventListener.java:68)
+	at org.hibernate.event.internal.DefaultFlushEntityEventListener.getValues(DefaultFlushEntityEventListener.java:166)
+	at org.hibernate.event.internal.DefaultFlushEntityEventListener.onFlushEntity(DefaultFlushEntityEventListener.java:125)
+	at org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:138)
+	at org.hibernate.event.internal.AbstractFlushingEventListener.flushEntities(AbstractFlushingEventListener.java:229)
+	at org.hibernate.event.internal.AbstractFlushingEventListener.flushEverythingToExecutions(AbstractFlushingEventListener.java:69)
+	at org.hibernate.event.internal.DefaultAutoFlushEventListener.onAutoFlush(DefaultAutoFlushEventListener.java:47)
+	at org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:138)
+	at org.hibernate.internal.SessionImpl.autoFlushIfRequired(SessionImpl.java:1440)
+	at org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.lambda$new$1(ConcreteSqmSelectQueryPlan.java:126)
+	at org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.withCacheableSqmInterpretation(ConcreteSqmSelectQueryPlan.java:427)
+	at org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.performList(ConcreteSqmSelectQueryPlan.java:355)
+	at org.hibernate.query.sqm.internal.SqmQueryImpl.doList(SqmQueryImpl.java:374)
+	at org.hibernate.query.spi.AbstractSelectionQuery.list(AbstractSelectionQuery.java:153)
+	at org.hibernate.query.spi.AbstractSelectionQuery.getSingleResultOrNull(AbstractSelectionQuery.java:330)
+	at org.springframework.data.jpa.repository.query.JpaQueryExecution$SingleEntityExecution.doExecute(JpaQueryExecution.java:328)
+	at org.springframework.data.jpa.repository.query.JpaQueryExecution.execute(JpaQueryExecution.java:99)
+	at org.springframework.data.jpa.repository.query.AbstractJpaQuery.doExecute(AbstractJpaQuery.java:164)
+	at org.springframework.data.jpa.repository.query.AbstractJpaQuery.execute(AbstractJpaQuery.java:154)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.doInvoke(RepositoryMethodInvoker.java:169)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.invoke(RepositoryMethodInvoker.java:158)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.doInvoke(QueryExecutorMethodInterceptor.java:167)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.invoke(QueryExecutorMethodInterceptor.java:146)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor.invoke(DefaultMethodInvokingMethodInterceptor.java:69)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:370)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:118)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:135)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodInterceptor.invoke(CrudMethodMetadataPostProcessor.java:137)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:222)
+	at jdk.proxy2/jdk.proxy2.$Proxy170.findByStudyInstanceUid(Unknown Source)
+	at com.hanumoka.sado.minipacs.domain.service.StudyService.findOrCreateStudy(StudyService.java:154)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:370)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:118)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719)
+	at com.hanumoka.sado.minipacs.domain.service.StudyService$$SpringCGLIB$$0.findOrCreateStudy(<generated>)
+	at com.hanumoka.sado.minipacs.controller.InstanceController.uploadDicom(InstanceController.java:271)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:258)
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:190)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:934)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:853)
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:86)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:963)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:866)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1003)
+	at org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:903)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:649)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:874)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:710)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:128)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:199)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:77)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:341)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1778)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:946)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:480)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:57)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-01-01 22:16:12 [http-nio-10201-exec-9] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/yaml]
+2026-01-01 22:16:12 [http-nio-10201-exec-9] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.hanumoka.sado.common.dto.ApiResponse@1c33743f]
+2026-01-01 22:16:12 [http-nio-10201-exec-9] DEBUG o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.hibernate.AssertionFailure: Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Study' has a null identifier (this can happen if the session is flushed after an exception occurs)]
+2026-01-01 22:16:12 [http-nio-10201-exec-9] DEBUG o.s.web.servlet.DispatcherServlet - Completed 500 INTERNAL_SERVER_ERROR
+2026-01-01 22:16:12 [http-nio-10201-exec-10] INFO  c.h.s.m.c.InstanceController - Series resolved: id=1, seriesInstanceUid=1.2.840.113619.2.391.88964.1760345262.5620.1, modality=US
+2026-01-01 22:16:12 [http-nio-10201-exec-10] INFO  c.h.s.m.s.s.SeaweedFsS3StorageService - Uploading DICOM file: bucket=minipacs, s3Key=studies/1.2.410.2000010.82.2291.1115161250421034/series/1.2.840.113619.2.391.88964.1760345262.5620.1/instances/1.2.840.113619.2.391.88964.1760345313.5620.3.512.dcm, size=6017714 bytes
+2026-01-01 22:16:13 [http-nio-10201-exec-10] INFO  c.h.s.m.s.s.SeaweedFsS3StorageService - DICOM file uploaded successfully: s3Key=studies/1.2.410.2000010.82.2291.1115161250421034/series/1.2.840.113619.2.391.88964.1760345262.5620.1/instances/1.2.840.113619.2.391.88964.1760345313.5620.3.512.dcm
+2026-01-01 22:16:13 [http-nio-10201-exec-10] INFO  c.h.s.m.c.InstanceController - DICOM file uploaded to storage: s3Key=studies/1.2.410.2000010.82.2291.1115161250421034/series/1.2.840.113619.2.391.88964.1760345262.5620.1/instances/1.2.840.113619.2.391.88964.1760345313.5620.3.512.dcm, originalFilename=ORG-2-1.2.840.113619.2.391.88964.1760345313.5620.3.512.dcm
+2026-01-01 22:16:13 [http-nio-10201-exec-10] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        i 
+    FROM
+        Instance i 
+    WHERE
+        i.storagePath = :storagePath */ select
+            i1_0.id,
+            i1_0.created_at,
+            i1_0.file_size,
+            i1_0.frame_rate,
+            i1_0.frame_rate_source,
+            i1_0.image_columns,
+            i1_0.image_rows,
+            i1_0.instance_number,
+            i1_0.number_of_frames,
+            i1_0.series_id,
+            i1_0.sop_class_uid,
+            i1_0.sop_instance_uid,
+            i1_0.storage_path,
+            i1_0.storage_tier,
+            i1_0.tenant_id,
+            i1_0.thumbnail_path,
+            i1_0.transcoding_status,
+            i1_0.updated_at,
+            i1_0.video_path 
+        from
+            instance i1_0 
+        where
+            i1_0.storage_path=?
+Hibernate: 
+    /* SELECT
+        i 
+    FROM
+        Instance i 
+    WHERE
+        i.storagePath = :storagePath */ select
+            i1_0.id,
+            i1_0.created_at,
+            i1_0.file_size,
+            i1_0.frame_rate,
+            i1_0.frame_rate_source,
+            i1_0.image_columns,
+            i1_0.image_rows,
+            i1_0.instance_number,
+            i1_0.number_of_frames,
+            i1_0.series_id,
+            i1_0.sop_class_uid,
+            i1_0.sop_instance_uid,
+            i1_0.storage_path,
+            i1_0.storage_tier,
+            i1_0.tenant_id,
+            i1_0.thumbnail_path,
+            i1_0.transcoding_status,
+            i1_0.updated_at,
+            i1_0.video_path 
+        from
+            instance i1_0 
+        where
+            i1_0.storage_path=?
+2026-01-01 22:16:13 [http-nio-10201-exec-10] INFO  c.h.s.m.d.service.InstanceService - Creating new instance: sopInstanceUid=1.2.840.113619.2.391.88964.1760345313.5620.3.512, seriesId=1
+2026-01-01 22:16:13 [http-nio-10201-exec-10] DEBUG org.hibernate.SQL - 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Instance
+        */insert 
+    into
+        instance (created_at, file_size, frame_rate, frame_rate_source, image_columns, image_rows, instance_number, number_of_frames, series_id, sop_class_uid, sop_instance_uid, storage_path, storage_tier, tenant_id, thumbnail_path, transcoding_status, updated_at, video_path) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Instance
+        */insert 
+    into
+        instance (created_at, file_size, frame_rate, frame_rate_source, image_columns, image_rows, instance_number, number_of_frames, series_id, sop_class_uid, sop_instance_uid, storage_path, storage_tier, tenant_id, thumbnail_path, transcoding_status, updated_at, video_path) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-01 22:16:13 [http-nio-10201-exec-10] DEBUG org.hibernate.SQL - 
+    /* update
+        
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Study */update study 
+    set
+        number_of_instances=?,
+        number_of_series=?,
+        patient_id=?,
+        study_date=?,
+        study_description=?,
+        study_instance_uid=?,
+        tenant_id=?,
+        updated_at=? 
+    where
+        id=?
+Hibernate: 
+    /* update
+        
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Study */update study 
+    set
+        number_of_instances=?,
+        number_of_series=?,
+        patient_id=?,
+        study_date=?,
+        study_description=?,
+        study_instance_uid=?,
+        tenant_id=?,
+        updated_at=? 
+    where
+        id=?
+2026-01-01 22:16:13 [http-nio-10201-exec-10] DEBUG org.hibernate.SQL - 
+    /* update
+        
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Series */update series 
+    set
+        body_part_examined=?,
+        manufacturer=?,
+        manufacturer_model_name=?,
+        modality=?,
+        number_of_instances=?,
+        series_description=?,
+        series_instance_uid=?,
+        series_number=?,
+        study_id=?,
+        tenant_id=?,
+        updated_at=? 
+    where
+        id=?
+Hibernate: 
+    /* update
+        
+    for
+        com.hanumoka.sado.minipacs.domain.entity.Series */update series 
+    set
+        body_part_examined=?,
+        manufacturer=?,
+        manufacturer_model_name=?,
+        modality=?,
+        number_of_instances=?,
+        series_description=?,
+        series_instance_uid=?,
+        series_number=?,
+        study_id=?,
+        tenant_id=?,
+        updated_at=? 
+    where
+        id=?
+2026-01-01 22:16:13 [http-nio-10201-exec-10] INFO  c.h.s.m.c.InstanceController - Instance created: id=1, sopInstanceUid=1.2.840.113619.2.391.88964.1760345313.5620.3.512, s3Key=studies/1.2.410.2000010.82.2291.1115161250421034/series/1.2.840.113619.2.391.88964.1760345262.5620.1/instances/1.2.840.113619.2.391.88964.1760345313.5620.3.512.dcm, seriesId=1
+2026-01-01 22:16:13 [http-nio-10201-exec-10] DEBUG org.hibernate.SQL - 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.DicomMetadataRecord
+        */insert 
+    into
+        dicom_metadata_record (created_at, file_hash, file_path, file_size, filename, is_immutable, instance_id, metadata, series_instance_uid, sop_instance_uid, study_instance_uid, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.DicomMetadataRecord
+        */insert 
+    into
+        dicom_metadata_record (created_at, file_hash, file_path, file_size, filename, is_immutable, instance_id, metadata, series_instance_uid, sop_instance_uid, study_instance_uid, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-01 22:16:13 [http-nio-10201-exec-10] INFO  c.h.s.m.c.InstanceController - DicomMetadataRecord created: instanceId=1, sopInstanceUid=1.2.840.113619.2.391.88964.1760345313.5620.3.512
+2026-01-01 22:16:13 [http-nio-10201-exec-10] DEBUG org.hibernate.SQL - 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.FileAsset
+        */insert 
+    into
+        file_assets (category, checksum, created_at, expires_at, file_name, file_size, last_accessed_at, metadata, mime_type, reference_id, reference_type, status, storage_path, storage_tier, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    /* insert 
+    for
+        com.hanumoka.sado.minipacs.domain.entity.FileAsset
+        */insert 
+    into
+        file_assets (category, checksum, created_at, expires_at, file_name, file_size, last_accessed_at, metadata, mime_type, reference_id, reference_type, status, storage_path, storage_tier, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-01 22:16:13 [http-nio-10201-exec-10] INFO  c.h.s.m.c.InstanceController - FileAsset created: id=1, instanceId=1, storagePath=studies/1.2.410.2000010.82.2291.1115161250421034/series/1.2.840.113619.2.391.88964.1760345262.5620.1/instances/1.2.840.113619.2.391.88964.1760345313.5620.3.512.dcm
+2026-01-01 22:16:13 [http-nio-10201-exec-10] DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/yaml]
+2026-01-01 22:16:13 [http-nio-10201-exec-10] DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Writing [com.hanumoka.sado.common.dto.ApiResponse@6be890e3]
+2026-01-01 22:16:13 [http-nio-10201-exec-10] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:16:24 [http-nio-10201-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - GET "/api/patients", parameters={}
+2026-01-01 22:16:24 [http-nio-10201-exec-1] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.PatientController#getAllPatients(String, String)
+2026-01-01 22:16:24 [http-nio-10201-exec-1] INFO  c.h.s.m.controller.PatientController - GET /api/patients?name=null&gender=null
+2026-01-01 22:16:24 [http-nio-10201-exec-1] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0
+Hibernate: 
+    /* <criteria> */ select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0
+2026-01-01 22:16:24 [http-nio-10201-exec-1] DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/yaml]
+2026-01-01 22:16:24 [http-nio-10201-exec-1] DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Writing [com.hanumoka.sado.common.dto.ApiResponse@3692e7c5]
+2026-01-01 22:16:24 [http-nio-10201-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:16:26 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies", parameters={}
+2026-01-01 22:16:26 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchStudies(String, String, String, String, int, int)
+2026-01-01 22:16:26 [http-nio-10201-exec-2] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search studies - PatientID=null, PatientName=null, StudyDate=null, StudyInstanceUID=null
+2026-01-01 22:16:26 [http-nio-10201-exec-2] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+Hibernate: 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+2026-01-01 22:16:26 [http-nio-10201-exec-2] DEBUG org.hibernate.SQL - 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+2026-01-01 22:16:26 [http-nio-10201-exec-2] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Found 1 studies
+2026-01-01 22:16:26 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom+json' in response
+2026-01-01 22:16:26 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[{0020000D={vr=UI, Value=[1.2.410.2000010.82.2291.1115161250421034]}, 00080020={vr=DA, Value=[202510 (truncated)...]
+2026-01-01 22:16:26 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:16:28 [http-nio-10201-exec-3] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies", parameters={}
+2026-01-01 22:16:28 [http-nio-10201-exec-3] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchStudies(String, String, String, String, int, int)
+2026-01-01 22:16:28 [http-nio-10201-exec-3] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search studies - PatientID=null, PatientName=null, StudyDate=null, StudyInstanceUID=null
+2026-01-01 22:16:28 [http-nio-10201-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+Hibernate: 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+2026-01-01 22:16:28 [http-nio-10201-exec-3] DEBUG org.hibernate.SQL - 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+2026-01-01 22:16:28 [http-nio-10201-exec-3] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Found 1 studies
+2026-01-01 22:16:28 [http-nio-10201-exec-3] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom+json' in response
+2026-01-01 22:16:28 [http-nio-10201-exec-3] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[{0020000D={vr=UI, Value=[1.2.410.2000010.82.2291.1115161250421034]}, 00080020={vr=DA, Value=[202510 (truncated)...]
+2026-01-01 22:16:28 [http-nio-10201-exec-3] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:16:30 [http-nio-10201-exec-4] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies?StudyInstanceUID=1.2.410.2000010.82.2291.1115161250421034", parameters={masked}
+2026-01-01 22:16:30 [http-nio-10201-exec-4] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchStudies(String, String, String, String, int, int)
+2026-01-01 22:16:30 [http-nio-10201-exec-5] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies/1.2.410.2000010.82.2291.1115161250421034/series", parameters={}
+2026-01-01 22:16:30 [http-nio-10201-exec-5] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchSeries(String, String, String)
+2026-01-01 22:16:30 [http-nio-10201-exec-4] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search studies - PatientID=null, PatientName=null, StudyDate=null, StudyInstanceUID=1.2.410.2000010.82.2291.1115161250421034
+2026-01-01 22:16:30 [http-nio-10201-exec-5] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search series - studyUID=1.2.410.2000010.82.2291.1115161250421034, Modality=null, SeriesInstanceUID=null
+2026-01-01 22:16:30 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        s 
+    FROM
+        Study s 
+    WHERE
+        s.studyInstanceUid = :studyInstanceUid */ select
+            s1_0.id,
+            s1_0.created_at,
+            s1_0.number_of_instances,
+            s1_0.number_of_series,
+            s1_0.patient_id,
+            s1_0.study_date,
+            s1_0.study_description,
+            s1_0.study_instance_uid,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            study s1_0 
+        where
+            s1_0.study_instance_uid=?
+Hibernate: 
+    /* SELECT
+        s 
+    FROM
+        Study s 
+    WHERE
+        s.studyInstanceUid = :studyInstanceUid */ select
+            s1_0.id,
+            s1_0.created_at,
+            s1_0.number_of_instances,
+            s1_0.number_of_series,
+            s1_0.patient_id,
+            s1_0.study_date,
+            s1_0.study_description,
+            s1_0.study_instance_uid,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            study s1_0 
+        where
+            s1_0.study_instance_uid=?
+2026-01-01 22:16:30 [http-nio-10201-exec-5] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        s 
+    FROM
+        Study s 
+    WHERE
+        s.studyInstanceUid = :studyInstanceUid */ select
+            s1_0.id,
+            s1_0.created_at,
+            s1_0.number_of_instances,
+            s1_0.number_of_series,
+            s1_0.patient_id,
+            s1_0.study_date,
+            s1_0.study_description,
+            s1_0.study_instance_uid,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            study s1_0 
+        where
+            s1_0.study_instance_uid=?
+Hibernate: 
+    /* SELECT
+        s 
+    FROM
+        Study s 
+    WHERE
+        s.studyInstanceUid = :studyInstanceUid */ select
+            s1_0.id,
+            s1_0.created_at,
+            s1_0.number_of_instances,
+            s1_0.number_of_series,
+            s1_0.patient_id,
+            s1_0.study_date,
+            s1_0.study_description,
+            s1_0.study_instance_uid,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            study s1_0 
+        where
+            s1_0.study_instance_uid=?
+2026-01-01 22:16:30 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL - 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+2026-01-01 22:16:30 [http-nio-10201-exec-4] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Found 1 studies
+2026-01-01 22:16:30 [http-nio-10201-exec-4] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom+json' in response
+2026-01-01 22:16:30 [http-nio-10201-exec-4] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[{0020000D={vr=UI, Value=[1.2.410.2000010.82.2291.1115161250421034]}, 00080020={vr=DA, Value=[202510 (truncated)...]
+2026-01-01 22:16:30 [http-nio-10201-exec-4] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:16:30 [http-nio-10201-exec-5] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        s 
+    FROM
+        Series s 
+    WHERE
+        s.study.id = :studyId 
+    ORDER BY
+        s.seriesNumber asc */ select
+            s1_0.id,
+            s1_0.body_part_examined,
+            s1_0.created_at,
+            s1_0.manufacturer,
+            s1_0.manufacturer_model_name,
+            s1_0.modality,
+            s1_0.number_of_instances,
+            s1_0.series_description,
+            s1_0.series_instance_uid,
+            s1_0.series_number,
+            s1_0.study_id,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            series s1_0 
+        where
+            s1_0.study_id=? 
+        order by
+            s1_0.series_number
+Hibernate: 
+    /* SELECT
+        s 
+    FROM
+        Series s 
+    WHERE
+        s.study.id = :studyId 
+    ORDER BY
+        s.seriesNumber asc */ select
+            s1_0.id,
+            s1_0.body_part_examined,
+            s1_0.created_at,
+            s1_0.manufacturer,
+            s1_0.manufacturer_model_name,
+            s1_0.modality,
+            s1_0.number_of_instances,
+            s1_0.series_description,
+            s1_0.series_instance_uid,
+            s1_0.series_number,
+            s1_0.study_id,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            series s1_0 
+        where
+            s1_0.study_id=? 
+        order by
+            s1_0.series_number
+2026-01-01 22:16:30 [http-nio-10201-exec-5] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Found 1 series
+2026-01-01 22:16:30 [http-nio-10201-exec-5] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom+json' in response
+2026-01-01 22:16:30 [http-nio-10201-exec-5] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[{0020000D={vr=UI, Value=[1.2.410.2000010.82.2291.1115161250421034]}, 0020000E={vr=UI, Value=[1.2.84 (truncated)...]
+2026-01-01 22:16:30 [http-nio-10201-exec-5] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:16:30 [http-nio-10201-exec-6] DEBUG o.s.web.servlet.DispatcherServlet - OPTIONS "/dicomweb/studies/1.2.840.113619.2.391.88964.1760345262.5620.1/series/1.2.410.2000010.82.2291.1115161250421034/instances", parameters={}
+2026-01-01 22:16:30 [http-nio-10201-exec-6] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchInstances(String, String, String)
+2026-01-01 22:16:30 [http-nio-10201-exec-6] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:16:30 [http-nio-10201-exec-7] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies/1.2.840.113619.2.391.88964.1760345262.5620.1/series/1.2.410.2000010.82.2291.1115161250421034/instances", parameters={}
+2026-01-01 22:16:30 [http-nio-10201-exec-7] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchInstances(String, String, String)
+2026-01-01 22:16:30 [http-nio-10201-exec-7] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search instances - studyUID=1.2.840.113619.2.391.88964.1760345262.5620.1, seriesUID=1.2.410.2000010.82.2291.1115161250421034, SOPInstanceUID=null
+2026-01-01 22:16:30 [http-nio-10201-exec-7] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        s 
+    FROM
+        Series s 
+    WHERE
+        s.seriesInstanceUid = :seriesInstanceUid */ select
+            s1_0.id,
+            s1_0.body_part_examined,
+            s1_0.created_at,
+            s1_0.manufacturer,
+            s1_0.manufacturer_model_name,
+            s1_0.modality,
+            s1_0.number_of_instances,
+            s1_0.series_description,
+            s1_0.series_instance_uid,
+            s1_0.series_number,
+            s1_0.study_id,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            series s1_0 
+        where
+            s1_0.series_instance_uid=?
+Hibernate: 
+    /* SELECT
+        s 
+    FROM
+        Series s 
+    WHERE
+        s.seriesInstanceUid = :seriesInstanceUid */ select
+            s1_0.id,
+            s1_0.body_part_examined,
+            s1_0.created_at,
+            s1_0.manufacturer,
+            s1_0.manufacturer_model_name,
+            s1_0.modality,
+            s1_0.number_of_instances,
+            s1_0.series_description,
+            s1_0.series_instance_uid,
+            s1_0.series_number,
+            s1_0.study_id,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            series s1_0 
+        where
+            s1_0.series_instance_uid=?
+2026-01-01 22:16:30 [http-nio-10201-exec-7] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/dicom+json', given [*/*] and supported [application/dicom+json]
+2026-01-01 22:16:30 [http-nio-10201-exec-7] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Nothing to write: null body
+2026-01-01 22:16:30 [http-nio-10201-exec-7] DEBUG o.s.web.servlet.DispatcherServlet - Completed 404 NOT_FOUND
+2026-01-01 22:16:55 [http-nio-10201-exec-8] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies/1.2.840.113619.2.391.88964.1760345262.5620.1/series/1.2.410.2000010.82.2291.1115161250421034/instances", parameters={}
+2026-01-01 22:16:55 [http-nio-10201-exec-8] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchInstances(String, String, String)
+2026-01-01 22:16:55 [http-nio-10201-exec-8] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search instances - studyUID=1.2.840.113619.2.391.88964.1760345262.5620.1, seriesUID=1.2.410.2000010.82.2291.1115161250421034, SOPInstanceUID=null
+2026-01-01 22:16:55 [http-nio-10201-exec-8] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        s 
+    FROM
+        Series s 
+    WHERE
+        s.seriesInstanceUid = :seriesInstanceUid */ select
+            s1_0.id,
+            s1_0.body_part_examined,
+            s1_0.created_at,
+            s1_0.manufacturer,
+            s1_0.manufacturer_model_name,
+            s1_0.modality,
+            s1_0.number_of_instances,
+            s1_0.series_description,
+            s1_0.series_instance_uid,
+            s1_0.series_number,
+            s1_0.study_id,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            series s1_0 
+        where
+            s1_0.series_instance_uid=?
+Hibernate: 
+    /* SELECT
+        s 
+    FROM
+        Series s 
+    WHERE
+        s.seriesInstanceUid = :seriesInstanceUid */ select
+            s1_0.id,
+            s1_0.body_part_examined,
+            s1_0.created_at,
+            s1_0.manufacturer,
+            s1_0.manufacturer_model_name,
+            s1_0.modality,
+            s1_0.number_of_instances,
+            s1_0.series_description,
+            s1_0.series_instance_uid,
+            s1_0.series_number,
+            s1_0.study_id,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            series s1_0 
+        where
+            s1_0.series_instance_uid=?
+2026-01-01 22:16:55 [http-nio-10201-exec-8] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/dicom+json', given [*/*] and supported [application/dicom+json]
+2026-01-01 22:16:55 [http-nio-10201-exec-8] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Nothing to write: null body
+2026-01-01 22:16:55 [http-nio-10201-exec-8] DEBUG o.s.web.servlet.DispatcherServlet - Completed 404 NOT_FOUND
+2026-01-01 22:16:58 [http-nio-10201-exec-9] DEBUG o.s.web.servlet.DispatcherServlet - GET "/api/patients", parameters={}
+2026-01-01 22:16:58 [http-nio-10201-exec-9] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.PatientController#getAllPatients(String, String)
+2026-01-01 22:16:58 [http-nio-10201-exec-9] INFO  c.h.s.m.controller.PatientController - GET /api/patients?name=null&gender=null
+2026-01-01 22:16:58 [http-nio-10201-exec-9] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0
+Hibernate: 
+    /* <criteria> */ select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0
+2026-01-01 22:16:58 [http-nio-10201-exec-9] DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/yaml]
+2026-01-01 22:16:58 [http-nio-10201-exec-9] DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Writing [com.hanumoka.sado.common.dto.ApiResponse@1250366c]
+2026-01-01 22:16:58 [http-nio-10201-exec-9] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:40:28 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - GET "/actuator/health", parameters={}
+2026-01-01 22:40:28 [http-nio-10201-exec-2] DEBUG o.s.w.s.h.SimpleUrlHandlerMapping - Mapped to ResourceHttpRequestHandler [classpath [META-INF/resources/], classpath [resources/], classpath [static/], classpath [public/], ServletContext [/]]
+2026-01-01 22:40:28 [http-nio-10201-exec-2] DEBUG o.s.w.s.r.ResourceHttpRequestHandler - Resource not found
+2026-01-01 22:40:28 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Using @ExceptionHandler com.hanumoka.sado.common.exception.GlobalExceptionHandler#handleException(Exception)
+2026-01-01 22:40:28 [http-nio-10201-exec-2] ERROR c.h.s.c.e.GlobalExceptionHandler - Unexpected Error
+org.springframework.web.servlet.resource.NoResourceFoundException: No static resource actuator/health for request '/actuator/health'.
+	at org.springframework.web.servlet.resource.ResourceHttpRequestHandler.handleRequest(ResourceHttpRequestHandler.java:527)
+	at org.springframework.web.servlet.mvc.HttpRequestHandlerAdapter.handle(HttpRequestHandlerAdapter.java:50)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:963)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:866)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1003)
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:892)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:622)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:874)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:710)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:128)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:199)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:77)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:341)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1778)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:946)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:480)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:57)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-01-01 22:40:28 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/yaml]
+2026-01-01 22:40:28 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.hanumoka.sado.common.dto.ApiResponse@3ce884e2]
+2026-01-01 22:40:28 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.web.servlet.resource.NoResourceFoundException: No static resource actuator/health for request '/actuator/health'.]
+2026-01-01 22:40:28 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - Completed 500 INTERNAL_SERVER_ERROR
+2026-01-01 22:40:35 [http-nio-10201-exec-3] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies", parameters={}
+2026-01-01 22:40:35 [http-nio-10201-exec-3] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchStudies(String, String, String, String, int, int)
+2026-01-01 22:40:35 [http-nio-10201-exec-3] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search studies - PatientID=null, PatientName=null, StudyDate=null, StudyInstanceUID=null
+2026-01-01 22:40:35 [http-nio-10201-exec-3] DEBUG org.hibernate.SQL - 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+Hibernate: 
+    /* <criteria> */ select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0
+2026-01-01 22:40:35 [http-nio-10201-exec-3] DEBUG org.hibernate.SQL - 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.dicom_patient_id,
+        p1_0.emr_patient_id,
+        p1_0.issuer_of_patient_id,
+        p1_0.issuer_type_code,
+        p1_0.matching_confidence,
+        p1_0.matching_status,
+        p1_0.patient_birth_date,
+        p1_0.patient_name,
+        p1_0.patient_sex,
+        p1_0.tenant_id,
+        p1_0.updated_at 
+    from
+        patient p1_0 
+    where
+        p1_0.id=?
+2026-01-01 22:40:35 [http-nio-10201-exec-3] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Found 1 studies
+2026-01-01 22:40:35 [http-nio-10201-exec-3] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom+json' in response
+2026-01-01 22:40:35 [http-nio-10201-exec-3] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[{0020000D={vr=UI, Value=[1.2.410.2000010.82.2291.1115161250421034]}, 00080020={vr=DA, Value=[202510 (truncated)...]
+2026-01-01 22:40:35 [http-nio-10201-exec-3] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:40:52 [http-nio-10201-exec-5] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies/1.2.410.2000010.82.2291.1115161250421034/series", parameters={}
+2026-01-01 22:40:52 [http-nio-10201-exec-5] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchSeries(String, String, String)
+2026-01-01 22:40:52 [http-nio-10201-exec-5] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search series - studyUID=1.2.410.2000010.82.2291.1115161250421034, Modality=null, SeriesInstanceUID=null
+2026-01-01 22:40:52 [http-nio-10201-exec-5] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        s 
+    FROM
+        Study s 
+    WHERE
+        s.studyInstanceUid = :studyInstanceUid */ select
+            s1_0.id,
+            s1_0.created_at,
+            s1_0.number_of_instances,
+            s1_0.number_of_series,
+            s1_0.patient_id,
+            s1_0.study_date,
+            s1_0.study_description,
+            s1_0.study_instance_uid,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            study s1_0 
+        where
+            s1_0.study_instance_uid=?
+Hibernate: 
+    /* SELECT
+        s 
+    FROM
+        Study s 
+    WHERE
+        s.studyInstanceUid = :studyInstanceUid */ select
+            s1_0.id,
+            s1_0.created_at,
+            s1_0.number_of_instances,
+            s1_0.number_of_series,
+            s1_0.patient_id,
+            s1_0.study_date,
+            s1_0.study_description,
+            s1_0.study_instance_uid,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            study s1_0 
+        where
+            s1_0.study_instance_uid=?
+2026-01-01 22:40:52 [http-nio-10201-exec-5] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        s 
+    FROM
+        Series s 
+    WHERE
+        s.study.id = :studyId 
+    ORDER BY
+        s.seriesNumber asc */ select
+            s1_0.id,
+            s1_0.body_part_examined,
+            s1_0.created_at,
+            s1_0.manufacturer,
+            s1_0.manufacturer_model_name,
+            s1_0.modality,
+            s1_0.number_of_instances,
+            s1_0.series_description,
+            s1_0.series_instance_uid,
+            s1_0.series_number,
+            s1_0.study_id,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            series s1_0 
+        where
+            s1_0.study_id=? 
+        order by
+            s1_0.series_number
+Hibernate: 
+    /* SELECT
+        s 
+    FROM
+        Series s 
+    WHERE
+        s.study.id = :studyId 
+    ORDER BY
+        s.seriesNumber asc */ select
+            s1_0.id,
+            s1_0.body_part_examined,
+            s1_0.created_at,
+            s1_0.manufacturer,
+            s1_0.manufacturer_model_name,
+            s1_0.modality,
+            s1_0.number_of_instances,
+            s1_0.series_description,
+            s1_0.series_instance_uid,
+            s1_0.series_number,
+            s1_0.study_id,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            series s1_0 
+        where
+            s1_0.study_id=? 
+        order by
+            s1_0.series_number
+2026-01-01 22:40:52 [http-nio-10201-exec-5] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Found 1 series
+2026-01-01 22:40:52 [http-nio-10201-exec-5] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom+json' in response
+2026-01-01 22:40:52 [http-nio-10201-exec-5] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[{0020000D={vr=UI, Value=[1.2.410.2000010.82.2291.1115161250421034]}, 0020000E={vr=UI, Value=[1.2.84 (truncated)...]
+2026-01-01 22:40:52 [http-nio-10201-exec-5] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:40:59 [http-nio-10201-exec-7] DEBUG o.s.web.servlet.DispatcherServlet - GET "/dicomweb/studies/1.2.410.2000010.82.2291.1115161250421034/series/1.2.840.113619.2.391.88964.1760345262.5620.1/instances", parameters={}
+2026-01-01 22:40:59 [http-nio-10201-exec-7] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#searchInstances(String, String, String)
+2026-01-01 22:40:59 [http-nio-10201-exec-7] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Search instances - studyUID=1.2.410.2000010.82.2291.1115161250421034, seriesUID=1.2.840.113619.2.391.88964.1760345262.5620.1, SOPInstanceUID=null
+2026-01-01 22:40:59 [http-nio-10201-exec-7] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        s 
+    FROM
+        Series s 
+    WHERE
+        s.seriesInstanceUid = :seriesInstanceUid */ select
+            s1_0.id,
+            s1_0.body_part_examined,
+            s1_0.created_at,
+            s1_0.manufacturer,
+            s1_0.manufacturer_model_name,
+            s1_0.modality,
+            s1_0.number_of_instances,
+            s1_0.series_description,
+            s1_0.series_instance_uid,
+            s1_0.series_number,
+            s1_0.study_id,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            series s1_0 
+        where
+            s1_0.series_instance_uid=?
+Hibernate: 
+    /* SELECT
+        s 
+    FROM
+        Series s 
+    WHERE
+        s.seriesInstanceUid = :seriesInstanceUid */ select
+            s1_0.id,
+            s1_0.body_part_examined,
+            s1_0.created_at,
+            s1_0.manufacturer,
+            s1_0.manufacturer_model_name,
+            s1_0.modality,
+            s1_0.number_of_instances,
+            s1_0.series_description,
+            s1_0.series_instance_uid,
+            s1_0.series_number,
+            s1_0.study_id,
+            s1_0.tenant_id,
+            s1_0.updated_at 
+        from
+            series s1_0 
+        where
+            s1_0.series_instance_uid=?
+2026-01-01 22:40:59 [http-nio-10201-exec-7] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0 
+    where
+        s1_0.id=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0 
+    where
+        s1_0.id=?
+2026-01-01 22:41:00 [http-nio-10201-exec-7] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        i 
+    FROM
+        Instance i 
+    WHERE
+        i.series.id = :seriesId 
+    ORDER BY
+        i.instanceNumber asc */ select
+            i1_0.id,
+            i1_0.created_at,
+            i1_0.file_size,
+            i1_0.frame_rate,
+            i1_0.frame_rate_source,
+            i1_0.image_columns,
+            i1_0.image_rows,
+            i1_0.instance_number,
+            i1_0.number_of_frames,
+            i1_0.series_id,
+            i1_0.sop_class_uid,
+            i1_0.sop_instance_uid,
+            i1_0.storage_path,
+            i1_0.storage_tier,
+            i1_0.tenant_id,
+            i1_0.thumbnail_path,
+            i1_0.transcoding_status,
+            i1_0.updated_at,
+            i1_0.video_path 
+        from
+            instance i1_0 
+        where
+            i1_0.series_id=? 
+        order by
+            i1_0.instance_number
+Hibernate: 
+    /* SELECT
+        i 
+    FROM
+        Instance i 
+    WHERE
+        i.series.id = :seriesId 
+    ORDER BY
+        i.instanceNumber asc */ select
+            i1_0.id,
+            i1_0.created_at,
+            i1_0.file_size,
+            i1_0.frame_rate,
+            i1_0.frame_rate_source,
+            i1_0.image_columns,
+            i1_0.image_rows,
+            i1_0.instance_number,
+            i1_0.number_of_frames,
+            i1_0.series_id,
+            i1_0.sop_class_uid,
+            i1_0.sop_instance_uid,
+            i1_0.storage_path,
+            i1_0.storage_tier,
+            i1_0.tenant_id,
+            i1_0.thumbnail_path,
+            i1_0.transcoding_status,
+            i1_0.updated_at,
+            i1_0.video_path 
+        from
+            instance i1_0 
+        where
+            i1_0.series_id=? 
+        order by
+            i1_0.instance_number
+2026-01-01 22:41:00 [http-nio-10201-exec-7] INFO  c.h.s.m.c.DicomWebController - QIDO-RS: Found 1 instances
+2026-01-01 22:41:00 [http-nio-10201-exec-7] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom+json' in response
+2026-01-01 22:41:00 [http-nio-10201-exec-7] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[{0020000D={vr=UI, Value=[1.2.410.2000010.82.2291.1115161250421034]}, 0020000E={vr=UI, Value=[1.2.84 (truncated)...]
+2026-01-01 22:41:00 [http-nio-10201-exec-7] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2026-01-01 22:41:09 [http-nio-10201-exec-9] DEBUG o.s.web.servlet.DispatcherServlet - HEAD "/dicomweb/wado?requestType=WADO&studyUID=1.2.410.2000010.82.2291.1115161250421034&seriesUID=1.2.840.113619.2.391.88964.1760345262.5620.1&objectUID=1.2.840.113619.2.391.88964.1760345313.5620.3.512", parameters={masked}
+2026-01-01 22:41:09 [http-nio-10201-exec-9] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#wadoUri(String, String, String, String)
+2026-01-01 22:41:09 [http-nio-10201-exec-9] INFO  c.h.s.m.c.DicomWebController - WADO-URI: Request - studyUID=1.2.410.2000010.82.2291.1115161250421034, seriesUID=1.2.840.113619.2.391.88964.1760345262.5620.1, objectUID=1.2.840.113619.2.391.88964.1760345313.5620.3.512
+2026-01-01 22:41:09 [http-nio-10201-exec-9] INFO  c.h.s.m.c.DicomWebController - WADO-RS: Retrieve instance - studyUID=1.2.410.2000010.82.2291.1115161250421034, seriesUID=1.2.840.113619.2.391.88964.1760345262.5620.1, sopInstanceUID=1.2.840.113619.2.391.88964.1760345313.5620.3.512
+2026-01-01 22:41:09 [http-nio-10201-exec-9] DEBUG org.hibernate.SQL - 
+    /* SELECT
+        i 
+    FROM
+        Instance i 
+    WHERE
+        i.sopInstanceUid = :sopInstanceUid */ select
+            i1_0.id,
+            i1_0.created_at,
+            i1_0.file_size,
+            i1_0.frame_rate,
+            i1_0.frame_rate_source,
+            i1_0.image_columns,
+            i1_0.image_rows,
+            i1_0.instance_number,
+            i1_0.number_of_frames,
+            i1_0.series_id,
+            i1_0.sop_class_uid,
+            i1_0.sop_instance_uid,
+            i1_0.storage_path,
+            i1_0.storage_tier,
+            i1_0.tenant_id,
+            i1_0.thumbnail_path,
+            i1_0.transcoding_status,
+            i1_0.updated_at,
+            i1_0.video_path 
+        from
+            instance i1_0 
+        where
+            i1_0.sop_instance_uid=?
+Hibernate: 
+    /* SELECT
+        i 
+    FROM
+        Instance i 
+    WHERE
+        i.sopInstanceUid = :sopInstanceUid */ select
+            i1_0.id,
+            i1_0.created_at,
+            i1_0.file_size,
+            i1_0.frame_rate,
+            i1_0.frame_rate_source,
+            i1_0.image_columns,
+            i1_0.image_rows,
+            i1_0.instance_number,
+            i1_0.number_of_frames,
+            i1_0.series_id,
+            i1_0.sop_class_uid,
+            i1_0.sop_instance_uid,
+            i1_0.storage_path,
+            i1_0.storage_tier,
+            i1_0.tenant_id,
+            i1_0.thumbnail_path,
+            i1_0.transcoding_status,
+            i1_0.updated_at,
+            i1_0.video_path 
+        from
+            instance i1_0 
+        where
+            i1_0.sop_instance_uid=?
+2026-01-01 22:41:09 [http-nio-10201-exec-9] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.id,
+        s1_0.body_part_examined,
+        s1_0.created_at,
+        s1_0.manufacturer,
+        s1_0.manufacturer_model_name,
+        s1_0.modality,
+        s1_0.number_of_instances,
+        s1_0.series_description,
+        s1_0.series_instance_uid,
+        s1_0.series_number,
+        s1_0.study_id,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        series s1_0 
+    where
+        s1_0.id=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.body_part_examined,
+        s1_0.created_at,
+        s1_0.manufacturer,
+        s1_0.manufacturer_model_name,
+        s1_0.modality,
+        s1_0.number_of_instances,
+        s1_0.series_description,
+        s1_0.series_instance_uid,
+        s1_0.series_number,
+        s1_0.study_id,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        series s1_0 
+    where
+        s1_0.id=?
+2026-01-01 22:41:09 [http-nio-10201-exec-9] DEBUG org.hibernate.SQL - 
+    select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0 
+    where
+        s1_0.id=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.number_of_instances,
+        s1_0.number_of_series,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        study s1_0 
+    where
+        s1_0.id=?
+2026-01-01 22:41:09 [http-nio-10201-exec-9] INFO  c.h.s.m.s.s.SeaweedFsS3StorageService - Downloading DICOM file: bucket=minipacs, s3Key=studies/1.2.410.2000010.82.2291.1115161250421034/series/1.2.840.113619.2.391.88964.1760345262.5620.1/instances/1.2.840.113619.2.391.88964.1760345313.5620.3.512.dcm
+2026-01-01 22:41:09 [http-nio-10201-exec-9] INFO  c.h.s.m.s.s.SeaweedFsS3StorageService - DICOM file downloaded successfully: s3Key=studies/1.2.410.2000010.82.2291.1115161250421034/series/1.2.840.113619.2.391.88964.1760345262.5620.1/instances/1.2.840.113619.2.391.88964.1760345313.5620.3.512.dcm
+2026-01-01 22:41:09 [http-nio-10201-exec-9] INFO  c.h.s.m.c.DicomWebController - WADO-RS: Returning instance file
+2026-01-01 22:41:09 [http-nio-10201-exec-9] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Found 'Content-Type:application/dicom' in response
+2026-01-01 22:41:09 [http-nio-10201-exec-9] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [InputStream resource [resource loaded through InputStream]]
+2026-01-01 22:41:09 [http-nio-10201-exec-9] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+
+> Task :sado-minipacs:bootRun FAILED
+
+[Incubating] Problems report is available at: file:///C:/Users/amagr/project/sado/sado_be/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':sado-minipacs:bootRun'.
+> Process 'command 'C:\Program Files\OpenJDK\jdk-21.0.2\bin\java.exe'' finished with non-zero exit value -1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 46m 17s
+6 actionable tasks: 1 executed, 5 up-to-date

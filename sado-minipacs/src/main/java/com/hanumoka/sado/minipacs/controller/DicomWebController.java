@@ -10,16 +10,17 @@ import com.hanumoka.sado.minipacs.storage.service.DicomStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.InputStream;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -52,6 +53,7 @@ import java.util.*;
 @RequestMapping("/dicomweb")
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 @Tag(name = "DICOMweb", description = "DICOMweb 표준 API (QIDO-RS, WADO-RS)")
 public class DicomWebController {
 
@@ -102,9 +104,24 @@ public class DicomWebController {
                     .map(List::of)
                     .orElse(List.of());
         } else {
-            // 전체 조회 (추후 필터링 구현)
-            // TODO: PatientID, PatientName, StudyDate 필터링 구현
-            studies = studyService.findAll();
+            // CRITICAL: OOM 방지 - DB 쿼리로 필터링 (findAll() + Stream 제거)
+            // StudyDate 파싱 (YYYYMMDD → LocalDate)
+            java.time.LocalDate studyDateFilter = null;
+            if (StudyDate != null && !StudyDate.isEmpty()) {
+                try {
+                    studyDateFilter = java.time.LocalDate.parse(StudyDate,
+                            java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
+                } catch (java.time.format.DateTimeParseException e) {
+                    log.warn("Invalid StudyDate format: {}, expected YYYYMMDD", StudyDate);
+                }
+            }
+
+            // DB 쿼리로 필터링 (인덱스 활용 + JOIN FETCH)
+            studies = studyService.findByDicomWebFilters(
+                    PatientID,
+                    PatientName,
+                    studyDateFilter
+            );
         }
 
         // 페이징 적용
@@ -313,7 +330,7 @@ public class DicomWebController {
     @GetMapping(value = "/studies/{studyUID}/series/{seriesUID}/instances/{sopInstanceUID}",
             produces = DICOM_MEDIA_TYPE)
     @Operation(summary = "WADO-RS: Instance 다운로드", description = "DICOM 파일을 다운로드합니다.")
-    public ResponseEntity<InputStreamResource> retrieveInstance(
+    public ResponseEntity<Resource> retrieveInstance(
             @Parameter(description = "Study Instance UID") @PathVariable String studyUID,
             @Parameter(description = "Series Instance UID") @PathVariable String seriesUID,
             @Parameter(description = "SOP Instance UID") @PathVariable String sopInstanceUID
@@ -335,16 +352,17 @@ public class DicomWebController {
             return ResponseEntity.notFound().build();
         }
 
-        // S3에서 파일 다운로드
-        InputStream inputStream = dicomStorageService.downloadDicomFile(instance.getStoragePath());
+        // CRITICAL: Resource 반환으로 리소스 누수 방지
+        // Spring Framework가 Resource.close()를 자동 호출
+        Resource resource = dicomStorageService.downloadDicomFileAsResource(instance.getStoragePath());
 
-        log.info("WADO-RS: Returning instance file");
+        log.info("WADO-RS: Returning instance file as Resource");
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(DICOM_MEDIA_TYPE))
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"" + sopInstanceUID + ".dcm\"")
-                .body(new InputStreamResource(inputStream));
+                .body(resource);
     }
 
     /**
@@ -400,11 +418,11 @@ public class DicomWebController {
      */
     @GetMapping(value = "/wado", produces = DICOM_MEDIA_TYPE)
     @Operation(summary = "WADO-URI: 레거시 WADO 지원", description = "레거시 WADO-URI 형식을 지원합니다.")
-    public ResponseEntity<InputStreamResource> wadoUri(
+    public ResponseEntity<Resource> wadoUri(
             @RequestParam String requestType,
-            @RequestParam String studyUID,
-            @RequestParam String seriesUID,
-            @RequestParam String objectUID
+            @RequestParam @Pattern(regexp = "^[0-9.]+$", message = "Invalid DICOM UID format") String studyUID,
+            @RequestParam @Pattern(regexp = "^[0-9.]+$", message = "Invalid DICOM UID format") String seriesUID,
+            @RequestParam @Pattern(regexp = "^[0-9.]+$", message = "Invalid DICOM UID format") String objectUID
     ) {
         if (!"WADO".equals(requestType)) {
             return ResponseEntity.badRequest().build();

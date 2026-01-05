@@ -1,0 +1,9 @@
+# Development Profile Configuration
+
+spring:
+  profiles:
+    active: dev
+
+# CORS Configuration
+cors:
+  allowed-origins: http://localhost:10300,http://localhost:3000,http://127.0.0.1:10300,http://127.0.0.1:3000

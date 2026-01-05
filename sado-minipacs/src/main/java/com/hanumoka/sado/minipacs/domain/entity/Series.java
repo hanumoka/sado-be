@@ -17,8 +17,16 @@ import java.util.Objects;
  * DICOM Series 단위 메타데이터 관리
  */
 @Entity
-@Table(name = "series", uniqueConstraints = @UniqueConstraint(
-        name = "uk_series_instance_uid", columnNames = {"tenant_id", "series_instance_uid"}))
+@Table(
+    name = "series",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_series_instance_uid",
+        columnNames = {"tenant_id", "series_instance_uid"}
+    ),
+    indexes = {
+        @Index(name = "idx_series_study_modality", columnList = "study_id, modality")
+    }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -94,13 +102,30 @@ public class Series extends TenantAwareEntity {
     @Column(name = "number_of_instances")
     private Integer numberOfInstances;
 
+    /**
+     * Optimistic Lock Version
+     *
+     * <p>CRITICAL: 동시성 제어
+     * - Pessimistic Lock 대신 Optimistic Lock 사용
+     * - 동시 Instance 추가 시 OptimisticLockingFailureException 발생
+     * - @Retryable로 자동 재시도
+     * - Deadlock 위험 제거
+     */
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     // ========== Instance 관계 ==========
 
     /**
      * 시리즈의 영상 목록
      * 1개의 시리즈 → N개의 영상
+     *
+     * CRITICAL: CascadeType.ALL 제거 (데이터 무결성 보호)
+     * - Series 삭제 시 Instance 연쇄 삭제 방지
+     * - orphanRemoval 제거하여 실수로 인한 데이터 손실 방지
      */
-    @OneToMany(mappedBy = "series", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "series", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Instance> instances = new ArrayList<>();
 
     // ========== 비즈니스 메서드 ==========

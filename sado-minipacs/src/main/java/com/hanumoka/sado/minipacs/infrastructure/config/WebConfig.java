@@ -1,5 +1,6 @@
 package com.hanumoka.sado.minipacs.infrastructure.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -11,6 +12,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+
+    @Value("${spring.profiles.active:dev}")
+    private String activeProfile;
+
+    @Value("${cors.allowed-origins:http://localhost:10300,http://localhost:3000}")
+    private String[] allowedOrigins;
 
     /**
      * CORS 설정
@@ -26,12 +33,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         // DICOMweb API CORS 설정
         registry.addMapping("/dicomweb/**")
-                .allowedOrigins(
-                        "http://localhost:10300",       // Vite Dev Server
-                        "http://localhost:3000",        // OHIF Viewer Default
-                        "http://127.0.0.1:10300",
-                        "http://127.0.0.1:3000"
-                )
+                .allowedOrigins(allowedOrigins)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders(
@@ -46,12 +48,7 @@ public class WebConfig implements WebMvcConfigurer {
 
         // REST API CORS 설정
         registry.addMapping("/api/**")
-                .allowedOrigins(
-                        "http://localhost:10300",
-                        "http://localhost:3000",
-                        "http://127.0.0.1:10300",
-                        "http://127.0.0.1:3000"
-                )
+                .allowedOrigins(allowedOrigins)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders(
@@ -64,13 +61,15 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowCredentials(true)
                 .maxAge(3600);
 
-        // Swagger UI CORS 설정
-        registry.addMapping("/swagger-ui/**")
-                .allowedOrigins("*")
-                .allowedMethods("GET", "OPTIONS");
+        // Swagger UI CORS 설정 (개발 환경만)
+        if ("dev".equals(activeProfile) || "local".equals(activeProfile)) {
+            registry.addMapping("/swagger-ui/**")
+                    .allowedOrigins(allowedOrigins)
+                    .allowedMethods("GET", "OPTIONS");
 
-        registry.addMapping("/api-docs/**")
-                .allowedOrigins("*")
-                .allowedMethods("GET", "OPTIONS");
+            registry.addMapping("/api-docs/**")
+                    .allowedOrigins(allowedOrigins)
+                    .allowedMethods("GET", "OPTIONS");
+        }
     }
 }

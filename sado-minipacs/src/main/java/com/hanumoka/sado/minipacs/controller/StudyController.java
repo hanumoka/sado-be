@@ -11,6 +11,7 @@ import com.hanumoka.sado.minipacs.dto.request.CreateStudyRequest;
 import com.hanumoka.sado.minipacs.dto.request.UpdateStudyRequest;
 import com.hanumoka.sado.minipacs.dto.response.SeriesResponse;
 import com.hanumoka.sado.minipacs.dto.response.StudyResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +38,7 @@ public class StudyController {
      * POST /api/studies
      */
     @PostMapping
-    public ApiResponse<StudyResponse> createStudy(@RequestBody CreateStudyRequest request) {
+    public ApiResponse<StudyResponse> createStudy(@Valid @RequestBody CreateStudyRequest request) {
         log.info("POST /api/studies - patientId: {}", request.getPatientId());
 
         // 1. DTO → Entity 변환
@@ -78,7 +79,7 @@ public class StudyController {
     @PutMapping("/{id}")
     public ApiResponse<StudyResponse> updateStudy(
             @PathVariable Long id,
-            @RequestBody UpdateStudyRequest request) {
+            @Valid @RequestBody UpdateStudyRequest request) {
         log.info("PUT /api/studies/{}", id);
 
         // 1. 기존 검사 조회

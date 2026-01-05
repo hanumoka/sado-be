@@ -27,6 +27,9 @@ dependencies {
     implementation libs.spring.boot.starter.web
     implementation libs.spring.boot.starter.data.jpa
 
+    // Spring Validation (입력 검증)
+    implementation libs.spring.boot.starter.validation
+
     // Database
     runtimeOnly libs.mysql.connector.java
 
@@ -39,9 +42,9 @@ dependencies {
     // DCM4CHE DICOM 라이브러리 (5.29.1 - mini-pacs-poc 검증 버전)
     implementation 'org.dcm4che:dcm4che-core:5.29.1'
 
-    // Lombok
-    implementation libs.lombok
-    annotationProcessor libs.lombok
+    // Lombok (Annotation Processor 명시적 등록)
+    compileOnly 'org.projectlombok:lombok:1.18.36'
+    annotationProcessor 'org.projectlombok:lombok:1.18.36'
 
     // Test
     testImplementation libs.spring.boot.starter.test

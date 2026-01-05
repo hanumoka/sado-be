@@ -5,6 +5,7 @@ import com.hanumoka.sado.minipacs.domain.entity.Instance;
 import com.hanumoka.sado.minipacs.domain.entity.Series;
 import com.hanumoka.sado.minipacs.domain.repository.InstanceRepository;
 import com.hanumoka.sado.minipacs.storage.service.DicomStorageService;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -28,6 +29,7 @@ public class InstanceService {
     private final InstanceRepository instanceRepository;
     private final SeriesService seriesService;
     private final DicomStorageService dicomStorageService;
+    private final EntityManager entityManager;
 
     /**
      * Instance PK로 조회
@@ -154,27 +156,12 @@ public class InstanceService {
             String storagePath,
             Long fileSize) {
 
-        // 1. 기존 Instance 검색
-        Optional<Instance> existingInstance = findBySopInstanceUid(sopInstanceUid);
+        // CRITICAL: Race Condition 해결
+        // - 초기 검사 제거: TOCTOU (Time-of-Check Time-of-Use) 취약점 방지
+        // - Insert-first 전략: DB Unique Constraint를 활용한 동시성 제어
 
-        if (existingInstance.isPresent()) {
-            log.debug("Found existing instance: id={}, sopInstanceUid={}",
-                    existingInstance.get().getId(),
-                    sopInstanceUid);
-            return existingInstance.get();
-        }
-
-        // 2. 파일 경로 중복 확인
-        if (storagePath != null) {
-            Optional<Instance> duplicateStoragePath = findByStoragePath(storagePath);
-            if (duplicateStoragePath.isPresent()) {
-                log.warn("Instance with same storagePath already exists: {}", storagePath);
-                throw new IllegalArgumentException("Instance with storagePath already exists: " + storagePath);
-            }
-        }
-
-        // 3. 새 Instance 생성 시도 (Race Condition 대응)
         try {
+            // 1. Instance 생성
             Instance newInstance = Instance.builder()
                     .series(series)
                     .sopInstanceUid(sopInstanceUid)
@@ -189,13 +176,22 @@ public class InstanceService {
                     series.getId(),
                     storagePath);
 
-            // 비즈니스 메서드 호출 (역정규화 필드 자동 업데이트)
+            // 2. 양방향 관계 설정 + 역정규화 필드 자동 업데이트
             series.addInstance(newInstance);
 
+            // 3. DB 저장 (Unique Constraint 위반 시 예외 발생)
             return instanceRepository.saveAndFlush(newInstance);
+
         } catch (DataIntegrityViolationException e) {
-            // Race condition 발생 - 다른 스레드가 먼저 저장함
-            log.warn("Race condition detected for instance: {}", sopInstanceUid);
+            // Race condition 발생: 다른 스레드가 먼저 저장함
+            log.warn("Race condition detected for instance: {}, refreshing series state", sopInstanceUid);
+
+            // CRITICAL: series의 메모리 상태를 DB 상태로 되돌림
+            // - series.addInstance()로 인한 numberOfInstances 증가를 원복
+            // - 트랜잭션이 커밋되면 잘못된 값이 DB에 저장되는 것을 방지
+            entityManager.refresh(series);
+
+            // 이미 존재하는 Instance 조회 후 반환
             return instanceRepository.findBySopInstanceUid(sopInstanceUid)
                     .orElseThrow(() -> new IllegalStateException(
                             "Instance should exist after DataIntegrityViolationException"));
@@ -220,14 +216,19 @@ public class InstanceService {
     /**
      * Instance 삭제
      *
-     * <p>삭제 순서:
+     * CRITICAL: 트랜잭션 일관성 보장을 위한 삭제 순서 변경
      * <ol>
-     *   <li>DB에서 Instance 삭제</li>
-     *   <li>S3에서 DICOM 파일 삭제</li>
+     *   <li>S3에서 DICOM 파일 먼저 삭제 (실패 시 예외 발생 → 트랜잭션 롤백)</li>
+     *   <li>S3 삭제 성공 시에만 DB에서 Instance 삭제</li>
      * </ol>
      *
-     * <p>주의: S3 삭제 실패 시 로그만 남기고 진행합니다.
-     * 고아 파일은 나중에 배치 작업에서 정리합니다.
+     * <p>이전 문제점:
+     * - DB 먼저 삭제 → S3 삭제 실패 시 고아 파일 발생
+     * - DB는 이미 커밋되어 복구 불가능
+     *
+     * <p>개선 효과:
+     * - S3 삭제 실패 시 트랜잭션 롤백으로 DB 보존
+     * - 데이터 일관성 보장
      *
      * @param id Instance PK
      */
@@ -242,24 +243,19 @@ public class InstanceService {
                 instance.getSopInstanceUid(),
                 storagePath);
 
+        // 1. S3에서 DICOM 파일 먼저 삭제 (실패 시 예외 발생 → 트랜잭션 롤백)
+        if (storagePath != null && !storagePath.isEmpty()) {
+            dicomStorageService.deleteDicomFile(storagePath);
+            log.info("Deleted S3 file: {}", storagePath);
+        }
+
+        // 2. S3 삭제 성공 시에만 DB에서 Instance 삭제
         // 비즈니스 메서드 호출 (역정규화 필드 자동 업데이트)
         if (series != null) {
             series.removeInstance(instance);
         }
 
-        // 1. DB에서 Instance 삭제
         instanceRepository.delete(instance);
-
-        // 2. S3에서 DICOM 파일 삭제
-        if (storagePath != null && !storagePath.isEmpty()) {
-            try {
-                dicomStorageService.deleteDicomFile(storagePath);
-                log.info("Deleted S3 file: {}", storagePath);
-            } catch (Exception e) {
-                // S3 삭제 실패 시 로그만 남기고 진행
-                // 고아 파일은 나중에 배치 작업에서 정리
-                log.error("Failed to delete S3 file: {}. Will be cleaned up later.", storagePath, e);
-            }
-        }
+        log.info("Deleted instance from DB: id={}", id);
     }
 }

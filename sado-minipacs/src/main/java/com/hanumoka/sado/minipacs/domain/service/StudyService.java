@@ -10,6 +10,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -79,6 +80,29 @@ public class StudyService {
      */
     public long countByPatientId(Long patientId) {
         return studyRepository.countByPatientId(patientId);
+    }
+
+    /**
+     * DICOM-Web QIDO-RS 필터링 조회
+     *
+     * <p>CRITICAL: OOM 방지
+     * - findAll() + Stream 필터링 대신 DB 쿼리 활용
+     * - null 파라미터는 무시 (동적 쿼리)
+     * - JOIN FETCH로 N+1 문제 방지
+     *
+     * @param patientId DICOM PatientID (nullable)
+     * @param patientName 환자 이름 (nullable, 부분 일치)
+     * @param studyDate 검사 날짜 (nullable)
+     * @return Study 목록 (Patient eager loading)
+     */
+    public List<Study> findByDicomWebFilters(String patientId, String patientName, LocalDate studyDate) {
+        log.debug("Searching studies with filters: patientId={}, patientName={}, studyDate={}",
+                patientId, patientName, studyDate);
+
+        List<Study> studies = studyRepository.findByDicomWebFilters(patientId, patientName, studyDate);
+
+        log.debug("Found {} studies matching filters", studies.size());
+        return studies;
     }
 
     /**

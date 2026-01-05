@@ -9,6 +9,7 @@ import com.hanumoka.sado.minipacs.dto.request.CreatePatientRequest;
 import com.hanumoka.sado.minipacs.dto.request.UpdatePatientRequest;
 import com.hanumoka.sado.minipacs.dto.response.PatientResponse;
 import com.hanumoka.sado.minipacs.dto.response.StudyResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -30,23 +31,35 @@ public class PatientController {
     private final StudyService studyService;
 
     /**
+     * 환자 목록 조회
+     * GET /api/patients
+     */
+    @GetMapping
+    public ApiResponse<List<PatientResponse>> getAllPatients(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String gender) {
+        log.info("GET /api/patients?name={}&gender={}", name, gender);
+
+        // CRITICAL: OOM 방지 - DB 쿼리로 필터링 (findAll() + Stream 제거)
+        List<Patient> patients = patientService.findByFilters(name, gender);
+
+        List<PatientResponse> response = patients.stream()
+                .map(this::toResponse)
+                .toList();
+
+        return ApiResponse.success(response);
+    }
+
+    /**
      * 환자 생성
      * POST /api/patients
      */
     @PostMapping
-    public ApiResponse<PatientResponse> createPatient(@RequestBody CreatePatientRequest request) {
-        // 1. DTO → Entity 변환
+    public ApiResponse<PatientResponse> createPatient(@Valid @RequestBody CreatePatientRequest request) {
         Patient patient = toEntity(request);
-
-        // 2. Service 호출
         Patient savedPatient = patientService.createPatient(patient);
-
-        // 3. Entity → Response DTO 변환
         PatientResponse response = toResponse(savedPatient);
-
-        // 4. 성공 응답 반환
         return ApiResponse.success(response);
-
     }
 
     /**
@@ -56,14 +69,8 @@ public class PatientController {
     @GetMapping("/{id}")
     public ApiResponse<PatientResponse> getPatient(@PathVariable Long id) {
         log.info("GET /api/patients/{}", id);
-
-        // 1. Service 호출
         Patient patient = patientService.findById(id);
-
-        // 2. Entity → Response DTO 변환
         PatientResponse response = toResponse(patient);
-
-        // 3. 성공 응답 반환
         return ApiResponse.success(response);
     }
 
@@ -74,22 +81,12 @@ public class PatientController {
     @PutMapping("/{id}")
     public ApiResponse<PatientResponse> updatePatient(
             @PathVariable Long id,
-            @RequestBody UpdatePatientRequest request) {
+            @Valid @RequestBody UpdatePatientRequest request) {
         log.info("PUT /api/patients/{}", id);
-
-        // 1. 기존 환자 조회
         Patient patient = patientService.findById(id);
-
-        // 2. Request DTO로 Entity 업데이트 (부분 업데이트)
         updateEntity(patient, request);
-
-        // 3. Service 호출
         Patient updatedPatient = patientService.updatePatient(patient);
-
-        // 4. Entity → Response DTO 변환
         PatientResponse response = toResponse(updatedPatient);
-
-        // 5. 성공 응답 반환
         return ApiResponse.success(response);
     }
 
@@ -100,11 +97,7 @@ public class PatientController {
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deletePatient(@PathVariable Long id) {
         log.info("DELETE /api/patients/{}", id);
-
-        // 1. Service 호출
         patientService.deletePatient(id);
-
-        // 2. 성공 응답 반환 (데이터 없음)
         return ApiResponse.success();
     }
 
@@ -115,20 +108,12 @@ public class PatientController {
     @GetMapping("/{id}/studies")
     public ApiResponse<List<StudyResponse>> getPatientStudies(@PathVariable Long id) {
         log.info("GET /api/patients/{}/studies", id);
-
-        // 1. Service 호출
         List<Study> studies = studyService.findByPatientId(id);
-
-        // 2. Entity → Response DTO 변환
         List<StudyResponse> response = studies.stream()
                 .map(this::toStudyResponse)
                 .toList();
-
-        // 3. 성공 응답 반환
         return ApiResponse.success(response);
     }
-
-    // ========== Helper Methods: Entity ↔ DTO 변환 ==========
 
     /**
      * CreatePatientRequest → Patient Entity 변환
@@ -144,9 +129,8 @@ public class PatientController {
         return patient;
     }
 
-
     /**
-     * UpdatePatientRequest → Patient Entity 변환 (기존 Entity 업데이트)
+     * UpdatePatientRequest → Patient Entity 변환
      */
     private void updateEntity(Patient patient, UpdatePatientRequest request) {
         if (request.getDicomPatientId() != null) {
@@ -177,7 +161,6 @@ public class PatientController {
         }
     }
 
-
     /**
      * Patient Entity → PatientResponse 변환
      */
@@ -194,6 +177,8 @@ public class PatientController {
                 .matchingConfidence(patient.getMatchingConfidence())
                 .matchingStatus(patient.getMatchingStatus() != null ?
                         patient.getMatchingStatus().name() : null)
+                .studiesCount(patient.getStudiesCount())
+                .lastStudyDate(patient.getLastStudyDate())
                 .createdAt(patient.getCreatedAt())
                 .updatedAt(patient.getUpdatedAt())
                 .tenantId(patient.getTenantId())

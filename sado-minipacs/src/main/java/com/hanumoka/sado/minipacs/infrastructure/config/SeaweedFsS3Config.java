@@ -143,41 +143,44 @@ public class SeaweedFsS3Config {
     @EventListener(ApplicationReadyEvent.class)
     public void createBucketIfNotExists() {
 
-        try (S3Client client = s3Client()) {
-            // 1. ListBuckets로 실제 S3 버킷 목록 조회
-            ListBucketsResponse listBucketsResponse = client.listBuckets();
+        // CRITICAL FIX: try-with-resources를 사용하면 Spring Bean이 닫혀서 "Connection pool shut down" 에러 발생
+        // Spring이 @Bean 메서드를 프록시하여 싱글톤을 반환하므로, try-with-resources는 싱글톤 bean을 닫아버림
+        // 해결: try-with-resources 제거, Spring이 bean lifecycle 관리하도록 함
+        S3Client client = s3Client();  // Spring이 싱글톤 bean 반환
 
-            // 2. Stream API로 버킷 존재 여부 확인
-            boolean bucketExists = listBucketsResponse.buckets().stream()
-                    .anyMatch(bucket -> bucket.name().equals(s3Properties.getBucket()));
+        // 1. ListBuckets로 실제 S3 버킷 목록 조회
+        ListBucketsResponse listBucketsResponse = client.listBuckets();
 
-            if (bucketExists) {
-                // 버킷이 이미 존재함
-                log.info("S3 bucket already exists: {}", s3Properties.getBucket());
+        // 2. Stream API로 버킷 존재 여부 확인
+        boolean bucketExists = listBucketsResponse.buckets().stream()
+                .anyMatch(bucket -> bucket.name().equals(s3Properties.getBucket()));
 
-            } else {
-                // 3. 버킷이 ListBuckets에 없으면 CreateBucket 호출
-                log.info("S3 bucket does not exist. Creating bucket: {}", s3Properties.getBucket());
+        if (bucketExists) {
+            // 버킷이 이미 존재함
+            log.info("S3 bucket already exists: {}", s3Properties.getBucket());
 
-                try {
-                    CreateBucketRequest createBucketRequest = CreateBucketRequest.builder()
-                            .bucket(s3Properties.getBucket())
-                            .build();
+        } else {
+            // 3. 버킷이 ListBuckets에 없으면 CreateBucket 호출
+            log.info("S3 bucket does not exist. Creating bucket: {}", s3Properties.getBucket());
 
-                    client.createBucket(createBucketRequest);
+            try {
+                CreateBucketRequest createBucketRequest = CreateBucketRequest.builder()
+                        .bucket(s3Properties.getBucket())
+                        .build();
 
-                    log.info("S3 bucket created successfully: {}", s3Properties.getBucket());
+                client.createBucket(createBucketRequest);
 
-                } catch (software.amazon.awssdk.services.s3.model.BucketAlreadyExistsException e) {
-                    // SeaweedFS에서 collection 등으로 이미 존재하는 경우
-                    // ListBuckets에는 없지만 실제로는 사용 가능한 상태
-                    log.info("S3 bucket already exists (collection conflict resolved): {}", s3Properties.getBucket());
-                }
+                log.info("S3 bucket created successfully: {}", s3Properties.getBucket());
+
+            } catch (software.amazon.awssdk.services.s3.model.BucketAlreadyExistsException e) {
+                // SeaweedFS에서 collection 등으로 이미 존재하는 경우
+                // ListBuckets에는 없지만 실제로는 사용 가능한 상태
+                log.info("S3 bucket already exists (collection conflict resolved): {}", s3Properties.getBucket());
+            } catch (Exception e) {
+                // 4. 기타 예외 처리
+                log.error("Failed to check or create S3 bucket: {}", s3Properties.getBucket(), e);
+                throw new RuntimeException("S3 bucket initialization failed", e);
             }
-        } catch (Exception e) {
-            // 4. 기타 예외 처리
-            log.error("Failed to check or create S3 bucket: {}", s3Properties.getBucket(), e);
-            throw new RuntimeException("S3 bucket initialization failed", e);
         }
     }
 

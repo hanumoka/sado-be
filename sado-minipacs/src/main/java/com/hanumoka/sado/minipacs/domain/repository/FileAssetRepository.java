@@ -301,4 +301,104 @@ public interface FileAssetRepository extends JpaRepository<FileAsset, Long> {
      */
     @Query("SELECT COALESCE(SUM(f.fileSize), 0) FROM FileAsset f WHERE f.storageTier = :tier AND f.status = 'ACTIVE'")
     Long sumFileSizeByStorageTier(@Param("tier") String tier);
+
+    /**
+     * Storage Tier별 파일 목록 페이징 조회 (Admin용)
+     *
+     * <p>특정 Tier의 활성 파일을 마지막 접근 시간 내림차순으로 조회합니다.
+     *
+     * <p>사용 예시:
+     * <pre>
+     * {@code
+     * // HOT Storage 파일 목록 (첫 페이지, 20개)
+     * Pageable pageable = PageRequest.of(0, 20);
+     * Page<FileAsset> hotFiles = fileAssetRepository.findByStorageTierAndStatusOrderByLastAccessedAtDesc(
+     *     "HOT",
+     *     FileStatus.ACTIVE,
+     *     pageable
+     * );
+     * }
+     * </pre>
+     *
+     * @param tier Storage Tier (HOT, WARM, COLD)
+     * @param status 파일 상태 (일반적으로 ACTIVE)
+     * @param pageable 페이징 정보
+     * @return 파일 목록 페이지
+     */
+    org.springframework.data.domain.Page<FileAsset> findByStorageTierAndStatusOrderByLastAccessedAtDesc(
+        String tier,
+        FileStatus status,
+        org.springframework.data.domain.Pageable pageable
+    );
+
+    /**
+     * Storage Tier별 파일 개수 통계
+     *
+     * <p>사용 예시:
+     * <pre>
+     * {@code
+     * // HOT Storage 파일 개수
+     * Long hotFileCount = fileAssetRepository.countByStorageTierAndStatus("HOT", FileStatus.ACTIVE);
+     * log.info("HOT storage file count: {}", hotFileCount);
+     * }
+     * </pre>
+     *
+     * @param tier Storage Tier (HOT, WARM, COLD)
+     * @param status 파일 상태
+     * @return 파일 개수
+     */
+    Long countByStorageTierAndStatus(String tier, FileStatus status);
+
+    /**
+     * 카테고리별 파일 개수 통계
+     *
+     * <p>사용 예시:
+     * <pre>
+     * {@code
+     * // DICOM 파일 개수
+     * Long dicomCount = fileAssetRepository.countByCategoryAndStatus(FileCategory.DICOM, FileStatus.ACTIVE);
+     * log.info("DICOM file count: {}", dicomCount);
+     * }
+     * </pre>
+     *
+     * @param category 파일 카테고리
+     * @param status 파일 상태
+     * @return 파일 개수
+     */
+    Long countByCategoryAndStatus(FileCategory category, FileStatus status);
+
+    /**
+     * 모든 카테고리별 스토리지 메트릭 조회 (단일 쿼리)
+     *
+     * <p>N+1 문제를 방지하기 위해 GROUP BY를 사용한 단일 쿼리로 모든 카테고리의 통계를 조회합니다.
+     *
+     * <p>사용 예시:
+     * <pre>
+     * {@code
+     * // 모든 카테고리 통계를 1개 쿼리로 조회
+     * List<CategoryStorageMetrics> metrics =
+     *     fileAssetRepository.findStorageMetricsByAllCategories();
+     *
+     * // 결과: [
+     * //   {category: "DICOM", fileCount: 100, totalSize: 1024000},
+     * //   {category: "AI_RESULT", fileCount: 50, totalSize: 512000},
+     * //   ...
+     * // ]
+     * }
+     * </pre>
+     *
+     * @return 카테고리별 메트릭 목록 (카테고리 오름차순)
+     */
+    @Query("""
+        SELECT new com.hanumoka.sado.minipacs.dto.response.admin.CategoryStorageMetrics(
+            f.category,
+            COUNT(f),
+            COALESCE(SUM(f.fileSize), 0)
+        )
+        FROM FileAsset f
+        WHERE f.status = 'ACTIVE'
+        GROUP BY f.category
+        ORDER BY f.category ASC
+        """)
+    List<com.hanumoka.sado.minipacs.dto.response.admin.CategoryStorageMetrics> findStorageMetricsByAllCategories();
 }
