@@ -43,7 +43,7 @@ spring:
 # 서버 설정
 server:
   port: 10201
-git
+
 # 로깅 설정
 logging:
   level:
