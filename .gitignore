@@ -39,4 +39,15 @@ out/
 ### Environment Variables ###
 .env
 .env.local
+
+### Logs ###
 /logs/
+**/logs/
+
+### OpenCV Native Libraries (auto-downloaded by Gradle) ###
+opencv_java.dll
+libopencv_java.so
+libopencv_java.dylib
+
+### Error logs ###
+_error_log.txt
