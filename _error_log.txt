@@ -1,403 +1,327 @@
-2026-01-05 17:55:29 [http-nio-10201-exec-2] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-01-05 17:55:29 [http-nio-10201-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
-2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - Detected StandardServletMultipartResolver
-2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - Detected AcceptHeaderLocaleResolver
-2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@79749108
-2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.support.SessionFlashMapManager@5be872b6
-2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - enableLoggingRequestDetails='false': request parameters and headers will be masked to prevent unsafe logging of potentially sensitive data
-2026-01-05 17:55:29 [http-nio-10201-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 5 ms
-2026-01-05 17:55:29 [http-nio-10201-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - POST "/dicomweb/studies", parameters={multipart}
-2026-01-05 17:55:29 [http-nio-10201-exec-3] DEBUG o.s.web.servlet.DispatcherServlet - POST "/dicomweb/studies", parameters={multipart}
-2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - POST "/dicomweb/studies", parameters={multipart}
-2026-01-05 17:55:29 [http-nio-10201-exec-3] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#storeInstance(MultipartFile)
-2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#storeInstance(MultipartFile)
-2026-01-05 17:55:29 [http-nio-10201-exec-3] INFO  c.h.s.m.c.DicomWebController - STOW-RS: Upload request - filename: ORG-2-1.2.840.113619.2.391.60843.1754902147.10.1.dcm, size: 377304 bytes
-2026-01-05 17:55:29 [http-nio-10201-exec-2] INFO  c.h.s.m.c.DicomWebController - STOW-RS: Upload request - filename: ORG-2-1.2.840.113619.2.391.60843.1754902162.12.1.512.dcm, size: 6559644 bytes
-2026-01-05 17:55:29 [http-nio-10201-exec-3] INFO  c.h.s.m.d.service.InstanceService - uploadDicomFile - filename: ORG-2-1.2.840.113619.2.391.60843.1754902147.10.1.dcm, size: 377304 bytes
-2026-01-05 17:55:29 [http-nio-10201-exec-2] INFO  c.h.s.m.d.service.InstanceService - uploadDicomFile - filename: ORG-2-1.2.840.113619.2.391.60843.1754902162.12.1.512.dcm, size: 6559644 bytes
-2026-01-05 17:55:29 [http-nio-10201-exec-3] DEBUG c.h.s.m.d.util.DicomFileValidator - 파일 확장자 검증 성공: ORG-2-1.2.840.113619.2.391.60843.1754902147.10.1.dcm
-2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG c.h.s.m.d.util.DicomFileValidator - 파일 확장자 검증 성공: ORG-2-1.2.840.113619.2.391.60843.1754902162.12.1.512.dcm
-2026-01-05 17:55:29 [http-nio-10201-exec-3] DEBUG c.h.s.m.d.util.DicomFileValidator - DICOM magic number 검증 성공
-2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG c.h.s.m.d.util.DicomFileValidator - DICOM magic number 검증 성공
-2026-01-05 17:55:29 [http-nio-10201-exec-1] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#storeInstance(MultipartFile)
-2026-01-05 17:55:29 [http-nio-10201-exec-1] INFO  c.h.s.m.c.DicomWebController - STOW-RS: Upload request - filename: ORG-2-1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm, size: 14842110 bytes
-2026-01-05 17:55:29 [http-nio-10201-exec-1] INFO  c.h.s.m.d.service.InstanceService - uploadDicomFile - filename: ORG-2-1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm, size: 14842110 bytes
-2026-01-05 17:55:29 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.util.DicomFileValidator - 파일 확장자 검증 성공: ORG-2-1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm
-2026-01-05 17:55:29 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.util.DicomFileValidator - DICOM magic number 검증 성공
-2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 19771025 with pattern: yyyyMMdd
-2026-01-05 17:55:29 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 19771025 with pattern: yyyyMMdd
-2026-01-05 17:55:29 [http-nio-10201-exec-3] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 19771025 with pattern: yyyyMMdd
-2026-01-05 17:55:29 [http-nio-10201-exec-2] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 20250811 with pattern: yyyyMMdd
-2026-01-05 17:55:29 [http-nio-10201-exec-3] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 20250811 with pattern: yyyyMMdd
-2026-01-05 17:55:29 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 20250811 with pattern: yyyyMMdd
-2026-01-05 17:55:29 [http-nio-10201-exec-2] INFO  c.h.s.m.d.service.InstanceService - DICOM metadata extracted: PatientID=39151975, StudyUID=1.2.410.2000010.82.2291.3915197250325002, SeriesUID=1.2.840.113619.2.391.60843.1754901917.1.1, SOPInstanceUID=1.2.840.113619.2.391.60843.1754902162.12.1.512
-2026-01-05 17:55:29 [http-nio-10201-exec-1] INFO  c.h.s.m.d.service.InstanceService - DICOM metadata extracted: PatientID=39151975, StudyUID=1.2.410.2000010.82.2291.3915197250325002, SeriesUID=1.2.840.113619.2.391.60843.1754901917.1.1, SOPInstanceUID=1.2.840.113619.2.391.60843.1754902157.11.1.512
-2026-01-05 17:55:29 [http-nio-10201-exec-3] INFO  c.h.s.m.d.service.InstanceService - DICOM metadata extracted: PatientID=39151975, StudyUID=1.2.410.2000010.82.2291.3915197250325002, SeriesUID=1.2.840.113619.2.391.60843.1754901917.1.1, SOPInstanceUID=1.2.840.113619.2.391.60843.1754902147.10.1
-2026-01-05 17:55:30 [http-nio-10201-exec-2] DEBUG org.hibernate.SQL -
-    /* insert
-    for
-        com.hanumoka.sado.minipacs.domain.entity.Patient
-        */insert
-    into
-        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at)
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-Hibernate:
-    /* insert
-    for
-        com.hanumoka.sado.minipacs.domain.entity.Patient
-        */insert
-    into
-        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at)
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-2026-01-05 17:55:30 [http-nio-10201-exec-3] DEBUG org.hibernate.SQL -
-    /* insert
-    for
-        com.hanumoka.sado.minipacs.domain.entity.Patient
-        */insert
-    into
-        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at)
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-Hibernate:
-    /* insert
-    for
-        com.hanumoka.sado.minipacs.domain.entity.Patient
-        */insert
-    into
-        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at)
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG org.hibernate.SQL -
-    /* insert
-    for
-        com.hanumoka.sado.minipacs.domain.entity.Patient
-        */insert
-    into
-        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at)
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-Hibernate:
-    /* insert
-    for
-        com.hanumoka.sado.minipacs.domain.entity.Patient
-        */insert
-    into
-        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at)
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.d.service.PatientService - Created new patient: id=2, dicomPatientId=39151975
-2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.service.InstanceService - Patient resolved: id=2, dicomPatientId=39151975
-2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG org.hibernate.SQL -
-    /* insert
-    for
-        com.hanumoka.sado.minipacs.domain.entity.Study
-        */insert
-    into
-        study (created_at, patient_id, study_date, study_description, study_instance_uid, tenant_id, updated_at)
-    values
-        (?, ?, ?, ?, ?, ?, ?)
-Hibernate:
-    /* insert
-    for
-        com.hanumoka.sado.minipacs.domain.entity.Study
-        */insert
-    into
-        study (created_at, patient_id, study_date, study_description, study_instance_uid, tenant_id, updated_at)
-    values
-        (?, ?, ?, ?, ?, ?, ?)
-2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.domain.service.StudyService - Created new study: id=1, studyInstanceUid=1.2.410.2000010.82.2291.3915197250325002
-2026-01-05 17:55:30 [http-nio-10201-exec-2] WARN  org.hibernate.orm.jdbc.error - HHH000247: ErrorCode: 1062, SQLState: 23000
-2026-01-05 17:55:30 [http-nio-10201-exec-3] WARN  org.hibernate.orm.jdbc.error - HHH000247: ErrorCode: 1062, SQLState: 23000
-2026-01-05 17:55:30 [http-nio-10201-exec-2] WARN  org.hibernate.orm.jdbc.error - Duplicate entry '1-39151975-' for key 'patient.uk_patient_identity'
-2026-01-05 17:55:30 [http-nio-10201-exec-3] WARN  org.hibernate.orm.jdbc.error - Duplicate entry '1-39151975-' for key 'patient.uk_patient_identity'
-2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.service.InstanceService - Study resolved: id=1, studyInstanceUid=1.2.410.2000010.82.2291.3915197250325002
-2026-01-05 17:55:30 [http-nio-10201-exec-3] DEBUG c.h.s.m.d.service.PatientService - Race condition detected for patient: 39151975, selecting existing record
-2026-01-05 17:55:30 [http-nio-10201-exec-2] DEBUG c.h.s.m.d.service.PatientService - Race condition detected for patient: 39151975, selecting existing record
-2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG org.hibernate.SQL -
-    /* insert
-    for
-        com.hanumoka.sado.minipacs.domain.entity.Series
-        */insert
-    into
-        series (body_part_examined, created_at, manufacturer, manufacturer_model_name, modality, series_description, series_instance_uid, series_number, study_id, tenant_id, updated_at)
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-Hibernate:
-    /* insert
-    for
-        com.hanumoka.sado.minipacs.domain.entity.Series
-        */insert
-    into
-        series (body_part_examined, created_at, manufacturer, manufacturer_model_name, modality, series_description, series_instance_uid, series_number, study_id, tenant_id, updated_at)
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.domain.service.SeriesService - Created new series: id=1, seriesInstanceUid=1.2.840.113619.2.391.60843.1754901917.1.1, modality=US
-2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.service.InstanceService - Series resolved: id=1, seriesInstanceUid=1.2.840.113619.2.391.60843.1754901917.1.1, modality=US
-2026-01-05 17:55:30 [http-nio-10201-exec-2] ERROR org.hibernate.orm.core - HHH000099: an assertion failure occurred (this may indicate a bug in Hibernate, but is more likely due to unsafe use of the session): org.hibernate.AssertionFailure: Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a null identifier (this can happen if the session is flushed after an exception occurs)
-2026-01-05 17:55:30 [http-nio-10201-exec-3] ERROR org.hibernate.orm.core - HHH000099: an assertion failure occurred (this may indicate a bug in Hibernate, but is more likely due to unsafe use of the session): org.hibernate.AssertionFailure: Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a null identifier (this can happen if the session is flushed after an exception occurs)
-2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG org.hibernate.SQL -
-    /* SELECT
-        i
-    FROM
-        Instance i
-    WHERE
-        i.sopInstanceUid = :sopInstanceUid */ select
-            i1_0.id,
-            i1_0.created_at,
-            i1_0.file_size,
-            i1_0.frame_rate,
-            i1_0.frame_rate_source,
-            i1_0.image_columns,
-            i1_0.image_rows,
-            i1_0.instance_number,
-            i1_0.number_of_frames,
-            i1_0.series_id,
-            i1_0.sop_class_uid,
-            i1_0.sop_instance_uid,
-            i1_0.storage_path,
-            i1_0.storage_tier,
-            i1_0.tenant_id,
-            i1_0.thumbnail_path,
-            i1_0.transcoding_status,
-            i1_0.updated_at,
-            i1_0.video_path
-        from
-            instance i1_0
-        where
-            i1_0.sop_instance_uid=?
-Hibernate:
-    /* SELECT
-        i
-    FROM
-        Instance i
-    WHERE
-        i.sopInstanceUid = :sopInstanceUid */ select
-            i1_0.id,
-            i1_0.created_at,
-            i1_0.file_size,
-            i1_0.frame_rate,
-            i1_0.frame_rate_source,
-            i1_0.image_columns,
-            i1_0.image_rows,
-            i1_0.instance_number,
-            i1_0.number_of_frames,
-            i1_0.series_id,
-            i1_0.sop_class_uid,
-            i1_0.sop_instance_uid,
-            i1_0.storage_path,
-            i1_0.storage_tier,
-            i1_0.tenant_id,
-            i1_0.thumbnail_path,
-            i1_0.transcoding_status,
-            i1_0.updated_at,
-            i1_0.video_path
-        from
-            instance i1_0
-        where
-            i1_0.sop_instance_uid=?
-2026-01-05 17:55:30 [http-nio-10201-exec-2] WARN  c.h.s.m.c.DicomWebController - STOW-RS: Runtime exception - Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a null identifier (this can happen if the session is flushed after an exception occurs)
-2026-01-05 17:55:30 [http-nio-10201-exec-3] WARN  c.h.s.m.c.DicomWebController - STOW-RS: Runtime exception - Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a null identifier (this can happen if the session is flushed after an exception occurs)
-2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG c.h.s.m.s.s.DicomwebPathStrategy - Generated DICOMweb path: studies/1.2.410.2000010.82.2291.3915197250325002/series/1.2.840.113619.2.391.60843.1754901917.1.1/instances/1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm
-2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.s.s.SeaweedFsS3StorageService - Uploading DICOM file with metadata: bucket=minipacs, s3Key=studies/1.2.410.2000010.82.2291.3915197250325002/series/1.2.840.113619.2.391.60843.1754901917.1.1/instances/1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm, strategy=DICOMweb Standard Path Strategy
-2026-01-05 17:55:30 [http-nio-10201-exec-3] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/dicom+json', given [application/dicom+json] and supported [application/json, application/*+json, application/yaml]
-2026-01-05 17:55:30 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/dicom+json', given [application/dicom+json] and supported [application/json, application/*+json, application/yaml]
-2026-01-05 17:55:30 [http-nio-10201-exec-2] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{success=false, error=Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a (truncated)...]
-2026-01-05 17:55:30 [http-nio-10201-exec-3] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{success=false, error=Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a (truncated)...]
-2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG c.h.s.m.s.s.SeaweedFsS3StorageService - File size calculated: 14842110 bytes
-2026-01-05 17:55:30 [http-nio-10201-exec-3] DEBUG o.s.web.servlet.DispatcherServlet - Completed 422 UNPROCESSABLE_CONTENT
-2026-01-05 17:55:30 [http-nio-10201-exec-2] DEBUG o.s.web.servlet.DispatcherServlet - Completed 422 UNPROCESSABLE_CONTENT
-2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG o.s.web.servlet.DispatcherServlet - POST "/dicomweb/studies", parameters={multipart}
-2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.hanumoka.sado.minipacs.controller.DicomWebController#storeInstance(MultipartFile)
-2026-01-05 17:55:30 [http-nio-10201-exec-4] INFO  c.h.s.m.c.DicomWebController - STOW-RS: Upload request - filename: ORG-2-1.2.840.113619.2.391.60843.1754902173.13.1.512.dcm, size: 15736060 bytes
-2026-01-05 17:55:30 [http-nio-10201-exec-4] INFO  c.h.s.m.d.service.InstanceService - uploadDicomFile - filename: ORG-2-1.2.840.113619.2.391.60843.1754902173.13.1.512.dcm, size: 15736060 bytes
-2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG c.h.s.m.d.util.DicomFileValidator - 파일 확장자 검증 성공: ORG-2-1.2.840.113619.2.391.60843.1754902173.13.1.512.dcm
-2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG c.h.s.m.d.util.DicomFileValidator - DICOM magic number 검증 성공
-2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 19771025 with pattern: yyyyMMdd
-2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG c.h.s.m.d.p.DicomMetadataExtractor - Successfully parsed DICOM date: 20250811 with pattern: yyyyMMdd
-2026-01-05 17:55:30 [http-nio-10201-exec-4] INFO  c.h.s.m.d.service.InstanceService - DICOM metadata extracted: PatientID=39151975, StudyUID=1.2.410.2000010.82.2291.3915197250325002, SeriesUID=1.2.840.113619.2.391.60843.1754901917.1.1, SOPInstanceUID=1.2.840.113619.2.391.60843.1754902173.13.1.512
-2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG org.hibernate.SQL -
-    /* insert
-    for
-        com.hanumoka.sado.minipacs.domain.entity.Patient
-        */insert
-    into
-        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at)
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-Hibernate:
-    /* insert
-    for
-        com.hanumoka.sado.minipacs.domain.entity.Patient
-        */insert
-    into
-        patient (created_at, dicom_patient_id, emr_patient_id, issuer_of_patient_id, issuer_type_code, matching_confidence, matching_status, patient_birth_date, patient_name, patient_sex, tenant_id, updated_at)
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-2026-01-05 17:55:30 [http-nio-10201-exec-4] WARN  org.hibernate.orm.jdbc.error - HHH000247: ErrorCode: 1062, SQLState: 23000
-2026-01-05 17:55:30 [http-nio-10201-exec-4] WARN  org.hibernate.orm.jdbc.error - Duplicate entry '1-39151975-' for key 'patient.uk_patient_identity'
-2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG c.h.s.m.d.service.PatientService - Race condition detected for patient: 39151975, selecting existing record
-2026-01-05 17:55:30 [http-nio-10201-exec-4] ERROR org.hibernate.orm.core - HHH000099: an assertion failure occurred (this may indicate a bug in Hibernate, but is more likely due to unsafe use of the session): org.hibernate.AssertionFailure: Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a null identifier (this can happen if the session is flushed after an exception occurs)
-2026-01-05 17:55:30 [http-nio-10201-exec-4] WARN  c.h.s.m.c.DicomWebController - STOW-RS: Runtime exception - Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a null identifier (this can happen if the session is flushed after an exception occurs)
-2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/dicom+json', given [application/dicom+json] and supported [application/json, application/*+json, application/yaml]
-2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{success=false, error=Entry for instance of 'com.hanumoka.sado.minipacs.domain.entity.Patient' has a (truncated)...]
-2026-01-05 17:55:30 [http-nio-10201-exec-4] DEBUG o.s.web.servlet.DispatcherServlet - Completed 422 UNPROCESSABLE_CONTENT
-2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.s.s.SeaweedFsS3StorageService - DICOM file uploaded successfully: s3Key=studies/1.2.410.2000010.82.2291.3915197250325002/series/1.2.840.113619.2.391.60843.1754901917.1.1/instances/1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm, size=14842110 bytes
-2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.service.InstanceService - DICOM file uploaded to storage: s3Key=studies/1.2.410.2000010.82.2291.3915197250325002/series/1.2.840.113619.2.391.60843.1754901917.1.1/instances/1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm, size=14842110 bytes
-2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG c.h.s.m.d.service.InstanceService - Attempting to create instance: sopInstanceUid=1.2.840.113619.2.391.60843.1754902157.11.1.512 (may retry on conflict)
-2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG org.hibernate.SQL -
+2026-01-07 16:41:44.457 DEBUG [o-10201-exec-10] c.h.s.m.d.service.DicomRenderingService  : Rendering DICOM to PNG: path=studies/1.2.410.2000010.82.2291.2816285240528008/series/1.2.840.113619.2.391.60843.1732524731.1.1/instances/1.2.840.113619.2.391.60843.1732525043.23.1.512.dcm, frame=1
+2026-01-07 16:41:44.457  INFO [o-10201-exec-10] c.h.s.m.s.s.SeaweedFsS3StorageService    : Downloading DICOM file: bucket=minipacs, s3Key=studies/1.2.410.2000010.82.2291.2816285240528008/series/1.2.840.113619.2.391.60843.1732524731.1.1/instances/1.2.840.113619.2.391.60843.1732525043.23.1.512.dcm
+2026-01-07 16:41:44.457 TRACE [io-10201-exec-6] org.hibernate.orm.jdbc.bind              : binding parameter (1:BIGINT) <- [1]
+2026-01-07 16:41:44.461 DEBUG [io-10201-exec-6] org.hibernate.SQL                        :
     select
         s1_0.id,
-        s1_0.body_part_examined,
         s1_0.created_at,
-        s1_0.manufacturer,
-        s1_0.manufacturer_model_name,
-        s1_0.modality,
-        s1_0.series_description,
-        s1_0.series_instance_uid,
-        s1_0.series_number,
-        s1_0.study_id,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
         s1_0.tenant_id,
-        s1_0.updated_at
+        s1_0.updated_at,
+        s1_0.uuid
     from
-        series s1_0
+        study s1_0
     where
         s1_0.id=?
 Hibernate:
     select
         s1_0.id,
-        s1_0.body_part_examined,
         s1_0.created_at,
-        s1_0.manufacturer,
-        s1_0.manufacturer_model_name,
-        s1_0.modality,
-        s1_0.series_description,
-        s1_0.series_instance_uid,
-        s1_0.series_number,
-        s1_0.study_id,
+        s1_0.patient_id,
+        s1_0.study_date,
+        s1_0.study_description,
+        s1_0.study_instance_uid,
         s1_0.tenant_id,
-        s1_0.updated_at
+        s1_0.updated_at,
+        s1_0.uuid
     from
-        series s1_0
+        study s1_0
     where
         s1_0.id=?
-2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG org.hibernate.SQL -
-    /* SELECT
-        i
-    FROM
-        Instance i
-    WHERE
-        i.storagePath = :storagePath */ select
-            i1_0.id,
-            i1_0.created_at,
-            i1_0.file_size,
-            i1_0.frame_rate,
-            i1_0.frame_rate_source,
-            i1_0.image_columns,
-            i1_0.image_rows,
-            i1_0.instance_number,
-            i1_0.number_of_frames,
-            i1_0.series_id,
-            i1_0.sop_class_uid,
-            i1_0.sop_instance_uid,
-            i1_0.storage_path,
-            i1_0.storage_tier,
-            i1_0.tenant_id,
-            i1_0.thumbnail_path,
-            i1_0.transcoding_status,
-            i1_0.updated_at,
-            i1_0.video_path
-        from
-            instance i1_0
-        where
-            i1_0.storage_path=?
-Hibernate:
-    /* SELECT
-        i
-    FROM
-        Instance i
-    WHERE
-        i.storagePath = :storagePath */ select
-            i1_0.id,
-            i1_0.created_at,
-            i1_0.file_size,
-            i1_0.frame_rate,
-            i1_0.frame_rate_source,
-            i1_0.image_columns,
-            i1_0.image_rows,
-            i1_0.instance_number,
-            i1_0.number_of_frames,
-            i1_0.series_id,
-            i1_0.sop_class_uid,
-            i1_0.sop_instance_uid,
-            i1_0.storage_path,
-            i1_0.storage_tier,
-            i1_0.tenant_id,
-            i1_0.thumbnail_path,
-            i1_0.transcoding_status,
-            i1_0.updated_at,
-            i1_0.video_path
-        from
-            instance i1_0
-        where
-            i1_0.storage_path=?
-2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.d.service.InstanceService - Creating new instance: sopInstanceUid=1.2.840.113619.2.391.60843.1754902157.11.1.512, seriesId=1
-2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG org.hibernate.SQL -
-    select
-        i1_0.series_id,
-        i1_0.id,
-        i1_0.created_at,
-        i1_0.file_size,
-        i1_0.frame_rate,
-        i1_0.frame_rate_source,
-        i1_0.image_columns,
-        i1_0.image_rows,
-        i1_0.instance_number,
-        i1_0.number_of_frames,
-        i1_0.sop_class_uid,
-        i1_0.sop_instance_uid,
-        i1_0.storage_path,
-        i1_0.storage_tier,
-        i1_0.tenant_id,
-        i1_0.thumbnail_path,
-        i1_0.transcoding_status,
-        i1_0.updated_at,
-        i1_0.video_path
-    from
-        instance i1_0
-    where
-        i1_0.series_id=?
-Hibernate:
-    select
-        i1_0.series_id,
-        i1_0.id,
-        i1_0.created_at,
-        i1_0.file_size,
-        i1_0.frame_rate,
-        i1_0.frame_rate_source,
-        i1_0.image_columns,
-        i1_0.image_rows,
-        i1_0.instance_number,
-        i1_0.number_of_frames,
-        i1_0.sop_class_uid,
-        i1_0.sop_instance_uid,
-        i1_0.storage_path,
-        i1_0.storage_tier,
-        i1_0.tenant_id,
-        i1_0.thumbnail_path,
-        i1_0.transcoding_status,
-        i1_0.updated_at,
-        i1_0.video_path
-    from
-        instance i1_0
-    where
-        i1_0.series_id=?
-2026-01-05 17:55:30 [http-nio-10201-exec-1] WARN  c.h.s.m.d.service.InstanceService - Rolling back S3 upload due to non-retryable error: studies/1.2.410.2000010.82.2291.3915197250325002/series/1.2.840.113619.2.391.60843.1754901917.1.1/instances/1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm
-2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.s.s.SeaweedFsS3StorageService - Deleting DICOM file: bucket=minipacs, s3Key=studies/1.2.410.2000010.82.2291.3915197250325002/series/1.2.840.113619.2.391.60843.1754901917.1.1/instances/1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm
-2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.s.s.SeaweedFsS3StorageService - DICOM file deleted successfully: s3Key=studies/1.2.410.2000010.82.2291.3915197250325002/series/1.2.840.113619.2.391.60843.1754901917.1.1/instances/1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm
-2026-01-05 17:55:30 [http-nio-10201-exec-1] INFO  c.h.s.m.d.service.InstanceService - S3 file deleted successfully on error: studies/1.2.410.2000010.82.2291.3915197250325002/series/1.2.840.113619.2.391.60843.1754901917.1.1/instances/1.2.840.113619.2.391.60843.1754902157.11.1.512.dcm
-2026-01-05 17:55:30 [http-nio-10201-exec-1] WARN  c.h.s.m.c.DicomWebController - STOW-RS: Runtime exception - Failed to upload DICOM file
-2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/dicom+json', given [application/dicom+json] and supported [application/json, application/*+json, application/yaml]
-2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{success=false, error=지원하지 않는 파일 형식입니다, errorCode=NOT_DICOM}]
-2026-01-05 17:55:30 [http-nio-10201-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - Completed 415 UNSUPPORTED_MEDIA_TYPE
+2026-01-07 16:41:44.462 TRACE [io-10201-exec-6] org.hibernate.orm.jdbc.bind              : binding parameter (1:BIGINT) <- [1]
+2026-01-07 16:41:44.466 DEBUG [io-10201-exec-6] c.h.s.m.d.service.DicomRenderingService  : Rendering DICOM to PNG: path=studies/1.2.410.2000010.82.2291.2816285240528008/series/1.2.840.113619.2.391.60843.1732524731.1.1/instances/1.2.840.113619.2.391.60843.1732525049.24.1.512.dcm, frame=1
+2026-01-07 16:41:44.466  INFO [io-10201-exec-6] c.h.s.m.s.s.SeaweedFsS3StorageService    : Downloading DICOM file: bucket=minipacs, s3Key=studies/1.2.410.2000010.82.2291.2816285240528008/series/1.2.840.113619.2.391.60843.1732524731.1.1/instances/1.2.840.113619.2.391.60843.1732525049.24.1.512.dcm
+2026-01-07 16:41:44.477  INFO [o-10201-exec-10] c.h.s.m.s.s.SeaweedFsS3StorageService    : DICOM file downloaded successfully: s3Key=studies/1.2.410.2000010.82.2291.2816285240528008/series/1.2.840.113619.2.391.60843.1732524731.1.1/instances/1.2.840.113619.2.391.60843.1732525043.23.1.512.dcm
+2026-01-07 16:41:44.492  INFO [io-10201-exec-6] c.h.s.m.s.s.SeaweedFsS3StorageService    : DICOM file downloaded successfully: s3Key=studies/1.2.410.2000010.82.2291.2816285240528008/series/1.2.840.113619.2.391.60843.1732524731.1.1/instances/1.2.840.113619.2.391.60843.1732525049.24.1.512.dcm
+2026-01-07 16:41:44.557  INFO [io-10201-exec-9] c.h.s.m.d.service.DicomRenderingService  : DICOM Transfer Syntax: JPEG Baseline (8-bit) (1.2.840.10008.1.2.4.50)
+2026-01-07 16:41:44.557  INFO [io-10201-exec-9] c.h.s.m.d.service.DicomRenderingService  : DICOM Compression: COMPRESSED
+2026-01-07 16:41:44.570 DEBUG [io-10201-exec-9] .m.m.a.ExceptionHandlerExceptionResolver : Using @ExceptionHandler com.hanumoka.sado.common.exception.GlobalExceptionHandler#handleException(Exception)
+2026-01-07 16:41:44.570 ERROR [io-10201-exec-9] c.h.s.c.e.GlobalExceptionHandler         : Unexpected Error
+
+java.lang.IllegalArgumentException: w and h must be > 0
+        at java.desktop/java.awt.image.Raster.createInterleavedRaster(Raster.java:214)
+        at java.desktop/java.awt.image.ComponentColorModel.createCompatibleWritableRaster(ComponentColorModel.java:2809)
+        at org.weasis.opencv.op.ImageConversion.toBufferedImage(ImageConversion.java:80)
+        at org.weasis.opencv.op.ImageConversion.toBufferedImage(ImageConversion.java:118)
+        at org.dcm4che3.opencv.NativeImageReader.read(NativeImageReader.java:252)
+        at org.dcm4che3.imageio.plugins.dcm.DicomImageReader.read(DicomImageReader.java:458)
+        at com.hanumoka.sado.minipacs.domain.service.DicomRenderingService.extractFrame(DicomRenderingService.java:124)
+        at com.hanumoka.sado.minipacs.domain.service.DicomRenderingService.renderToPng(DicomRenderingService.java:61)
+        at com.hanumoka.sado.minipacs.controller.DicomWebController.renderFrame(DicomWebController.java:522)
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+        at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+        at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190)
+        at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158)
+        at org.springframework.validation.beanvalidation.MethodValidationInterceptor.invoke(MethodValidationInterceptor.java:171)
+        at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+        at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719)
+        at com.hanumoka.sado.minipacs.controller.DicomWebController$$SpringCGLIB$$0.renderFrame(<generated>)
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+        at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:258)
+        at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:190)
+        at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117)
+        at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:934)
+        at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:853)
+        at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:86)
+        at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:963)
+        at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:866)
+        at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1003)
+        at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:892)
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:622)
+        at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:874)
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:710)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:128)
+        at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+        at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+        at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+        at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:199)
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+        at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165)
+        at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:77)
+        at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+        at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113)
+        at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83)
+        at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72)
+        at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:341)
+        at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+        at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+        at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)
+        at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1778)
+        at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+        at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:946)
+        at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:480)
+        at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:57)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+
+2026-01-07 16:41:44.571 DEBUG [io-10201-exec-9] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json;q=0.8', given [image/avif, image/webp, image/apng, image/svg+xml, image/*, */*;q=0.8] and supported [application/json, application/*+json, application/yaml]
+2026-01-07 16:41:44.571 DEBUG [io-10201-exec-9] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [com.hanumoka.sado.common.dto.ApiResponse@59bd98c]
+2026-01-07 16:41:44.572 DEBUG [io-10201-exec-9] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [java.lang.IllegalArgumentException: w and h must be > 0]
+2026-01-07 16:41:44.573 DEBUG [io-10201-exec-9] o.s.web.servlet.DispatcherServlet        : Completed 500 INTERNAL_SERVER_ERROR
+2026-01-07 16:41:44.615  INFO [io-10201-exec-1] c.h.s.m.d.service.DicomRenderingService  : DICOM Transfer Syntax: JPEG Baseline (8-bit) (1.2.840.10008.1.2.4.50)
+2026-01-07 16:41:44.616  INFO [io-10201-exec-1] c.h.s.m.d.service.DicomRenderingService  : DICOM Compression: COMPRESSED
+2026-01-07 16:41:44.629 DEBUG [io-10201-exec-1] .m.m.a.ExceptionHandlerExceptionResolver : Using @ExceptionHandler com.hanumoka.sado.common.exception.GlobalExceptionHandler#handleException(Exception)
+2026-01-07 16:41:44.630 ERROR [io-10201-exec-1] c.h.s.c.e.GlobalExceptionHandler         : Unexpected Error
+
+java.lang.IllegalArgumentException: w and h must be > 0
+        at java.desktop/java.awt.image.Raster.createInterleavedRaster(Raster.java:214)
+        at java.desktop/java.awt.image.ComponentColorModel.createCompatibleWritableRaster(ComponentColorModel.java:2809)
+        at org.weasis.opencv.op.ImageConversion.toBufferedImage(ImageConversion.java:80)
+        at org.weasis.opencv.op.ImageConversion.toBufferedImage(ImageConversion.java:118)
+        at org.dcm4che3.opencv.NativeImageReader.read(NativeImageReader.java:252)
+        at org.dcm4che3.imageio.plugins.dcm.DicomImageReader.read(DicomImageReader.java:458)
+        at com.hanumoka.sado.minipacs.domain.service.DicomRenderingService.extractFrame(DicomRenderingService.java:124)
+        at com.hanumoka.sado.minipacs.domain.service.DicomRenderingService.renderToPng(DicomRenderingService.java:61)
+        at com.hanumoka.sado.minipacs.controller.DicomWebController.renderFrame(DicomWebController.java:522)
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+        at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+        at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190)
+        at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158)
+        at org.springframework.validation.beanvalidation.MethodValidationInterceptor.invoke(MethodValidationInterceptor.java:171)
+        at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+        at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719)
+        at com.hanumoka.sado.minipacs.controller.DicomWebController$$SpringCGLIB$$0.renderFrame(<generated>)
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+        at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:258)
+        at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:190)
+        at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117)
+        at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:934)
+        at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:853)
+        at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:86)
+        at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:963)
+        at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:866)
+        at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1003)
+        at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:892)
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:622)
+        at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:874)
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:710)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:128)
+        at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+        at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+        at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+        at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:199)
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+        at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165)
+        at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:77)
+        at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+        at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113)
+        at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83)
+        at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72)
+        at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:341)
+        at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+        at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+        at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)
+        at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1778)
+        at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+        at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:946)
+        at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:480)
+        at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:57)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+
+2026-01-07 16:41:44.630 DEBUG [io-10201-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json;q=0.8', given [image/avif, image/webp, image/apng, image/svg+xml, image/*, */*;q=0.8] and supported [application/json, application/*+json, application/yaml]
+2026-01-07 16:41:44.630 DEBUG [io-10201-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [com.hanumoka.sado.common.dto.ApiResponse@54c60632]
+2026-01-07 16:41:44.632 DEBUG [io-10201-exec-1] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [java.lang.IllegalArgumentException: w and h must be > 0]
+2026-01-07 16:41:44.632 DEBUG [io-10201-exec-1] o.s.web.servlet.DispatcherServlet        : Completed 500 INTERNAL_SERVER_ERROR
+2026-01-07 16:41:44.707  INFO [o-10201-exec-10] c.h.s.m.d.service.DicomRenderingService  : DICOM Transfer Syntax: JPEG Baseline (8-bit) (1.2.840.10008.1.2.4.50)
+2026-01-07 16:41:44.707  INFO [o-10201-exec-10] c.h.s.m.d.service.DicomRenderingService  : DICOM Compression: COMPRESSED
+2026-01-07 16:41:44.712  INFO [io-10201-exec-6] c.h.s.m.d.service.DicomRenderingService  : DICOM Transfer Syntax: JPEG Baseline (8-bit) (1.2.840.10008.1.2.4.50)
+2026-01-07 16:41:44.712  INFO [io-10201-exec-6] c.h.s.m.d.service.DicomRenderingService  : DICOM Compression: COMPRESSED
+2026-01-07 16:41:44.721 DEBUG [o-10201-exec-10] .m.m.a.ExceptionHandlerExceptionResolver : Using @ExceptionHandler com.hanumoka.sado.common.exception.GlobalExceptionHandler#handleException(Exception)
+2026-01-07 16:41:44.722 ERROR [o-10201-exec-10] c.h.s.c.e.GlobalExceptionHandler         : Unexpected Error
+
+java.lang.IllegalArgumentException: w and h must be > 0
+        at java.desktop/java.awt.image.Raster.createInterleavedRaster(Raster.java:214)
+        at java.desktop/java.awt.image.ComponentColorModel.createCompatibleWritableRaster(ComponentColorModel.java:2809)
+        at org.weasis.opencv.op.ImageConversion.toBufferedImage(ImageConversion.java:80)
+        at org.weasis.opencv.op.ImageConversion.toBufferedImage(ImageConversion.java:118)
+        at org.dcm4che3.opencv.NativeImageReader.read(NativeImageReader.java:252)
+        at org.dcm4che3.imageio.plugins.dcm.DicomImageReader.read(DicomImageReader.java:458)
+        at com.hanumoka.sado.minipacs.domain.service.DicomRenderingService.extractFrame(DicomRenderingService.java:124)
+        at com.hanumoka.sado.minipacs.domain.service.DicomRenderingService.renderToPng(DicomRenderingService.java:61)
+        at com.hanumoka.sado.minipacs.controller.DicomWebController.renderFrame(DicomWebController.java:522)
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+        at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+        at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190)
+        at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158)
+        at org.springframework.validation.beanvalidation.MethodValidationInterceptor.invoke(MethodValidationInterceptor.java:171)
+        at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+        at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719)
+        at com.hanumoka.sado.minipacs.controller.DicomWebController$$SpringCGLIB$$0.renderFrame(<generated>)
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+        at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:258)
+        at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:190)
+        at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117)
+        at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:934)
+        at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:853)
+        at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:86)
+        at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:963)
+        at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:866)
+        at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1003)
+        at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:892)
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:622)
+        at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:874)
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:710)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:128)
+        at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+        at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+        at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+        at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:199)
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+        at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165)
+        at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:77)
+        at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+        at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113)
+        at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83)
+        at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72)
+        at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:341)
+        at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+        at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+        at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)
+        at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1778)
+        at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+        at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:946)
+        at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:480)
+        at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:57)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+
+2026-01-07 16:41:44.722 DEBUG [o-10201-exec-10] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json;q=0.8', given [image/avif, image/webp, image/apng, image/svg+xml, image/*, */*;q=0.8] and supported [application/json, application/*+json, application/yaml]
+2026-01-07 16:41:44.722 DEBUG [o-10201-exec-10] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [com.hanumoka.sado.common.dto.ApiResponse@6eef1392]
+2026-01-07 16:41:44.723 DEBUG [o-10201-exec-10] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [java.lang.IllegalArgumentException: w and h must be > 0]
+2026-01-07 16:41:44.723 DEBUG [o-10201-exec-10] o.s.web.servlet.DispatcherServlet        : Completed 500 INTERNAL_SERVER_ERROR
+2026-01-07 16:41:44.723 DEBUG [io-10201-exec-6] .m.m.a.ExceptionHandlerExceptionResolver : Using @ExceptionHandler com.hanumoka.sado.common.exception.GlobalExceptionHandler#handleException(Exception)
+2026-01-07 16:41:44.723 ERROR [io-10201-exec-6] c.h.s.c.e.GlobalExceptionHandler         : Unexpected Error
+
+java.lang.IllegalArgumentException: w and h must be > 0
+        at java.desktop/java.awt.image.Raster.createInterleavedRaster(Raster.java:214)
+        at java.desktop/java.awt.image.ComponentColorModel.createCompatibleWritableRaster(ComponentColorModel.java:2809)
+        at org.weasis.opencv.op.ImageConversion.toBufferedImage(ImageConversion.java:80)
+        at org.weasis.opencv.op.ImageConversion.toBufferedImage(ImageConversion.java:118)
+        at org.dcm4che3.opencv.NativeImageReader.read(NativeImageReader.java:252)
+        at org.dcm4che3.imageio.plugins.dcm.DicomImageReader.read(DicomImageReader.java:458)
+        at com.hanumoka.sado.minipacs.domain.service.DicomRenderingService.extractFrame(DicomRenderingService.java:124)
+        at com.hanumoka.sado.minipacs.domain.service.DicomRenderingService.renderToPng(DicomRenderingService.java:61)
+        at com.hanumoka.sado.minipacs.controller.DicomWebController.renderFrame(DicomWebController.java:522)
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+        at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+        at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190)
+        at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158)
+        at org.springframework.validation.beanvalidation.MethodValidationInterceptor.invoke(MethodValidationInterceptor.java:171)
+        at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+        at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719)
+        at com.hanumoka.sado.minipacs.controller.DicomWebController$$SpringCGLIB$$0.renderFrame(<generated>)
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+        at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:258)
+        at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:190)
+        at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117)
+        at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:934)
+        at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:853)
+        at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:86)
+        at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:963)
+        at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:866)
+        at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1003)
+        at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:892)
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:622)
+        at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:874)
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:710)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:128)
+        at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+        at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+        at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+        at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:199)
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+        at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165)
+        at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:77)
+        at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+        at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113)
+        at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83)
+        at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72)
+        at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:341)
+        at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+        at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+        at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)
+        at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1778)
+        at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+        at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:946)
+        at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:480)
+        at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:57)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+
+2026-01-07 16:41:44.724 DEBUG [io-10201-exec-6] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json;q=0.8', given [image/avif, image/webp, image/apng, image/svg+xml, image/*, */*;q=0.8] and supported [application/json, application/*+json, application/yaml]
+2026-01-07 16:41:44.724 DEBUG [io-10201-exec-6] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [com.hanumoka.sado.common.dto.ApiResponse@a5e1e77]
+2026-01-07 16:41:44.724 DEBUG [io-10201-exec-6] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [java.lang.IllegalArgumentException: w and h must be > 0]
+2026-01-07 16:41:44.725 DEBUG [io-10201-exec-6] o.s.web.servlet.DispatcherServlet        : Completed 500 INTERNAL_SERVER_ERROR
+<===========--> 90% EXECUTING [47s]
