@@ -34,6 +34,9 @@ aspectj = "1.9.24"
 # Test
 junit = "5.10.1"
 
+# UUID Generator (UUID v7 support)
+java-uuid-generator = "5.1.0"
+
 [libraries]
 # Spring Boot Starters
 spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter", version.ref = "spring-boot" }
@@ -77,6 +80,9 @@ springdoc-openapi-starter-webmvc-ui = { module = "org.springdoc:springdoc-openap
 
 # Test
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+
+# UUID Generator
+java-uuid-generator = { module = "com.fasterxml.uuid:java-uuid-generator", version.ref = "java-uuid-generator" }
 
 [plugins]
 # Spring Boot

@@ -14,10 +14,15 @@ import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.net.URI;
+import java.time.Duration;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.core.retry.RetryPolicy;
+import software.amazon.awssdk.core.retry.backoff.FullJitterBackoffStrategy;
+import software.amazon.awssdk.core.retry.conditions.RetryCondition;
 
 /**
  * SeaweedFS S3 API 설정
@@ -57,16 +62,30 @@ public class SeaweedFsS3Config {
      *   <li>Region: us-east-1 (AWS SDK 필수, SeaweedFS는 무시)</li>
      *   <li>Credentials: access-key=any, secret-key=any (로컬 개발용)</li>
      *   <li>Path-style access: true (버킷을 URL path에 포함)</li>
+     *   <li>Timeout: apiCallTimeout (전체), apiCallAttemptTimeout (개별)</li>
+     *   <li>Retry: maxRetries, exponential backoff</li>
      * </ol>
+     *
+     * <p>타임아웃/재시도 설정 (2026-01-05 추가):
+     * <ul>
+     *   <li>apiCallTimeout: 전체 API 호출 타임아웃 (기본 5분)</li>
+     *   <li>apiCallAttemptTimeout: 개별 시도 타임아웃 (기본 60초)</li>
+     *   <li>maxRetries: 최대 재시도 횟수 (기본 3회)</li>
+     *   <li>Exponential backoff: 500ms ~ 10s</li>
+     * </ul>
      *
      * @return S3Client 인스턴스
      */
     @Bean
     public S3Client s3Client() {
-        log.info("Initializing S3Client with endpoint: {}, bucket: {}, pathStyleAccess: {}",
+        log.info("Initializing S3Client with endpoint: {}, bucket: {}, pathStyleAccess: {}, " +
+                        "apiCallTimeout: {}ms, apiCallAttemptTimeout: {}ms, maxRetries: {}",
                 s3Properties.getEndpoint(),
                 s3Properties.getBucket(),
-                s3Properties.getPathStyleAccess());
+                s3Properties.getPathStyleAccess(),
+                s3Properties.getApiCallTimeout(),
+                s3Properties.getApiCallAttemptTimeout(),
+                s3Properties.getMaxRetries());
 
         // 1. AWS 인증 정보 생성 (Access Key + Secret Key)
         AwsBasicCredentials credentials = AwsBasicCredentials.create(
@@ -79,15 +98,38 @@ public class SeaweedFsS3Config {
                 .pathStyleAccessEnabled(s3Properties.getPathStyleAccess())  // Path-style 활성화
                 .build();
 
-        // 3. S3Client 빌드
+        // 3. 재시도 정책 설정
+        // - Full Jitter Backoff: 500ms ~ 10s (AWS 권장 전략)
+        // - 일시적 오류 (503, 429, 네트워크 오류) 시 재시도
+        // - Jitter로 thundering herd 문제 방지
+        FullJitterBackoffStrategy backoffStrategy = FullJitterBackoffStrategy.builder()
+                .baseDelay(Duration.ofMillis(500))    // 초기 지연: 500ms
+                .maxBackoffTime(Duration.ofSeconds(10)) // 최대 지연: 10s
+                .build();
+
+        RetryPolicy retryPolicy = RetryPolicy.builder()
+                .numRetries(s3Properties.getMaxRetries())
+                .retryCondition(RetryCondition.defaultRetryCondition())
+                .backoffStrategy(backoffStrategy)
+                .build();
+
+        // 4. 클라이언트 오버라이드 설정 (타임아웃 + 재시도)
+        ClientOverrideConfiguration overrideConfig = ClientOverrideConfiguration.builder()
+                .apiCallTimeout(Duration.ofMillis(s3Properties.getApiCallTimeout()))
+                .apiCallAttemptTimeout(Duration.ofMillis(s3Properties.getApiCallAttemptTimeout()))
+                .retryPolicy(retryPolicy)
+                .build();
+
+        // 5. S3Client 빌드
         S3Client s3Client = S3Client.builder()
                 .endpointOverride(URI.create(s3Properties.getEndpoint()))  // SeaweedFS 엔드포인트
                 .region(Region.of(s3Properties.getRegion()))                // 리전 설정
                 .credentialsProvider(StaticCredentialsProvider.create(credentials))  // 인증 정보
                 .serviceConfiguration(s3Config)                             // S3 설정 (path-style)
+                .overrideConfiguration(overrideConfig)                      // 타임아웃 + 재시도
                 .build();
 
-        log.info("S3Client initialized successfully");
+        log.info("S3Client initialized successfully with timeout and retry configuration");
         return s3Client;
     }
 

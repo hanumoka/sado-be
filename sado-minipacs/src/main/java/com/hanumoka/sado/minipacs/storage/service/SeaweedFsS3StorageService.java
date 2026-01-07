@@ -19,8 +19,6 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 
@@ -82,40 +80,48 @@ public class SeaweedFsS3StorageService implements DicomStorageService {
      *   <li>StorageResult (Storage가 결정한 경로) 반환</li>
      * </ul>
      *
+     * <p>메모리 효율 개선 (2026-01-05):
+     * <ul>
+     *   <li>readAllBytes() 제거 → 중복 메모리 할당 방지</li>
+     *   <li>RequestBody.fromInputStream() 사용 → 스트리밍 업로드</li>
+     *   <li>fileSize는 DicomFileMetadata에서 전달받음</li>
+     * </ul>
+     *
      * <p>흐름:
      * <ol>
      *   <li>StoragePathStrategy.generatePath()로 경로 생성</li>
-     *   <li>InputStream → byte[] 변환 (파일 크기 계산)</li>
      *   <li>S3 PutObject 요청 생성 (Content-Type: application/dicom)</li>
-     *   <li>SeaweedFS에 업로드</li>
+     *   <li>RequestBody.fromInputStream()으로 스트리밍 업로드</li>
      *   <li>StorageResult 반환 (경로, 파일 크기 등)</li>
      * </ol>
      *
      * @param inputStream DICOM 파일 InputStream
-     * @param metadata DICOM 파일 메타데이터 (추상화된 키)
+     * @param metadata DICOM 파일 메타데이터 (추상화된 키, fileSize 포함)
      * @return StorageResult (Storage가 결정한 경로 및 메타데이터)
      * @throws BusinessException STORAGE_UPLOAD_FAILED - S3 업로드 실패 시
+     * @throws IllegalArgumentException metadata.fileSize가 null인 경우
      */
     @Override
     public StorageResult uploadDicomFile(
             InputStream inputStream,
             DicomFileMetadata metadata
     ) {
+        // 0. fileSize 필수 검증
+        if (metadata.getFileSize() == null) {
+            throw new IllegalArgumentException(
+                    "DicomFileMetadata.fileSize is required for streaming upload");
+        }
+
         // 1. StoragePathStrategy로 경로 생성
         String storagePath = pathStrategy.generatePath(metadata);
         String s3Key = storagePath; // S3에서는 storagePath == s3Key
+        long fileSize = metadata.getFileSize();
 
-        log.info("Uploading DICOM file with metadata: bucket={}, s3Key={}, strategy={}",
-                s3Properties.getBucket(), s3Key, pathStrategy.getStrategyName());
+        log.info("Uploading DICOM file with metadata: bucket={}, s3Key={}, size={} bytes, strategy={}",
+                s3Properties.getBucket(), s3Key, fileSize, pathStrategy.getStrategyName());
 
         try {
-            // 2. InputStream → byte[] 변환 (파일 크기 계산 필요)
-            byte[] fileBytes = inputStream.readAllBytes();
-            long fileSize = fileBytes.length;
-
-            log.debug("File size calculated: {} bytes", fileSize);
-
-            // 3. S3 PutObject 요청 생성
+            // 2. S3 PutObject 요청 생성
             PutObjectRequest putRequest = PutObjectRequest.builder()
                     .bucket(s3Properties.getBucket())
                     .key(s3Key)
@@ -123,26 +129,20 @@ public class SeaweedFsS3StorageService implements DicomStorageService {
                     .contentLength(fileSize)
                     .build();
 
-            // 4. SeaweedFS에 업로드
-            s3Client.putObject(putRequest, RequestBody.fromBytes(fileBytes));
+            // 3. SeaweedFS에 스트리밍 업로드 (메모리 효율)
+            // - readAllBytes() 제거: 중복 byte[] 할당 방지
+            // - fromInputStream(): InputStream을 직접 S3로 전송
+            s3Client.putObject(putRequest, RequestBody.fromInputStream(inputStream, fileSize));
 
             log.info("DICOM file uploaded successfully: s3Key={}, size={} bytes", s3Key, fileSize);
 
-            // 5. StorageResult 반환
+            // 4. StorageResult 반환
             return StorageResult.builder()
                     .storagePath(storagePath)
                     .s3Key(s3Key)
                     .fileSize(fileSize)
                     .fileHash(null) // TODO: SHA-256 해시 계산 (선택사항)
                     .build();
-
-        } catch (IOException e) {
-            log.error("Failed to read InputStream: metadata={}", metadata, e);
-
-            throw new BusinessException(
-                    MiniPacsErrorCode.STORAGE_UPLOAD_FAILED,
-                    String.format("InputStream 읽기 실패: %s", metadata.getSopInstanceUid())
-            );
 
         } catch (S3Exception e) {
             log.error("S3 upload failed: bucket={}, s3Key={}, metadata={}",

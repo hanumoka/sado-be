@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -32,6 +33,34 @@ public class StudyController {
     private final StudyService studyService;
     private final PatientService patientService;
     private final SeriesService seriesService;
+
+    /**
+     * 검사 목록 조회
+     * GET /api/studies
+     *
+     * <p>필터링 파라미터 (모두 optional):
+     * <ul>
+     *   <li>patientId: DICOM Patient ID로 필터링</li>
+     *   <li>patientName: 환자 이름으로 필터링 (부분 일치)</li>
+     *   <li>studyDate: 검사 날짜로 필터링 (YYYY-MM-DD)</li>
+     * </ul>
+     */
+    @GetMapping
+    public ApiResponse<List<StudyResponse>> getAllStudies(
+            @RequestParam(required = false) String patientId,
+            @RequestParam(required = false) String patientName,
+            @RequestParam(required = false) LocalDate studyDate) {
+        log.info("GET /api/studies?patientId={}&patientName={}&studyDate={}",
+                patientId, patientName, studyDate);
+
+        List<Study> studies = studyService.findByDicomWebFilters(patientId, patientName, studyDate);
+
+        List<StudyResponse> response = studies.stream()
+                .map(this::toResponse)
+                .toList();
+
+        return ApiResponse.success(response);
+    }
 
     /**
      * 검사 생성
@@ -171,7 +200,9 @@ public class StudyController {
     private StudyResponse toResponse(Study study) {
         return StudyResponse.builder()
                 .id(study.getId())
+                .uuid(study.getUuid())
                 .patientId(study.getPatient().getId())
+                .patientName(study.getPatient().getPatientName())
                 .studyInstanceUid(study.getStudyInstanceUid())
                 .studyDate(study.getStudyDate())
                 .studyDescription(study.getStudyDescription())
@@ -189,6 +220,7 @@ public class StudyController {
     private SeriesResponse toSeriesResponse(Series series) {
         return SeriesResponse.builder()
                 .id(series.getId())
+                .uuid(series.getUuid())
                 .studyId(series.getStudy().getId())
                 .seriesInstanceUid(series.getSeriesInstanceUid())
                 .modality(series.getModality())

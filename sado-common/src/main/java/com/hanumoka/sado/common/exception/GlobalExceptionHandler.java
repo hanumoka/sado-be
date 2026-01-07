@@ -4,6 +4,7 @@ import com.hanumoka.sado.common.code.ApiCode;
 import com.hanumoka.sado.common.code.CommonCode;
 import com.hanumoka.sado.common.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,6 +16,25 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    /**
+     * TooManyRequestsException 처리 (429 Too Many Requests)
+     *
+     * <p>Retry-After 헤더를 포함하여 클라이언트에게 재시도 시간을 안내합니다.
+     */
+    @ExceptionHandler(TooManyRequestsException.class)
+    protected ResponseEntity<ApiResponse<?>> handleTooManyRequestsException(TooManyRequestsException ex) {
+        log.warn("TooManyRequestsException: {} (retryAfter: {}s)", ex.getMessage(), ex.getRetryAfterSeconds());
+
+        ApiCode apiCode = ex.getApiCode();
+        return ResponseEntity
+                .status(apiCode.getHttpStatus())
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
+                .body(ApiResponse.of(apiCode, Map.of(
+                        "retryAfterSeconds", ex.getRetryAfterSeconds(),
+                        "message", ex.getMessage()
+                )));
+    }
 
     /**
      * BusinessException 처리

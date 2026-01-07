@@ -34,6 +34,31 @@ public class SeriesController {
     private final InstanceService instanceService;
 
     /**
+     * 시리즈 목록 조회
+     * GET /api/series
+     *
+     * <p>필터링 파라미터 (모두 optional):
+     * <ul>
+     *   <li>modality: Modality로 필터링 (US, CT, MR 등)</li>
+     *   <li>studyId: Study ID로 필터링</li>
+     * </ul>
+     */
+    @GetMapping
+    public ApiResponse<List<SeriesResponse>> getAllSeries(
+            @RequestParam(required = false) String modality,
+            @RequestParam(required = false) Long studyId) {
+        log.info("GET /api/series?modality={}&studyId={}", modality, studyId);
+
+        List<Series> seriesList = seriesService.findByFilters(modality, studyId);
+
+        List<SeriesResponse> response = seriesList.stream()
+                .map(this::toResponse)
+                .toList();
+
+        return ApiResponse.success(response);
+    }
+
+    /**
      * 시리즈 생성
      * POST /api/series
      */
@@ -187,7 +212,10 @@ public class SeriesController {
     private SeriesResponse toResponse(Series series) {
         return SeriesResponse.builder()
                 .id(series.getId())
+                .uuid(series.getUuid())
                 .studyId(series.getStudy().getId())
+                .studyDescription(series.getStudy().getStudyDescription())
+                .patientName(series.getStudy().getPatient().getPatientName())
                 .seriesInstanceUid(series.getSeriesInstanceUid())
                 .modality(series.getModality())
                 .seriesDescription(series.getSeriesDescription())
@@ -208,6 +236,7 @@ public class SeriesController {
     private InstanceResponse toInstanceResponse(Instance instance) {
         return InstanceResponse.builder()
                 .id(instance.getId())
+                .uuid(instance.getUuid())
                 .seriesId(instance.getSeries().getId())
                 .sopInstanceUid(instance.getSopInstanceUid())
                 .sopClassUid(instance.getSopClassUid())

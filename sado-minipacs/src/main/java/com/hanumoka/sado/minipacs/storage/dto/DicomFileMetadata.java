@@ -43,4 +43,16 @@ public class DicomFileMetadata {
      * DICOM 표준의 이미지 타입 식별자 (CT, MR, US 등)
      */
     private final String sopClassUid;
+
+    /**
+     * 파일 크기 (bytes)
+     *
+     * <p>스트리밍 업로드를 위해 필요 (2026-01-05 추가)
+     * <ul>
+     *   <li>S3 PutObject에 Content-Length 필요</li>
+     *   <li>RequestBody.fromInputStream() 사용 시 필수</li>
+     *   <li>메모리 효율: readAllBytes() 제거</li>
+     * </ul>
+     */
+    private final Long fileSize;
 }

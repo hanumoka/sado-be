@@ -2,6 +2,7 @@ package com.hanumoka.sado.minipacs.domain.service;
 
 import com.hanumoka.sado.common.exception.ResourceNotFoundException;
 import com.hanumoka.sado.common.tenant.TenantProvider;
+import com.hanumoka.sado.common.util.UuidV7Generator;
 import com.hanumoka.sado.minipacs.domain.entity.Series;
 import com.hanumoka.sado.minipacs.domain.entity.Study;
 import com.hanumoka.sado.minipacs.domain.repository.SeriesRepository;
@@ -27,6 +28,27 @@ public class SeriesService {
     private final SeriesRepository seriesRepository;
     private final StudyService studyService;
     private final TenantProvider tenantProvider;
+
+    /**
+     * 전체 Series 조회
+     *
+     * @return 모든 Series 목록
+     */
+    public List<Series> findAll() {
+        return seriesRepository.findAll();
+    }
+
+    /**
+     * 필터 조건으로 Series 조회
+     *
+     * @param modality Modality 필터 (optional)
+     * @param studyId Study ID 필터 (optional)
+     * @return 필터링된 Series 목록
+     */
+    public List<Series> findByFilters(String modality, Long studyId) {
+        log.debug("Finding series with filters: modality={}, studyId={}", modality, studyId);
+        return seriesRepository.findByFilters(modality, studyId);
+    }
 
     /**
      * Series PK로 조회
@@ -159,8 +181,10 @@ public class SeriesService {
 
         // 1. MySQL Upsert 실행 (Exception 없음, 완전 원자적)
         Long tenantId = tenantProvider.getCurrentTenantId();
+        String uuid = UuidV7Generator.generateString();
         seriesRepository.upsertSeries(
             tenantId,
+            uuid,
             seriesInstanceUid,
             study.getId(),
             seriesNumber,

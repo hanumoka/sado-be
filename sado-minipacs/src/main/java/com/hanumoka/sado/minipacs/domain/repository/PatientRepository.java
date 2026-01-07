@@ -49,10 +49,10 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
      */
     @Modifying
     @Query(value = """
-        INSERT INTO patient (tenant_id, dicom_patient_id, issuer_of_patient_id,
+        INSERT INTO patient (tenant_id, uuid, dicom_patient_id, issuer_of_patient_id,
                             patient_name, patient_birth_date, patient_sex,
                             created_at, updated_at)
-        VALUES (:tenantId, :dicomPatientId, :issuer, :name, :birthDate, :sex, NOW(), NOW())
+        VALUES (:tenantId, :uuid, :dicomPatientId, :issuer, :name, :birthDate, :sex, NOW(), NOW())
         ON DUPLICATE KEY UPDATE
             id = LAST_INSERT_ID(id),
             patient_name = COALESCE(:name, patient_name),
@@ -62,6 +62,7 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
         """, nativeQuery = true)
     void upsertPatient(
         @Param("tenantId") Long tenantId,
+        @Param("uuid") String uuid,
         @Param("dicomPatientId") String dicomPatientId,
         @Param("issuer") String issuer,
         @Param("name") String name,

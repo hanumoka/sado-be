@@ -35,7 +35,10 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.springframework.data.domain.Page;
+
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -59,6 +62,44 @@ public class InstanceController {
     private final ObjectMapper objectMapper;
 
     private final StorageAccessStrategy storageAccessStrategy; // Storage 접근 전략 (pre-signed url or backed proxy)
+
+    /**
+     * 영상 목록 조회 (페이지네이션)
+     * GET /api/instances
+     *
+     * <p>필터링 파라미터 (모두 optional):
+     * <ul>
+     *   <li>seriesId: Series ID로 필터링</li>
+     *   <li>studyId: Study ID로 필터링 (Series를 통해)</li>
+     *   <li>sopInstanceUid: SOP Instance UID로 필터링 (부분 일치)</li>
+     *   <li>storageTier: Storage Tier로 필터링 (HOT, WARM, COLD)</li>
+     *   <li>page: 페이지 번호 (0부터 시작, 기본값: 0)</li>
+     *   <li>size: 페이지 크기 (기본값: 10, 최대: 100)</li>
+     * </ul>
+     */
+    @GetMapping
+    public ApiResponse<Page<InstanceResponse>> getAllInstances(
+            @RequestParam(required = false) Long seriesId,
+            @RequestParam(required = false) Long studyId,
+            @RequestParam(required = false) String sopInstanceUid,
+            @RequestParam(required = false) String storageTier,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        log.info("GET /api/instances?seriesId={}&studyId={}&sopInstanceUid={}&storageTier={}&page={}&size={}",
+                seriesId, studyId, sopInstanceUid, storageTier, page, size);
+
+        // size 제한 (최대 100)
+        if (size > 100) {
+            size = 100;
+        }
+
+        Page<Instance> instances = instanceService.findByFiltersWithPagination(
+                seriesId, studyId, sopInstanceUid, storageTier, page, size);
+
+        Page<InstanceResponse> response = instances.map(this::toResponse);
+
+        return ApiResponse.success(response);
+    }
 
     /**
      * 영상 생성
@@ -369,6 +410,7 @@ public class InstanceController {
 
         return InstanceResponse.builder()
                 .id(instance.getId())
+                .uuid(instance.getUuid())
                 .seriesId(instance.getSeries().getId())
                 .sopInstanceUid(instance.getSopInstanceUid())
                 .sopClassUid(instance.getSopClassUid())

@@ -39,3 +39,4 @@ out/
 ### Environment Variables ###
 .env
 .env.local
+/logs/

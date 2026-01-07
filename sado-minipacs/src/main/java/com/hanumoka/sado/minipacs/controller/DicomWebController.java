@@ -6,6 +6,7 @@ import com.hanumoka.sado.minipacs.domain.entity.Study;
 import com.hanumoka.sado.minipacs.domain.service.InstanceService;
 import com.hanumoka.sado.minipacs.domain.service.SeriesService;
 import com.hanumoka.sado.minipacs.domain.service.StudyService;
+import com.hanumoka.sado.minipacs.infrastructure.config.UploadLimiter;
 import com.hanumoka.sado.minipacs.storage.service.DicomStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -66,6 +67,7 @@ public class DicomWebController {
     private final SeriesService seriesService;
     private final InstanceService instanceService;
     private final DicomStorageService dicomStorageService;
+    private final UploadLimiter uploadLimiter;
 
     // ========== QIDO-RS: Query Services ==========
 
@@ -588,6 +590,13 @@ public class DicomWebController {
      *   <li>HTTP 413 Payload Too Large: 파일 크기 초과</li>
      *   <li>HTTP 415 Unsupported Media Type: DICOM 형식 아님</li>
      *   <li>HTTP 422 Unprocessable Entity: 유효하지 않은 DICOM</li>
+     *   <li>HTTP 429 Too Many Requests: 동시 업로드 제한 초과</li>
+     * </ul>
+     *
+     * <p>동시 업로드 제한 (2026-01-05 추가):
+     * <ul>
+     *   <li>Semaphore 기반 동시성 제어 (기본: 5개)</li>
+     *   <li>타임아웃 초과 시 429 Too Many Requests + Retry-After 헤더</li>
      * </ul>
      *
      * @param file DICOM 파일 (MultipartFile)
@@ -600,75 +609,79 @@ public class DicomWebController {
     public ResponseEntity<Map<String, Object>> storeInstance(
             @RequestParam("file") MultipartFile file
     ) throws IOException {
-        log.info("STOW-RS: Upload request - filename: {}, size: {} bytes",
-                file.getOriginalFilename(), file.getSize());
+        log.info("STOW-RS: Upload request - filename: {}, size: {} bytes, availablePermits: {}",
+                file.getOriginalFilename(), file.getSize(), uploadLimiter.availablePermits());
 
-        // 1. 파일 검증
+        // 1. 파일 검증 (Semaphore 획득 전에 빠른 실패)
         if (file.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                     .body(createErrorResponse("EMPTY_FILE", "파일이 비어있습니다"));
         }
 
-        // 2. 파일 크기 제한 (500MB)
+        // 2. 파일 크기 제한 (500MB) - Semaphore 획득 전에 빠른 실패
         if (file.getSize() > MAX_FILE_SIZE) {
             return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
                     .body(createErrorResponse("FILE_TOO_LARGE",
                             "파일 크기가 너무 큽니다 (최대: " + MAX_FILE_SIZE + " bytes)"));
         }
 
-        try {
-            // 3. Service 호출 (모든 비즈니스 로직은 Service에서 처리)
-            byte[] fileBytes = file.getBytes();
-            Instance instance = instanceService.uploadDicomFile(
-                    fileBytes,
-                    file.getOriginalFilename()
-            );
+        // 3. 동시 업로드 제한 내에서 실행
+        // - 타임아웃 초과 시 TooManyRequestsException → GlobalExceptionHandler에서 429 반환
+        return uploadLimiter.executeWithLimit(() -> {
+            try {
+                // 4. Service 호출 (모든 비즈니스 로직은 Service에서 처리)
+                byte[] fileBytes = file.getBytes();
+                Instance instance = instanceService.uploadDicomFile(
+                        fileBytes,
+                        file.getOriginalFilename()
+                );
 
-            // 4. DICOMweb 표준 응답 생성
-            Map<String, Object> response = createStowRsResponse(instance);
+                // 5. DICOMweb 표준 응답 생성
+                Map<String, Object> response = createStowRsResponse(instance);
 
-            log.info("STOW-RS: Upload success - sopInstanceUid: {}",
-                    instance.getSopInstanceUid());
+                log.info("STOW-RS: Upload success - sopInstanceUid: {}",
+                        instance.getSopInstanceUid());
 
-            // 5. HTTP 200 OK 반환
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(DICOM_JSON_MEDIA_TYPE))
-                    .body(response);
+                // 6. HTTP 200 OK 반환
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(DICOM_JSON_MEDIA_TYPE))
+                        .body(response);
 
-        } catch (IllegalArgumentException e) {
-            // 409 Conflict (중복) 또는 422 Unprocessable Entity
-            if (e.getMessage().contains("already exists")) {
-                log.warn("STOW-RS: Duplicate instance - {}", e.getMessage());
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body(createErrorResponse("DUPLICATE_INSTANCE",
-                                "이미 존재하는 파일입니다"));
-            } else {
-                log.warn("STOW-RS: Invalid argument - {}", e.getMessage());
+            } catch (IllegalArgumentException e) {
+                // 409 Conflict (중복) 또는 422 Unprocessable Entity
+                if (e.getMessage() != null && e.getMessage().contains("already exists")) {
+                    log.warn("STOW-RS: Duplicate instance - {}", e.getMessage());
+                    return ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body(createErrorResponse("DUPLICATE_INSTANCE",
+                                    "이미 존재하는 파일입니다"));
+                } else {
+                    log.error("STOW-RS: Invalid argument", e);
+                    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                            .body(createErrorResponse("INVALID_ARGUMENT", e.getMessage()));
+                }
+
+            } catch (RuntimeException e) {
+                // 415 Unsupported Media Type 또는 422 Unprocessable Entity
+                log.error("STOW-RS: Runtime exception", e);
+
+                if (e.getMessage() != null &&
+                        (e.getMessage().contains("DICOM") ||
+                                e.getMessage().contains("magic number"))) {
+                    return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                            .body(createErrorResponse("NOT_DICOM",
+                                    "지원하지 않는 파일 형식입니다"));
+                }
+
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                        .body(createErrorResponse("INVALID_ARGUMENT", e.getMessage()));
+                        .body(createErrorResponse("PROCESSING_FAILED", e.getMessage()));
+
+            } catch (IOException e) {
+                // 500 Internal Server Error
+                log.error("STOW-RS: Upload failed", e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(createErrorResponse("UPLOAD_FAILED", "서버 오류가 발생했습니다"));
             }
-
-        } catch (RuntimeException e) {
-            // 415 Unsupported Media Type 또는 422 Unprocessable Entity
-            log.warn("STOW-RS: Runtime exception - {}", e.getMessage());
-
-            if (e.getMessage() != null &&
-                    (e.getMessage().contains("DICOM") ||
-                            e.getMessage().contains("magic number"))) {
-                return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
-                        .body(createErrorResponse("NOT_DICOM",
-                                "지원하지 않는 파일 형식입니다"));
-            }
-
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                    .body(createErrorResponse("PROCESSING_FAILED", e.getMessage()));
-
-        } catch (IOException e) {
-            // 500 Internal Server Error
-            log.error("STOW-RS: Upload failed", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(createErrorResponse("UPLOAD_FAILED", "서버 오류가 발생했습니다"));
-        }
+        });
     }
 
     /**

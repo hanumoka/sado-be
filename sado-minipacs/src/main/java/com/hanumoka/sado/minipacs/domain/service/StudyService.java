@@ -2,6 +2,7 @@ package com.hanumoka.sado.minipacs.domain.service;
 
 import com.hanumoka.sado.common.exception.ResourceNotFoundException;
 import com.hanumoka.sado.common.tenant.TenantProvider;
+import com.hanumoka.sado.common.util.UuidV7Generator;
 import com.hanumoka.sado.minipacs.domain.entity.Patient;
 import com.hanumoka.sado.minipacs.domain.entity.Study;
 import com.hanumoka.sado.minipacs.domain.repository.StudyRepository;
@@ -82,6 +83,47 @@ public class StudyService {
     public long countByPatientId(Long patientId) {
         return studyRepository.countByPatientId(patientId);
     }
+
+    /**
+     * 특정 환자의 최신 검사 날짜 조회
+     *
+     * @param patientId Patient PK
+     * @return 최신 검사 날짜 (없으면 null)
+     */
+    public LocalDate getLastStudyDate(Long patientId) {
+        return studyRepository.findLatestStudyDateByPatientId(patientId);
+    }
+
+    /**
+     * 여러 환자의 검사 통계 조회 (N+1 방지)
+     *
+     * <p>목록 조회 시 한 번의 쿼리로 모든 환자의 통계를 가져옴
+     *
+     * @param patientIds 환자 ID 목록
+     * @return Map&lt;patientId, StudyStats&gt;
+     */
+    public java.util.Map<Long, StudyStats> getStudyStatsByPatientIds(java.util.List<Long> patientIds) {
+        if (patientIds == null || patientIds.isEmpty()) {
+            return java.util.Collections.emptyMap();
+        }
+
+        java.util.List<Object[]> results = studyRepository.findStudyStatsByPatientIds(patientIds);
+
+        java.util.Map<Long, StudyStats> statsMap = new java.util.HashMap<>();
+        for (Object[] row : results) {
+            Long patientId = (Long) row[0];
+            Long count = (Long) row[1];
+            LocalDate lastStudyDate = (LocalDate) row[2];
+            statsMap.put(patientId, new StudyStats(count.intValue(), lastStudyDate));
+        }
+
+        return statsMap;
+    }
+
+    /**
+     * 환자별 검사 통계 DTO
+     */
+    public record StudyStats(int studiesCount, LocalDate lastStudyDate) {}
 
     /**
      * DICOM-Web QIDO-RS 필터링 조회
@@ -169,8 +211,10 @@ public class StudyService {
 
         // 1. MySQL Upsert 실행 (Exception 없음, 완전 원자적)
         Long tenantId = tenantProvider.getCurrentTenantId();
+        String uuid = UuidV7Generator.generateString();
         studyRepository.upsertStudy(
             tenantId,
+            uuid,
             studyInstanceUid,
             patient.getId(),
             studyDate,

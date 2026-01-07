@@ -2,6 +2,7 @@ package com.hanumoka.sado.minipacs.domain.service;
 
 import com.hanumoka.sado.common.exception.ResourceNotFoundException;
 import com.hanumoka.sado.common.tenant.TenantProvider;
+import com.hanumoka.sado.common.util.UuidV7Generator;
 import com.hanumoka.sado.minipacs.domain.entity.Patient;
 import com.hanumoka.sado.minipacs.domain.repository.PatientRepository;
 import lombok.RequiredArgsConstructor;
@@ -155,8 +156,10 @@ public class PatientService {
 
         // 1. MySQL Upsert 실행 (Exception 없음, 완전 원자적)
         Long tenantId = tenantProvider.getCurrentTenantId();
+        String uuid = UuidV7Generator.generateString();
         patientRepository.upsertPatient(
             tenantId,
+            uuid,
             dicomPatientId,
             normalizedIssuer,
             patientName,

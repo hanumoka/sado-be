@@ -20,8 +20,12 @@ public class StudyResponse {
     // 1. PK
     private Long id;
 
-    // 2. 소속 환자 ID
+    // 1-1. UUID v7 (외부 노출용 식별자)
+    private String uuid;
+
+    // 2. 소속 환자 정보
     private Long patientId;
+    private String patientName;
 
     // 3. DICOM 식별자
     private String studyInstanceUid;

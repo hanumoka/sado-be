@@ -48,9 +48,9 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
      */
     @Modifying
     @Query(value = """
-        INSERT INTO study (tenant_id, study_instance_uid, patient_id,
+        INSERT INTO study (tenant_id, uuid, study_instance_uid, patient_id,
                           study_date, study_description, created_at, updated_at)
-        VALUES (:tenantId, :studyUid, :patientId, :studyDate, :description, NOW(), NOW())
+        VALUES (:tenantId, :uuid, :studyUid, :patientId, :studyDate, :description, NOW(), NOW())
         ON DUPLICATE KEY UPDATE
             id = LAST_INSERT_ID(id),
             study_date = COALESCE(:studyDate, study_date),
@@ -59,6 +59,7 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
         """, nativeQuery = true)
     void upsertStudy(
         @Param("tenantId") Long tenantId,
+        @Param("uuid") String uuid,
         @Param("studyUid") String studyInstanceUid,
         @Param("patientId") Long patientId,
         @Param("studyDate") LocalDate studyDate,
@@ -135,6 +136,27 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
      * @return 검사 개수
      */
     long countByPatientId(Long patientId);
+
+    /**
+     * 환자의 최신 검사 날짜 조회
+     *
+     * @param patientId 환자 PK
+     * @return 최신 검사 날짜 (없으면 null)
+     */
+    @Query("SELECT MAX(s.studyDate) FROM Study s WHERE s.patient.id = :patientId")
+    LocalDate findLatestStudyDateByPatientId(@Param("patientId") Long patientId);
+
+    /**
+     * 여러 환자의 검사 통계 조회 (N+1 방지)
+     *
+     * <p>목록 조회 시 한 번의 쿼리로 모든 환자의 통계를 가져옴
+     *
+     * @param patientIds 환자 ID 목록
+     * @return Object[]{patientId, studiesCount, lastStudyDate} 배열 리스트
+     */
+    @Query("SELECT s.patient.id, COUNT(s), MAX(s.studyDate) " +
+           "FROM Study s WHERE s.patient.id IN :patientIds GROUP BY s.patient.id")
+    List<Object[]> findStudyStatsByPatientIds(@Param("patientIds") List<Long> patientIds);
 
     /**
      * DICOM-Web QIDO-RS 필터링 조회

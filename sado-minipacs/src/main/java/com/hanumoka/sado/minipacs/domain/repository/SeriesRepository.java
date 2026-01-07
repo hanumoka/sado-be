@@ -49,10 +49,10 @@ public interface SeriesRepository extends JpaRepository<Series, Long> {
      */
     @Modifying
     @Query(value = """
-        INSERT INTO series (tenant_id, series_instance_uid, study_id,
+        INSERT INTO series (tenant_id, uuid, series_instance_uid, study_id,
                            series_number, modality, series_description,
                            body_part_examined, created_at, updated_at)
-        VALUES (:tenantId, :seriesUid, :studyId, :seriesNumber, :modality,
+        VALUES (:tenantId, :uuid, :seriesUid, :studyId, :seriesNumber, :modality,
                 :description, :bodyPart, NOW(), NOW())
         ON DUPLICATE KEY UPDATE
             id = LAST_INSERT_ID(id),
@@ -64,6 +64,7 @@ public interface SeriesRepository extends JpaRepository<Series, Long> {
         """, nativeQuery = true)
     void upsertSeries(
         @Param("tenantId") Long tenantId,
+        @Param("uuid") String uuid,
         @Param("seriesUid") String seriesInstanceUid,
         @Param("studyId") Long studyId,
         @Param("seriesNumber") Integer seriesNumber,
@@ -151,6 +152,28 @@ public interface SeriesRepository extends JpaRepository<Series, Long> {
      * @return 시리즈 개수
      */
     long countByStudyId(Long studyId);
+
+    /**
+     * 필터 조건으로 시리즈 조회
+     *
+     * <p>모든 필터는 optional이며, null인 경우 해당 조건은 적용되지 않습니다.
+     *
+     * @param modality Modality 필터 (US, CT, MR 등)
+     * @param studyId Study ID 필터
+     * @return 시리즈 목록 (시리즈 번호순)
+     */
+    @Query("""
+        SELECT s FROM Series s
+        JOIN FETCH s.study st
+        JOIN FETCH st.patient p
+        WHERE (:modality IS NULL OR s.modality = :modality)
+        AND (:studyId IS NULL OR s.study.id = :studyId)
+        ORDER BY s.createdAt DESC
+        """)
+    List<Series> findByFilters(
+        @Param("modality") String modality,
+        @Param("studyId") Long studyId
+    );
 
     /**
      * ID로 조회 (Pessimistic Write Lock)

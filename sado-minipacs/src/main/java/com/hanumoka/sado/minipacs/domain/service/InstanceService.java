@@ -28,6 +28,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
@@ -89,6 +94,101 @@ public class InstanceService {
     }
 
     /**
+     * 전체 Instance 조회
+     *
+     * @return 모든 Instance 목록
+     */
+    public List<Instance> findAll() {
+        return instanceRepository.findAll();
+    }
+
+    /**
+     * Instance 필터링 조회
+     *
+     * <p>동적 쿼리로 null 파라미터는 무시됩니다.
+     * <ul>
+     *   <li>seriesId: Series ID 완전 일치</li>
+     *   <li>studyId: Study ID 완전 일치 (Series JOIN 통해)</li>
+     *   <li>sopInstanceUid: SOP Instance UID 부분 일치</li>
+     *   <li>storageTier: Storage Tier 완전 일치 (HOT/WARM/COLD)</li>
+     * </ul>
+     *
+     * @param seriesId Series ID (nullable)
+     * @param studyId Study ID (nullable)
+     * @param sopInstanceUid SOP Instance UID (nullable, 부분 일치)
+     * @param storageTier Storage Tier 문자열 (nullable, HOT/WARM/COLD)
+     * @return Instance 목록
+     */
+    public List<Instance> findByFilters(Long seriesId, Long studyId,
+            String sopInstanceUid, String storageTier) {
+        log.debug("Finding instances with filters: seriesId={}, studyId={}, sopInstanceUid={}, storageTier={}",
+                seriesId, studyId, sopInstanceUid, storageTier);
+
+        // storageTier String -> Enum 변환 (null-safe)
+        Instance.StorageTier storageTierEnum = null;
+        if (storageTier != null && !storageTier.isEmpty()) {
+            try {
+                storageTierEnum = Instance.StorageTier.valueOf(storageTier.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid storageTier value: {}, ignoring filter", storageTier);
+                // 잘못된 값은 무시하고 null로 처리
+            }
+        }
+
+        List<Instance> instances = instanceRepository.findByFilters(
+                seriesId, studyId, sopInstanceUid, storageTierEnum);
+
+        log.debug("Found {} instances matching filters", instances.size());
+        return instances;
+    }
+
+    /**
+     * Instance 필터링 조회 (페이지네이션)
+     *
+     * <p>동적 쿼리로 null 파라미터는 무시됩니다.
+     * <ul>
+     *   <li>seriesId: Series ID 완전 일치</li>
+     *   <li>studyId: Study ID 완전 일치 (Series JOIN 통해)</li>
+     *   <li>sopInstanceUid: SOP Instance UID 부분 일치</li>
+     *   <li>storageTier: Storage Tier 완전 일치 (HOT/WARM/COLD)</li>
+     * </ul>
+     *
+     * @param seriesId Series ID (nullable)
+     * @param studyId Study ID (nullable)
+     * @param sopInstanceUid SOP Instance UID (nullable, 부분 일치)
+     * @param storageTier Storage Tier 문자열 (nullable, HOT/WARM/COLD)
+     * @param page 페이지 번호 (0부터 시작)
+     * @param size 페이지 크기
+     * @return Instance 페이지
+     */
+    public Page<Instance> findByFiltersWithPagination(Long seriesId, Long studyId,
+            String sopInstanceUid, String storageTier, int page, int size) {
+        log.debug("Finding instances with filters (paginated): seriesId={}, studyId={}, " +
+                "sopInstanceUid={}, storageTier={}, page={}, size={}",
+                seriesId, studyId, sopInstanceUid, storageTier, page, size);
+
+        // storageTier String -> Enum 변환 (null-safe)
+        Instance.StorageTier storageTierEnum = null;
+        if (storageTier != null && !storageTier.isEmpty()) {
+            try {
+                storageTierEnum = Instance.StorageTier.valueOf(storageTier.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid storageTier value: {}, ignoring filter", storageTier);
+            }
+        }
+
+        // Pageable 생성 (createdAt 내림차순 정렬)
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        Page<Instance> instances = instanceRepository.findByFiltersWithPagination(
+                seriesId, studyId, sopInstanceUid, storageTierEnum, pageable);
+
+        log.debug("Found {} instances matching filters (page {}/{})",
+                instances.getTotalElements(), page + 1, instances.getTotalPages());
+        return instances;
+    }
+
+    /**
      * Storage Path로 Instance 조회
      * 파일 중복 업로드 방지용 (같은 경로에 이미 저장된 파일이 있는지 확인)
      *
@@ -134,23 +234,17 @@ public class InstanceService {
     }
 
     /**
-     * Instance 생성 with Retry (Public API)
+     * Instance 생성 with Retry (Legacy API)
      *
-     * CRITICAL: 역정규화 카운터 제거로 인한 변경 (2026-01-05)
-     * - numberOfInstances 필드 제거 → Optimistic Lock 충돌 완전 제거
-     * - @Retryable 유지 (향후 다른 충돌 가능성 대비)
-     * - Study/Series의 @Version 제거 → 동시성 충돌 사라짐
+     * <p><b>NOTE (2026-01-05):</b> 이 메서드는 더 이상 uploadDicomFile()에서 사용되지 않습니다.
+     * <ul>
+     *   <li>역정규화 카운터(numberOfInstances) 제거로 Optimistic Lock 충돌 사라짐</li>
+     *   <li>uploadDicomFile()에서 직접 instanceRepository.save() 호출로 트랜잭션 통합</li>
+     *   <li>같은 트랜잭션 내에서 Instance, MetadataRecord, FileAsset 함께 커밋/롤백</li>
+     * </ul>
      *
-     * CRITICAL: Transaction Propagation Strategy
-     * - @Transactional(propagation = Propagation.NOT_SUPPORTED)
-     * - This method runs OUTSIDE any transaction (suspends inherited read-only)
-     * - Each retry gets a completely fresh transaction via createInstanceInternal()
-     *
-     * Why NOT_SUPPORTED:
-     * - Class has @Transactional(readOnly = true) → all methods inherit read-only
-     * - Without NOT_SUPPORTED, this method inherits read-only transaction
-     * - createInstanceInternal() would join the read-only transaction → INSERT fails
-     * - NOT_SUPPORTED suspends inherited transaction → createInstanceInternal() gets fresh read-write transaction
+     * <p>외부 호출자가 있을 수 있으므로 유지하되, 새 코드에서는
+     * 트랜잭션 내에서 직접 series.addInstance() + instanceRepository.save() 호출 권장
      *
      * @param instance Instance 엔티티 (series 관계 설정 필요)
      * @return 저장된 Instance
@@ -449,12 +543,13 @@ public class InstanceService {
         // 8. SeaweedFS 업로드 + 보상 트랜잭션
         String s3Key = null;
         try {
-            // 8-1. DicomFileMetadata 생성
+            // 8-1. DicomFileMetadata 생성 (fileSize 포함 - 스트리밍 업로드용)
             DicomFileMetadata dicomMetadata = DicomFileMetadata.builder()
                     .studyInstanceUid(metadata.getStudyInstanceUid())
                     .seriesInstanceUid(metadata.getSeriesInstanceUid())
                     .sopInstanceUid(metadata.getSopInstanceUid())
                     .sopClassUid(metadata.getSopClassUid())
+                    .fileSize((long) fileBytes.length)
                     .build();
 
             // 8-2. S3 업로드
@@ -481,8 +576,13 @@ public class InstanceService {
                     .fileSize((long) fileBytes.length)
                     .build();
 
-            // 10. Instance DB 저장 (with retry support)
-            Instance savedInstance = createInstanceWithRetry(instance);
+            // 10. Instance DB 저장 (같은 트랜잭션 내 - 트랜잭션 통합)
+            // CRITICAL: createInstanceWithRetry() 대신 직접 저장
+            // - 역정규화 카운터(numberOfInstances) 제거로 Optimistic Lock 충돌 사라짐
+            // - 같은 트랜잭션 내에서 Instance, MetadataRecord, FileAsset 함께 커밋/롤백
+            // - Orphan Instance 문제 해결 (2026-01-05)
+            series.addInstance(instance);
+            Instance savedInstance = instanceRepository.save(instance);
 
             log.info("Instance created: id={}, sopInstanceUid={}, s3Key={}",
                     savedInstance.getId(),
@@ -528,18 +628,14 @@ public class InstanceService {
             return savedInstance;
 
         } catch (Exception e) {
-            // CRITICAL: Optimistic Lock 예외는 재시도 가능하므로 S3 파일 유지
-            if (e instanceof ObjectOptimisticLockingFailureException) {
-                log.warn("Optimistic lock failure - S3 file retained for retry: {}", s3Key);
-                throw (ObjectOptimisticLockingFailureException) e;
-            }
-
-            // 보상 트랜잭션: S3 파일 삭제 (재시도 불가능한 예외)
+            // 보상 트랜잭션: S3 파일 삭제
+            // - 트랜잭션 롤백 시 DB 변경사항은 자동 롤백되지만
+            // - S3에 업로드된 파일은 수동으로 삭제해야 함
             if (s3Key != null) {
                 try {
-                    log.warn("Rolling back S3 upload due to non-retryable error: {}", s3Key);
+                    log.warn("Rolling back S3 upload due to error: {}", s3Key);
                     dicomStorageService.deleteDicomFile(s3Key);
-                    log.info("S3 file deleted successfully on error: {}", s3Key);
+                    log.info("S3 file deleted successfully on rollback: {}", s3Key);
                 } catch (Exception deleteEx) {
                     log.error("Failed to delete orphan S3 file: {}. Will be cleaned up later.",
                             s3Key, deleteEx);

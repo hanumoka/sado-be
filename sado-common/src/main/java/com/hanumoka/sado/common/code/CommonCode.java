@@ -9,6 +9,7 @@ public enum CommonCode implements ApiCode {
     SUCCESS(HttpStatus.OK, 200000, "Success"),
     INVALID_PARAMETER(HttpStatus.BAD_REQUEST, 400001, "Invalid parameter"),
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, 404001, "Resource not found"),
+    TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, 429001, "Too many requests. Please try again later."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 500001, "Internal server error");
 
     private final HttpStatus httpStatus;

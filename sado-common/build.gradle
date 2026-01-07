@@ -22,5 +22,8 @@ dependencies {
     // SpringDoc OpenAPI (공유)
     api libs.springdoc.openapi.starter.webmvc.ui
 
+    // UUID Generator (UUID v7 support)
+    api libs.java.uuid.generator
+
     annotationProcessor libs.lombok
 }

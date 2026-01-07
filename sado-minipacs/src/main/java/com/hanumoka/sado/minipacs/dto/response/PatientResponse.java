@@ -22,6 +22,9 @@ public class PatientResponse {
     // 1. PK (필수)
      private Long id;
 
+    // 1-1. UUID v7 (외부 노출용 식별자)
+     private String uuid;
+
     // 2. DICOM 식별자
      private String dicomPatientId;
      private String issuerOfPatientId;

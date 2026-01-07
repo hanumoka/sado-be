@@ -19,8 +19,13 @@ public class SeriesResponse {
     // 1. PK
     private Long id;
 
-    // 2. 소속 검사 ID
+    // 1-1. UUID v7 (외부 노출용 식별자)
+    private String uuid;
+
+    // 2. 소속 검사 정보
     private Long studyId;
+    private String studyDescription;
+    private String patientName;
 
     // 3. DICOM 식별자
     private String seriesInstanceUid;

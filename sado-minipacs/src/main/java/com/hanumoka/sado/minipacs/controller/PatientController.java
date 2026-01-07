@@ -14,7 +14,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Patient REST API Controller
@@ -33,6 +35,8 @@ public class PatientController {
     /**
      * 환자 목록 조회
      * GET /api/patients
+     *
+     * <p>N+1 문제 방지: 배치 쿼리로 모든 환자의 studiesCount, lastStudyDate 조회
      */
     @GetMapping
     public ApiResponse<List<PatientResponse>> getAllPatients(
@@ -43,8 +47,14 @@ public class PatientController {
         // CRITICAL: OOM 방지 - DB 쿼리로 필터링 (findAll() + Stream 제거)
         List<Patient> patients = patientService.findByFilters(name, gender);
 
+        // N+1 방지: 배치 쿼리로 모든 환자의 통계 조회
+        List<Long> patientIds = patients.stream()
+                .map(Patient::getId)
+                .toList();
+        Map<Long, StudyService.StudyStats> statsMap = studyService.getStudyStatsByPatientIds(patientIds);
+
         List<PatientResponse> response = patients.stream()
-                .map(this::toResponse)
+                .map(patient -> toResponseWithStats(patient, statsMap.get(patient.getId())))
                 .toList();
 
         return ApiResponse.success(response);
@@ -65,12 +75,20 @@ public class PatientController {
     /**
      * 환자 조회
      * GET /api/patients/{id}
+     *
+     * <p>단일 환자 조회: 개별 쿼리로 studiesCount, lastStudyDate 조회
      */
     @GetMapping("/{id}")
     public ApiResponse<PatientResponse> getPatient(@PathVariable Long id) {
         log.info("GET /api/patients/{}", id);
         Patient patient = patientService.findById(id);
-        PatientResponse response = toResponse(patient);
+
+        // 단일 조회: 개별 쿼리로 통계 조회
+        long studiesCount = studyService.countByPatientId(id);
+        LocalDate lastStudyDate = studyService.getLastStudyDate(id);
+        StudyService.StudyStats stats = new StudyService.StudyStats((int) studiesCount, lastStudyDate);
+
+        PatientResponse response = toResponseWithStats(patient, stats);
         return ApiResponse.success(response);
     }
 
@@ -162,18 +180,31 @@ public class PatientController {
     }
 
     /**
-     * Patient Entity → PatientResponse 변환
+     * Patient Entity → PatientResponse 변환 (통계 없이)
      *
-     * <p>CHANGED (2026-01-05): 통계 필드 제거
-     * <ul>
-     *   <li>studiesCount, lastStudyDate 필드 제거됨</li>
-     *   <li>필요시 studyRepository.countByPatientId()로 실시간 조회</li>
-     *   <li>Deadlock 방지 + 메모리 정합성 보장</li>
-     * </ul>
+     * <p>CREATE, UPDATE 응답에서 사용 (통계 조회 불필요)
      */
     private PatientResponse toResponse(Patient patient) {
+        return toResponseWithStats(patient, null);
+    }
+
+    /**
+     * Patient Entity → PatientResponse 변환 (통계 포함)
+     *
+     * <p>CHANGED (2026-01-05): 통계 필드 동적 조회
+     * <ul>
+     *   <li>studiesCount, lastStudyDate를 동적으로 조회</li>
+     *   <li>목록 조회: 배치 쿼리로 N+1 방지</li>
+     *   <li>단일 조회: 개별 쿼리로 조회</li>
+     * </ul>
+     *
+     * @param patient 환자 엔티티
+     * @param stats 검사 통계 (null이면 0, null로 설정)
+     */
+    private PatientResponse toResponseWithStats(Patient patient, StudyService.StudyStats stats) {
         return PatientResponse.builder()
                 .id(patient.getId())
+                .uuid(patient.getUuid())
                 .dicomPatientId(patient.getDicomPatientId())
                 .issuerOfPatientId(patient.getIssuerOfPatientId())
                 .issuerTypeCode(patient.getIssuerTypeCode())
@@ -184,8 +215,8 @@ public class PatientController {
                 .matchingConfidence(patient.getMatchingConfidence())
                 .matchingStatus(patient.getMatchingStatus() != null ?
                         patient.getMatchingStatus().name() : null)
-                // studiesCount, lastStudyDate 제거 (2026-01-05)
-                // 필요시: studyRepository.countByPatientId(patient.getId())
+                .studiesCount(stats != null ? stats.studiesCount() : 0)
+                .lastStudyDate(stats != null ? stats.lastStudyDate() : null)
                 .createdAt(patient.getCreatedAt())
                 .updatedAt(patient.getUpdatedAt())
                 .tenantId(patient.getTenantId())
@@ -198,6 +229,7 @@ public class PatientController {
     private StudyResponse toStudyResponse(Study study) {
         return StudyResponse.builder()
                 .id(study.getId())
+                .uuid(study.getUuid())
                 .patientId(study.getPatient().getId())
                 .studyInstanceUid(study.getStudyInstanceUid())
                 .studyDate(study.getStudyDate())

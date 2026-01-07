@@ -34,7 +34,7 @@ spring:
     database-platform: org.hibernate.dialect.MySQLDialect
     show-sql: true
     hibernate:
-      ddl-auto: create  # 개발: update, 운영: validate
+      ddl-auto: update  # 개발: update, 운영: validate
     properties:
       hibernate:
         format_sql: true
@@ -47,18 +47,15 @@ spring:
 server:
   port: 10201
 
-# 로깅 설정
+# 로깅 설정 (상세 설정은 logback-spring.xml 참조)
 logging:
   level:
     root: INFO
     com.hanumoka.sado: DEBUG
     org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.hibernate.tool.schema: DEBUG
-    org.hibernate.boot: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
     org.springframework.web: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  # 색상 있는 로그 패턴은 logback-spring.xml에서 설정
 
 # Swagger/OpenAPI 설정
 springdoc:
@@ -91,6 +88,10 @@ seaweedfs:
     secret-key: ${SEAWEEDFS_SECRET_KEY}
     bucket: minipacs                   # DICOM 파일 저장 버킷명
     path-style-access: true            # SeaweedFS 필수 (true), 버킷을 path에 포함 하는 설정
+    # 타임아웃/재시도 설정 (2026-01-05 추가)
+    api-call-timeout: 300000           # 전체 API 호출 타임아웃 (5분) - 대용량 파일용
+    api-call-attempt-timeout: 60000    # 개별 시도 타임아웃 (60초)
+    max-retries: 3                     # 최대 재시도 횟수 (503, 429, 네트워크 오류)
 
   # SeaweedFS Admin API 설정 (클러스터 관리)
   admin:
@@ -137,4 +138,17 @@ minipacs:
   # 기본 User ID (Week 12+ 전까지 임시)
   # Week 12+ Spring Security 도입 후 SecurityContext에서 추출
   default-user-id: 1
+
+# 업로드 동시성 제한 설정 (2026-01-05 추가)
+upload:
+  # 최대 동시 업로드 수 (Semaphore permits)
+  # - DB 풀(10)의 절반으로 설정하여 다른 요청용 여유 확보
+  # - 메모리 고려: 500MB × 5 = 2.5GB 최대 동시 처리
+  max-concurrent: 5
+  # permit 획득 대기 시간 (밀리초)
+  # - 초과 시 429 Too Many Requests 반환
+  acquire-timeout-ms: 30000
+  # 클라이언트에게 전달할 재시도 대기 시간 (초)
+  # - Retry-After 헤더 값
+  retry-after-seconds: 30
 

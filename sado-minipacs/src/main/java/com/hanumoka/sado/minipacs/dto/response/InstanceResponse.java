@@ -19,6 +19,9 @@ public class InstanceResponse {
     // 1. PK
     private Long id;
 
+    // 1-1. UUID v7 (외부 노출용 식별자)
+    private String uuid;
+
     // 2. 소속 시리즈 ID
     private Long seriesId;
 
