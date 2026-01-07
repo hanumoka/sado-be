@@ -84,8 +84,8 @@ seaweedfs:
   s3:
     endpoint: http://localhost:10405   # filer S3 API 포트
     region: us-east-1                  # AWS SDK 필수파라미터(SeaweedFS는 무시)
-    access-key: ${SEAWEEDFS_ACCESS_KEY}
-    secret-key: ${SEAWEEDFS_SECRET_KEY}
+    access-key: ${SEAWEEDFS_ACCESS_KEY:any}    # 기본값: any (로컬 개발용)
+    secret-key: ${SEAWEEDFS_SECRET_KEY:any}    # 기본값: any (로컬 개발용)
     bucket: minipacs                   # DICOM 파일 저장 버킷명
     path-style-access: true            # SeaweedFS 필수 (true), 버킷을 path에 포함 하는 설정
     # 타임아웃/재시도 설정 (2026-01-05 추가)

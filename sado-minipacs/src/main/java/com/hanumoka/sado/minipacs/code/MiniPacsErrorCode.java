@@ -169,6 +169,30 @@ public enum MiniPacsErrorCode implements ApiCode {
     ),
 
     /**
+     * 유효하지 않은 프레임 번호
+     *
+     * <p>발생 시점: WADO-RS Rendered API에서 프레임 번호가 유효 범위 초과
+     * <p>원인: 존재하지 않는 프레임 번호 요청
+     */
+    INVALID_FRAME_NUMBER(
+            HttpStatus.BAD_REQUEST,
+            400205,
+            "유효하지 않은 프레임 번호입니다"
+    ),
+
+    /**
+     * DICOM 이미지 렌더링 실패
+     *
+     * <p>발생 시점: DICOM → PNG/JPEG 변환 실패
+     * <p>원인: DCM4CHE ImageIO 누락, 지원하지 않는 Transfer Syntax, 픽셀 데이터 손상
+     */
+    DICOM_RENDER_FAILED(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            500201,
+            "DICOM 이미지 렌더링에 실패했습니다"
+    ),
+
+    /**
      * DICOM 중복
      *
      * <p>발생 시점: 동일한 SOP Instance UID가 이미 존재

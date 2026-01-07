@@ -1,8 +1,11 @@
 package com.hanumoka.sado.minipacs.controller;
 
+import com.hanumoka.sado.common.exception.BusinessException;
+import com.hanumoka.sado.minipacs.code.MiniPacsErrorCode;
 import com.hanumoka.sado.minipacs.domain.entity.Instance;
 import com.hanumoka.sado.minipacs.domain.entity.Series;
 import com.hanumoka.sado.minipacs.domain.entity.Study;
+import com.hanumoka.sado.minipacs.domain.service.DicomRenderingService;
 import com.hanumoka.sado.minipacs.domain.service.InstanceService;
 import com.hanumoka.sado.minipacs.domain.service.SeriesService;
 import com.hanumoka.sado.minipacs.domain.service.StudyService;
@@ -15,11 +18,14 @@ import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+
+import java.time.Duration;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -67,6 +73,7 @@ public class DicomWebController {
     private final SeriesService seriesService;
     private final InstanceService instanceService;
     private final DicomStorageService dicomStorageService;
+    private final DicomRenderingService dicomRenderingService;
     private final UploadLimiter uploadLimiter;
 
     // ========== QIDO-RS: Query Services ==========
@@ -436,6 +443,100 @@ public class DicomWebController {
                 studyUID, seriesUID, objectUID);
 
         return retrieveInstance(studyUID, seriesUID, objectUID);
+    }
+
+    // ========== WADO-RS: Rendered Services ==========
+
+    /**
+     * WADO-RS: Instance Rendered (싱글프레임 또는 첫 프레임)
+     *
+     * <p>DICOM 파일을 PNG 이미지로 렌더링하여 반환합니다.
+     * 멀티프레임 DICOM의 경우 첫 번째 프레임을 반환합니다.
+     *
+     * @param studyUID Study Instance UID
+     * @param seriesUID Series Instance UID
+     * @param sopInstanceUID SOP Instance UID
+     * @return PNG 이미지
+     */
+    @GetMapping(value = "/studies/{studyUID}/series/{seriesUID}/instances/{sopInstanceUID}/rendered",
+            produces = MediaType.IMAGE_PNG_VALUE)
+    @Operation(summary = "WADO-RS: Instance Rendered", description = "DICOM 파일을 PNG 이미지로 렌더링합니다.")
+    public ResponseEntity<byte[]> renderInstance(
+            @Parameter(description = "Study Instance UID") @PathVariable String studyUID,
+            @Parameter(description = "Series Instance UID") @PathVariable String seriesUID,
+            @Parameter(description = "SOP Instance UID") @PathVariable String sopInstanceUID
+    ) {
+        log.info("WADO-RS Rendered: instance - sopInstanceUID={}", sopInstanceUID);
+
+        Instance instance = instanceService.findBySopInstanceUid(sopInstanceUID)
+                .orElseThrow(() -> new BusinessException(MiniPacsErrorCode.INSTANCE_NOT_FOUND));
+
+        // UID 검증
+        validateInstanceUIDs(instance, studyUID, seriesUID);
+
+        // 렌더링 (첫 프레임)
+        byte[] pngBytes = dicomRenderingService.renderToPng(instance.getStoragePath(), 1);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .cacheControl(CacheControl.maxAge(Duration.ofHours(1)))
+                .body(pngBytes);
+    }
+
+    /**
+     * WADO-RS: Frame Rendered (멀티프레임)
+     *
+     * <p>DICOM 파일의 특정 프레임을 PNG 이미지로 렌더링하여 반환합니다.
+     *
+     * @param studyUID Study Instance UID
+     * @param seriesUID Series Instance UID
+     * @param sopInstanceUID SOP Instance UID
+     * @param frameNumber 프레임 번호 (1부터 시작)
+     * @return PNG 이미지
+     */
+    @GetMapping(value = "/studies/{studyUID}/series/{seriesUID}/instances/{sopInstanceUID}/frames/{frameNumber}/rendered",
+            produces = MediaType.IMAGE_PNG_VALUE)
+    @Operation(summary = "WADO-RS: Frame Rendered", description = "DICOM 멀티프레임의 특정 프레임을 PNG 이미지로 렌더링합니다.")
+    public ResponseEntity<byte[]> renderFrame(
+            @Parameter(description = "Study Instance UID") @PathVariable String studyUID,
+            @Parameter(description = "Series Instance UID") @PathVariable String seriesUID,
+            @Parameter(description = "SOP Instance UID") @PathVariable String sopInstanceUID,
+            @Parameter(description = "프레임 번호 (1부터 시작)") @PathVariable int frameNumber
+    ) {
+        log.info("WADO-RS Rendered: frame - sopInstanceUID={}, frame={}", sopInstanceUID, frameNumber);
+
+        Instance instance = instanceService.findBySopInstanceUid(sopInstanceUID)
+                .orElseThrow(() -> new BusinessException(MiniPacsErrorCode.INSTANCE_NOT_FOUND));
+
+        // UID 검증
+        validateInstanceUIDs(instance, studyUID, seriesUID);
+
+        // 프레임 번호 검증
+        int totalFrames = instance.getNumberOfFrames() != null ? instance.getNumberOfFrames() : 1;
+        if (frameNumber < 1 || frameNumber > totalFrames) {
+            throw new BusinessException(MiniPacsErrorCode.INVALID_FRAME_NUMBER,
+                    "Frame " + frameNumber + " out of range (1-" + totalFrames + ")");
+        }
+
+        // 렌더링
+        byte[] pngBytes = dicomRenderingService.renderToPng(instance.getStoragePath(), frameNumber);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .cacheControl(CacheControl.maxAge(Duration.ofHours(1)))
+                .body(pngBytes);
+    }
+
+    /**
+     * UID 검증 헬퍼 메서드
+     */
+    private void validateInstanceUIDs(Instance instance, String studyUID, String seriesUID) {
+        Series series = instance.getSeries();
+        if (!seriesUID.equals(series.getSeriesInstanceUid()) ||
+                !studyUID.equals(series.getStudy().getStudyInstanceUid())) {
+            throw new BusinessException(MiniPacsErrorCode.INSTANCE_NOT_FOUND,
+                    "Instance UID hierarchy mismatch");
+        }
     }
 
     // ========== Helper Methods: DICOM JSON 변환 ==========

@@ -7,6 +7,14 @@ plugins {
 group = "com.hanumoka.sado"
 version = "0.0.1-SNAPSHOT"
 
+repositories {
+    mavenCentral()
+    // DCM4CHE 공식 저장소
+    maven { url 'https://www.dcm4che.org/maven2' }
+    // Weasis OpenCV 네이티브 라이브러리 저장소
+    maven { url 'https://raw.github.com/nroduit/mvn-repo/master' }
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
@@ -45,6 +53,22 @@ dependencies {
 
     // DCM4CHE DICOM 라이브러리 (5.29.1 - mini-pacs-poc 검증 버전)
     implementation 'org.dcm4che:dcm4che-core:5.29.1'
+    implementation 'org.dcm4che:dcm4che-imageio:5.29.1'   // DICOM 이미지 렌더링
+    implementation 'org.dcm4che:dcm4che-image:5.29.1'     // 픽셀 데이터 처리
+    implementation 'org.dcm4che:dcm4che-imageio-opencv:5.29.1'  // JPEG/JPEG2000 코덱 (OpenCV 기반)
+
+    // Weasis OpenCV Java 바인딩 (JPEG 디코딩에 필요)
+    runtimeOnly 'org.weasis.thirdparty.org.opencv:opencv:4.9.0-dcm'
+
+    // 플랫폼별 OpenCV 네이티브 라이브러리
+    // Windows 64-bit
+    runtimeOnly('org.weasis.thirdparty.org.opencv:opencv_java:4.9.0-dcm:windows-x86-64@dll')
+    // Linux 64-bit
+    runtimeOnly('org.weasis.thirdparty.org.opencv:libopencv_java:4.9.0-dcm:linux-x86-64@so')
+    // macOS x86-64
+    runtimeOnly('org.weasis.thirdparty.org.opencv:libopencv_java:4.9.0-dcm:macosx-x86-64@dylib')
+    // macOS ARM (Apple Silicon)
+    runtimeOnly('org.weasis.thirdparty.org.opencv:libopencv_java:4.9.0-dcm:macosx-aarch64@dylib')
 
     // Lombok (Annotation Processor 명시적 등록)
     compileOnly 'org.projectlombok:lombok:1.18.36'
@@ -57,7 +81,75 @@ dependencies {
     testRuntimeOnly libs.junit.platform.launcher  // JUnit Platform launcher
 }
 
+// ========== OpenCV 네이티브 라이브러리 설정 ==========
+// DCM4CHE ImageIO OpenCV가 System.loadLibrary("opencv_java")를 호출하므로
+// 라이브러리 파일명을 opencv_java.dll/libopencv_java.so로 맞춰줘야 함
+
+def nativesDir = layout.buildDirectory.dir("natives")
+
+tasks.register('copyOpenCVNatives') {
+    description = 'Copies OpenCV native library with correct filename for System.loadLibrary'
+    group = 'build'
+
+    doLast {
+        def osName = System.getProperty('os.name').toLowerCase()
+        def osArch = System.getProperty('os.arch').toLowerCase()
+
+        def targetFileName
+        def sourceFile
+
+        if (osName.contains('win')) {
+            targetFileName = 'opencv_java.dll'
+            sourceFile = configurations.runtimeClasspath.find {
+                it.name.contains('opencv_java') && it.name.endsWith('.dll')
+            }
+        } else if (osName.contains('linux')) {
+            targetFileName = 'libopencv_java.so'
+            sourceFile = configurations.runtimeClasspath.find {
+                it.name.contains('libopencv_java') && it.name.endsWith('.so')
+            }
+        } else if (osName.contains('mac')) {
+            targetFileName = 'libopencv_java.dylib'
+            sourceFile = configurations.runtimeClasspath.find {
+                it.name.contains('libopencv_java') && it.name.endsWith('.dylib')
+            }
+        }
+
+        if (sourceFile != null) {
+            def targetDir = nativesDir.get().asFile
+            targetDir.mkdirs()
+            def targetFile = new File(targetDir, targetFileName)
+
+            logger.lifecycle("Copying OpenCV native library:")
+            logger.lifecycle("  Source: ${sourceFile}")
+            logger.lifecycle("  Target: ${targetFile}")
+
+            targetFile.bytes = sourceFile.bytes
+        } else {
+            logger.warn("OpenCV native library not found for platform: ${osName} ${osArch}")
+        }
+    }
+}
+
+// bootRun 태스크에 네이티브 라이브러리 경로 설정
+tasks.named('bootRun') {
+    dependsOn 'copyOpenCVNatives'
+    systemProperty 'java.library.path', nativesDir.get().asFile.absolutePath
+
+    // DCM4CHE ImageIO OpenCV가 내부 Java 클래스에 리플렉션 접근 필요
+    // Java 9+ 모듈 시스템(JPMS)이 기본적으로 차단하므로 명시적으로 열어줘야 함
+    jvmArgs '--add-opens', 'java.desktop/javax.imageio.stream=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.io=ALL-UNNAMED'
+}
+
+// test 태스크 설정
 tasks.named('test') {
+    dependsOn 'copyOpenCVNatives'
     useJUnitPlatform()
     systemProperty 'file.encoding', 'UTF-8'
+    systemProperty 'java.library.path', nativesDir.get().asFile.absolutePath
+
+    // DCM4CHE ImageIO OpenCV가 내부 Java 클래스에 리플렉션 접근 필요
+    jvmArgs '--add-opens', 'java.desktop/javax.imageio.stream=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.io=ALL-UNNAMED'
 }
