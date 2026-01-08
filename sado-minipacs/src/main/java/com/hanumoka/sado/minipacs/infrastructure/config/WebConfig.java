@@ -41,7 +41,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "Content-Length",
                         "Content-Disposition",
                         "Accept",
-                        "X-Request-ID"
+                        "X-Request-ID",
+                        "X-Tenant-Id"
                 )
                 .allowCredentials(true)
                 .maxAge(3600);  // Pre-flight 캐시 1시간
@@ -56,7 +57,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "Content-Length",
                         "Content-Disposition",
                         "X-Total-Count",
-                        "X-Request-ID"
+                        "X-Request-ID",
+                        "X-Tenant-Id"
                 )
                 .allowCredentials(true)
                 .maxAge(3600);
