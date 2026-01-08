@@ -32,6 +32,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -50,6 +51,7 @@ import java.util.Optional;
 @RequestMapping("/api/instances")
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 public class InstanceController {
 
     private final InstanceService instanceService;

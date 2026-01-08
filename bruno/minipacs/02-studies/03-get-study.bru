@@ -1,0 +1,20 @@
+meta {
+  name: Get Study
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/studies/{{studyId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Study
+
+  Retrieve a single study by ID.
+
+  ## Path Parameters
+  - `id`: Study ID
+}

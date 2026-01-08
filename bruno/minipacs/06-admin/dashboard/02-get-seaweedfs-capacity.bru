@@ -1,0 +1,59 @@
+meta {
+  name: Get SeaweedFS Capacity
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/admin/seaweedfs/capacity
+  body: none
+  auth: none
+}
+
+docs {
+  # Get SeaweedFS Capacity
+
+  SeaweedFS의 물리적 스토리지 용량 정보를 조회합니다.
+
+  ## Response
+
+  ### Success (200)
+  ```json
+  {
+    "code": 200000,
+    "message": "OK",
+    "data": {
+      "totalCapacity": 1099511627776,
+      "usedSpace": 549755813888,
+      "freeSpace": 549755813888,
+      "percentUsed": 50.0
+    }
+  }
+  ```
+
+  ### Response Fields (SeaweedFSCapacityResponse)
+
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | totalCapacity | number | 전체 용량 (bytes) |
+  | usedSpace | number | 사용 중인 용량 (bytes) |
+  | freeSpace | number | 남은 용량 (bytes) |
+  | percentUsed | number | 사용률 (%) |
+
+  ### Capacity Unit Conversion
+
+  | Value | Unit |
+  |-------|------|
+  | 1,099,511,627,776 | 1 TB |
+  | 1,073,741,824 | 1 GB |
+  | 1,048,576 | 1 MB |
+
+  ### Error (503) - SeaweedFS Unavailable
+  ```json
+  {
+    "code": 503000,
+    "message": "SeaweedFS is not available",
+    "data": null
+  }
+  ```
+}

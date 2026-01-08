@@ -1,0 +1,74 @@
+meta {
+  name: Get Studies
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/studies
+  body: none
+  auth: none
+}
+
+params:query {
+  ~patientId: 1
+  ~patientName: Hong
+  ~studyDate: 2026-01-08
+}
+
+docs {
+  # Get Studies
+
+  검사 목록을 조회합니다.
+
+  ## Query Parameters
+
+  | Parameter | Type | Required | Description |
+  |-----------|------|----------|-------------|
+  | patientId | number | No | 환자 ID로 필터링 |
+  | patientName | string | No | 환자 이름으로 필터링 (부분 일치) |
+  | studyDate | string | No | 검사 날짜로 필터링 (YYYY-MM-DD) |
+
+  ## Response
+
+  ### Success (200)
+  ```json
+  {
+    "code": 200000,
+    "message": "OK",
+    "data": [
+      {
+        "id": 1,
+        "uuid": "01936b6c-1234-7abc-def0-123456789abc",
+        "patientId": 1,
+        "patientName": "Hong Gildong",
+        "studyInstanceUid": "1.2.840.113619.2.1.20260108",
+        "studyDate": "2026-01-08",
+        "studyDescription": "Echocardiogram",
+        "numberOfSeries": 3,
+        "numberOfInstances": 45,
+        "createdAt": "2026-01-08T10:30:00",
+        "updatedAt": "2026-01-08T10:30:00",
+        "tenantId": 1
+      }
+    ]
+  }
+  ```
+
+  ### Response Fields
+
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | id | number | 검사 고유 ID |
+  | uuid | string | UUID v7 (외부 노출용) |
+  | patientId | number | 환자 ID |
+  | patientName | string | 환자 이름 |
+  | studyInstanceUid | string | DICOM Study Instance UID |
+  | studyDate | string | 검사 날짜 (YYYY-MM-DD) |
+  | studyDescription | string | 검사 설명 |
+  | numberOfSeries | number | 시리즈 수 |
+  | numberOfInstances | number | 영상 수 |
+  | createdAt | string | 생성 일시 |
+  | updatedAt | string | 수정 일시 |
+  | tenantId | number | 테넌트 ID |
+}

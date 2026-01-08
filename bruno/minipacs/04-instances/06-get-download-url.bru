@@ -1,0 +1,111 @@
+meta {
+  name: Get Download URL
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/instances/{{instanceId}}/download
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Download URL
+
+  DICOM 파일 다운로드 URL을 조회합니다.
+
+  ## Path Parameters
+
+  | Parameter | Type | Required | Description |
+  |-----------|------|----------|-------------|
+  | instanceId | number | **Yes** | Instance ID |
+
+  ## Access Strategy
+
+  시스템 설정(`storage.access-strategy`)에 따라 다른 방식으로 URL을 반환합니다:
+
+  ### 1. Pre-signed URL (POC 모드)
+  - 설정: `storage.access-strategy: presigned-url`
+  - SeaweedFS S3 API의 Pre-signed URL 반환
+  - 클라이언트가 SeaweedFS에 직접 접근
+  - 기본 만료 시간: 15분
+
+  ### 2. Backend Proxy (프로덕션 모드)
+  - 설정: `storage.access-strategy: backend-proxy`
+  - Backend Proxy URL 반환 (`/api/files/{id}/proxy`)
+  - 모든 접근이 Backend를 경유
+  - HIPAA/GDPR 감사 추적 지원
+
+  ## Response
+
+  ### Success (200) - Pre-signed URL Mode
+  ```json
+  {
+    "code": 200000,
+    "message": "OK",
+    "data": {
+      "method": "PRESIGNED_URL",
+      "url": "http://localhost:10405/minipacs/2026/01/08/patient-1/study-1/series-1/instance-1.dcm?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=any%2F20260108%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260108T103000Z&X-Amz-Expires=900&X-Amz-SignedHeaders=host&X-Amz-Signature=abc123...",
+      "expiresIn": "PT15M"
+    }
+  }
+  ```
+
+  ### Success (200) - Backend Proxy Mode
+  ```json
+  {
+    "code": 200000,
+    "message": "OK",
+    "data": {
+      "method": "BACKEND_PROXY",
+      "url": "http://localhost:10201/api/files/1/proxy",
+      "expiresIn": null
+    }
+  }
+  ```
+
+  ### Response Fields (FileAccessResponse)
+
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | method | string | 접근 방식 (PRESIGNED_URL, BACKEND_PROXY) |
+  | url | string | 다운로드 URL |
+  | expiresIn | string | URL 만료 시간 (ISO-8601 Duration, 예: "PT15M" = 15분) |
+
+  ### Duration Format (ISO-8601)
+
+  | Example | Description |
+  |---------|-------------|
+  | PT15M | 15분 |
+  | PT1H | 1시간 |
+  | PT30M | 30분 |
+  | null | 만료 없음 (Backend Proxy) |
+
+  ### Error (404) - Not Found
+  ```json
+  {
+    "code": 404000,
+    "message": "Instance not found",
+    "data": null
+  }
+  ```
+
+  ## Usage Example (Frontend)
+
+  ```typescript
+  // 1. Get download URL
+  const response = await fetch('/api/instances/1/download');
+  const { data } = await response.json();
+
+  // 2. Download file
+  if (data.method === 'PRESIGNED_URL') {
+    // Direct download from SeaweedFS
+    window.open(data.url, '_blank');
+  } else {
+    // Download through backend proxy
+    const blob = await fetch(data.url).then(r => r.blob());
+    // ... handle blob
+  }
+  ```
+}

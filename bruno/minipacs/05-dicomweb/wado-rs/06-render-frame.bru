@@ -1,0 +1,30 @@
+meta {
+  name: WADO-RS Render Frame
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/dicomweb/studies/{{studyUID}}/series/{{seriesUID}}/instances/{{sopInstanceUID}}/frames/1/rendered
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: image/png
+}
+
+docs {
+  # WADO-RS: Render Frame
+
+  Render a specific frame from a multi-frame DICOM image as PNG.
+
+  ## Path Parameters
+  - `studyUID`: Study Instance UID
+  - `seriesUID`: Series Instance UID
+  - `sopInstanceUID`: SOP Instance UID
+  - `frameNumber`: Frame number (1-based)
+
+  ## Response
+  PNG image (image/png)
+}

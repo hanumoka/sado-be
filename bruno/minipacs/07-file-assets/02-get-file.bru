@@ -1,0 +1,20 @@
+meta {
+  name: Get File Metadata
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/files/{{fileId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Get File Metadata
+
+  Retrieve file metadata by ID.
+
+  ## Path Parameters
+  - `id`: File ID
+}

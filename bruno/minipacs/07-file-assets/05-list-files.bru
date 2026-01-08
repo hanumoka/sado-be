@@ -1,0 +1,28 @@
+meta {
+  name: List Files
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/files
+  body: none
+  auth: none
+}
+
+params:query {
+  ~referenceType:
+  ~referenceId:
+  ~category:
+}
+
+docs {
+  # List Files
+
+  List files with optional filters.
+
+  ## Query Parameters
+  - `referenceType`: Filter by reference type (PATIENT, STUDY, SERIES, INSTANCE)
+  - `referenceId`: Filter by reference ID
+  - `category`: Filter by category (DICOM, AI_RESULT, CLINICAL_DOCUMENT, SYSTEM)
+}

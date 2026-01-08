@@ -1,0 +1,27 @@
+meta {
+  name: List Filer Directory
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/admin/seaweedfs/filer/ls
+  body: none
+  auth: none
+}
+
+params:query {
+  path: /
+}
+
+docs {
+  # List Filer Directory
+
+  Browse SeaweedFS Filer directory structure.
+
+  ## Query Parameters
+  - `path`: Directory path to list (default: /)
+
+  ## Response
+  List of entries (files and directories).
+}

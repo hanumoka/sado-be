@@ -1,0 +1,23 @@
+meta {
+  name: Delete Volume
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/seaweedfs/volumes/{{volumeId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Delete SeaweedFS Volume
+
+  Delete a volume from SeaweedFS cluster.
+
+  ## Path Parameters
+  - `volumeId`: Volume ID to delete
+
+  ## Warning
+  This is a destructive operation. All data in the volume will be lost.
+}

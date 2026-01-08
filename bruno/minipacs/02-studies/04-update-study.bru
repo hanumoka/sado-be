@@ -1,0 +1,84 @@
+meta {
+  name: Update Study
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/studies/{{studyId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "studyInstanceUid": "1.2.840.113619.2.1.20260108",
+    "studyDate": "2026-01-08",
+    "studyDescription": "Echocardiogram - Updated"
+  }
+}
+
+docs {
+  # Update Study
+
+  검사 정보를 수정합니다.
+
+  **Note**: patientId는 수정 불가합니다. Study는 생성 후 다른 Patient로 이동할 수 없습니다.
+
+  ## Path Parameters
+
+  | Parameter | Type | Required | Description |
+  |-----------|------|----------|-------------|
+  | studyId | number | **Yes** | 검사 ID |
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | studyInstanceUid | string | No | DICOM Study Instance UID |
+  | studyDate | string | No | 검사 날짜 (YYYY-MM-DD) |
+  | studyDescription | string | No | 검사 설명 |
+
+  ## Request Example
+
+  ```json
+  {
+    "studyInstanceUid": "1.2.840.113619.2.1.20260108",
+    "studyDate": "2026-01-08",
+    "studyDescription": "Echocardiogram - Updated"
+  }
+  ```
+
+  ## Response
+
+  ### Success (200)
+  ```json
+  {
+    "code": 200000,
+    "message": "OK",
+    "data": {
+      "id": 1,
+      "uuid": "01936b6c-1234-7abc-def0-123456789abc",
+      "patientId": 1,
+      "patientName": "Hong Gildong",
+      "studyInstanceUid": "1.2.840.113619.2.1.20260108",
+      "studyDate": "2026-01-08",
+      "studyDescription": "Echocardiogram - Updated",
+      "numberOfSeries": 3,
+      "numberOfInstances": 45,
+      "createdAt": "2026-01-08T10:30:00",
+      "updatedAt": "2026-01-08T11:00:00",
+      "tenantId": 1
+    }
+  }
+  ```
+
+  ### Error (404) - Not Found
+  ```json
+  {
+    "code": 404000,
+    "message": "Study not found",
+    "data": null
+  }
+  ```
+}

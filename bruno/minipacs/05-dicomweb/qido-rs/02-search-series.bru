@@ -1,0 +1,33 @@
+meta {
+  name: QIDO-RS Search Series
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/dicomweb/studies/{{studyUID}}/series
+  body: none
+  auth: none
+}
+
+params:query {
+  ~Modality:
+  ~SeriesInstanceUID:
+}
+
+headers {
+  Accept: application/dicom+json
+}
+
+docs {
+  # QIDO-RS: Search Series
+
+  Search for series within a study using DICOMweb QIDO-RS.
+
+  ## Path Parameters
+  - `studyUID`: Study Instance UID
+
+  ## Query Parameters
+  - `Modality`: Filter by modality
+  - `SeriesInstanceUID`: Filter by Series Instance UID
+}

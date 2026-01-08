@@ -1,0 +1,23 @@
+meta {
+  name: Delete File
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/files/{{fileId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Delete File
+
+  Soft delete a file.
+
+  ## Path Parameters
+  - `id`: File ID
+
+  ## Note
+  This performs a soft delete, marking the file as deleted but not removing it from storage.
+}

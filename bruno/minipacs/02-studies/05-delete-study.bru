@@ -1,0 +1,20 @@
+meta {
+  name: Delete Study
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/studies/{{studyId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Delete Study
+
+  Delete a study record.
+
+  ## Path Parameters
+  - `id`: Study ID
+}

@@ -1,0 +1,30 @@
+meta {
+  name: Get Pre-signed URL
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/files/{{fileId}}/presigned-url
+  body: none
+  auth: none
+}
+
+params:query {
+  expiresInMinutes: 60
+}
+
+docs {
+  # Get Pre-signed URL
+
+  Get a pre-signed URL for direct file access.
+
+  ## Path Parameters
+  - `id`: File ID
+
+  ## Query Parameters
+  - `expiresInMinutes`: URL expiration time (default: 60)
+
+  ## Response
+  Pre-signed URL for direct access to SeaweedFS.
+}

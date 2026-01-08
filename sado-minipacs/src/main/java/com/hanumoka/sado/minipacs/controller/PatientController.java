@@ -12,6 +12,7 @@ import com.hanumoka.sado.minipacs.dto.response.StudyResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -27,6 +28,7 @@ import java.util.Map;
 @RequestMapping("/api/patients")
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 public class PatientController {
 
     private final PatientService patientService;

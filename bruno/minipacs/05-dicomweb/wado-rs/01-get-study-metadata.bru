@@ -1,0 +1,24 @@
+meta {
+  name: WADO-RS Get Study Metadata
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/dicomweb/studies/{{studyUID}}/metadata
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/dicom+json
+}
+
+docs {
+  # WADO-RS: Get Study Metadata
+
+  Retrieve metadata for all instances in a study.
+
+  ## Path Parameters
+  - `studyUID`: Study Instance UID
+}

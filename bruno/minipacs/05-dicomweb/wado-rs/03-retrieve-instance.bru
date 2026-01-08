@@ -1,0 +1,29 @@
+meta {
+  name: WADO-RS Retrieve Instance
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/dicomweb/studies/{{studyUID}}/series/{{seriesUID}}/instances/{{sopInstanceUID}}
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/dicom
+}
+
+docs {
+  # WADO-RS: Retrieve Instance
+
+  Download a DICOM file.
+
+  ## Path Parameters
+  - `studyUID`: Study Instance UID
+  - `seriesUID`: Series Instance UID
+  - `sopInstanceUID`: SOP Instance UID
+
+  ## Response
+  DICOM file (application/dicom)
+}

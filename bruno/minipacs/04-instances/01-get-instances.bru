@@ -1,0 +1,116 @@
+meta {
+  name: Get Instances
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/instances
+  body: none
+  auth: none
+}
+
+params:query {
+  ~seriesId: 1
+  ~studyId: 1
+  ~sopInstanceUid: 1.2.840
+  ~storageTier: HOT
+  page: 0
+  size: 10
+}
+
+docs {
+  # Get Instances
+
+  영상(Instance) 목록을 페이지네이션으로 조회합니다.
+
+  ## Query Parameters
+
+  | Parameter | Type | Required | Default | Description |
+  |-----------|------|----------|---------|-------------|
+  | seriesId | number | No | - | Series ID로 필터링 |
+  | studyId | number | No | - | Study ID로 필터링 |
+  | sopInstanceUid | string | No | - | SOP Instance UID로 필터링 (부분 일치) |
+  | storageTier | string | No | - | Storage Tier로 필터링 (HOT, WARM, COLD) |
+  | page | number | No | 0 | 페이지 번호 (0부터 시작) |
+  | size | number | No | 10 | 페이지 크기 |
+
+  ## Storage Tier Values
+
+  | Value | Description |
+  |-------|-------------|
+  | HOT | 최근 데이터 (30일 이내) - 빠른 접근 |
+  | WARM | 중간 데이터 (30일~365일) - 보통 접근 |
+  | COLD | 오래된 데이터 (365일 이상) - 아카이브 |
+
+  ## Response
+
+  ### Success (200)
+  ```json
+  {
+    "code": 200000,
+    "message": "OK",
+    "data": {
+      "content": [
+        {
+          "id": 1,
+          "uuid": "01936b6c-1234-7abc-def0-123456789abc",
+          "seriesId": 1,
+          "sopInstanceUid": "1.2.840.113619.2.1.1.1.20260108",
+          "sopClassUid": "1.2.840.10008.5.1.4.1.1.3.1",
+          "rows": 768,
+          "columns": 1024,
+          "numberOfFrames": 30,
+          "frameRate": 30.0,
+          "frameRateSource": "MEASURED",
+          "instanceNumber": 1,
+          "storagePath": "minipacs/2026/01/08/patient-1/study-1/series-1/instance-1.dcm",
+          "storageUri": "http://localhost:10405/minipacs/...",
+          "fileSize": 2048576,
+          "transcodingStatus": "COMPLETED",
+          "thumbnailPath": "minipacs/.../instance-1-thumb.png",
+          "videoPath": "minipacs/.../instance-1.mp4",
+          "storageTier": "HOT",
+          "createdAt": "2026-01-08T10:30:00",
+          "updatedAt": "2026-01-08T10:30:00",
+          "tenantId": 1
+        }
+      ],
+      "pageable": {
+        "pageNumber": 0,
+        "pageSize": 10,
+        "sort": { "sorted": false, "unsorted": true, "empty": true }
+      },
+      "totalElements": 1,
+      "totalPages": 1,
+      "last": true,
+      "first": true,
+      "numberOfElements": 1,
+      "empty": false
+    }
+  }
+  ```
+
+  ### Response Fields
+
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | id | number | Instance 고유 ID |
+  | uuid | string | UUID v7 (외부 노출용) |
+  | seriesId | number | Series ID |
+  | sopInstanceUid | string | DICOM SOP Instance UID |
+  | sopClassUid | string | DICOM SOP Class UID |
+  | rows | number | 이미지 높이 (픽셀) |
+  | columns | number | 이미지 너비 (픽셀) |
+  | numberOfFrames | number | 프레임 수 (동영상) |
+  | frameRate | number | 프레임 레이트 (fps) |
+  | frameRateSource | string | 프레임 레이트 소스 (MEASURED, DERIVED, UNKNOWN) |
+  | instanceNumber | number | Instance 번호 |
+  | storagePath | string | 저장 경로 |
+  | storageUri | string | Pre-signed URL 또는 Proxy URL |
+  | fileSize | number | 파일 크기 (bytes) |
+  | transcodingStatus | string | 트랜스코딩 상태 (PENDING, IN_PROGRESS, COMPLETED, FAILED) |
+  | thumbnailPath | string | 썸네일 경로 |
+  | videoPath | string | 비디오 경로 |
+  | storageTier | string | 저장소 계층 (HOT, WARM, COLD) |
+}

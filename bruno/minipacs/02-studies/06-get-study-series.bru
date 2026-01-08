@@ -1,0 +1,20 @@
+meta {
+  name: Get Study Series
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/studies/{{studyId}}/series
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Study Series
+
+  Retrieve all series for a specific study.
+
+  ## Path Parameters
+  - `id`: Study ID
+}

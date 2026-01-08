@@ -1,0 +1,41 @@
+meta {
+  name: QIDO-RS Search Studies
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/dicomweb/studies
+  body: none
+  auth: none
+}
+
+params:query {
+  ~PatientID:
+  ~PatientName:
+  ~StudyDate:
+  ~StudyInstanceUID:
+  limit: 100
+  offset: 0
+}
+
+headers {
+  Accept: application/dicom+json
+}
+
+docs {
+  # QIDO-RS: Search Studies
+
+  Search for studies using DICOMweb QIDO-RS.
+
+  ## Query Parameters
+  - `PatientID`: Filter by patient ID
+  - `PatientName`: Filter by patient name
+  - `StudyDate`: Filter by study date (YYYYMMDD)
+  - `StudyInstanceUID`: Filter by Study Instance UID
+  - `limit`: Maximum results (default: 100)
+  - `offset`: Results offset (default: 0)
+
+  ## Response
+  DICOM JSON format array of study metadata.
+}

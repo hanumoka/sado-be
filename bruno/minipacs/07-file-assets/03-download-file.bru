@@ -1,0 +1,23 @@
+meta {
+  name: Download File
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/files/{{fileId}}/download
+  body: none
+  auth: none
+}
+
+docs {
+  # Download File
+
+  Download a file via backend proxy.
+
+  ## Path Parameters
+  - `id`: File ID
+
+  ## Response
+  File stream with appropriate content type.
+}

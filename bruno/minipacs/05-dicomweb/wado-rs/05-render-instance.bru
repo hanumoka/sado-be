@@ -1,0 +1,29 @@
+meta {
+  name: WADO-RS Render Instance
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/dicomweb/studies/{{studyUID}}/series/{{seriesUID}}/instances/{{sopInstanceUID}}/rendered
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: image/png
+}
+
+docs {
+  # WADO-RS: Render Instance
+
+  Render a DICOM image as PNG.
+
+  ## Path Parameters
+  - `studyUID`: Study Instance UID
+  - `seriesUID`: Series Instance UID
+  - `sopInstanceUID`: SOP Instance UID
+
+  ## Response
+  PNG image (image/png)
+}

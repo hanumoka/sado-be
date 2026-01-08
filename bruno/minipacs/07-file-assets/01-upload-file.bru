@@ -1,0 +1,30 @@
+meta {
+  name: Upload File
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/files/upload
+  body: multipartForm
+  auth: none
+}
+
+body:multipart-form {
+  file: @file(sample.pdf)
+  category: CLINICAL_DOCUMENT
+  referenceType: STUDY
+  referenceId: 1
+}
+
+docs {
+  # Upload File
+
+  Upload a file (non-DICOM assets like reports, AI results).
+
+  ## Request Body (multipart/form-data)
+  - `file`: File to upload
+  - `category`: File category (DICOM, AI_RESULT, CLINICAL_DOCUMENT, SYSTEM)
+  - `referenceType`: Reference type (PATIENT, STUDY, SERIES, INSTANCE)
+  - `referenceId`: Reference ID
+}

@@ -1,0 +1,24 @@
+meta {
+  name: Get Storage by Category
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/admin/metrics/storage-by-category
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Storage by Category
+
+  Retrieve storage usage grouped by file category.
+
+  ## Response
+  Includes:
+  - DICOM files
+  - AI Results
+  - Clinical Documents
+  - System files
+}

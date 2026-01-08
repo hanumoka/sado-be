@@ -1,0 +1,23 @@
+meta {
+  name: Delete Patient
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/patients/{{patientId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Delete Patient
+
+  Delete a patient record.
+
+  ## Path Parameters
+  - `id`: Patient ID
+
+  ## Warning
+  This operation may be restricted due to data retention policies.
+}

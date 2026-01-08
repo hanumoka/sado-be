@@ -1,0 +1,24 @@
+meta {
+  name: List Volumes
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/admin/seaweedfs/volumes
+  body: none
+  auth: none
+}
+
+docs {
+  # List SeaweedFS Volumes
+
+  Retrieve all volumes from SeaweedFS cluster.
+
+  ## Response
+  List of volume information including:
+  - Volume ID
+  - Size
+  - File count
+  - Data center
+}

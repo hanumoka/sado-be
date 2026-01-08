@@ -1,0 +1,101 @@
+meta {
+  name: Update Patient
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/patients/{{patientId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "dicomPatientId": "PAT001-UPDATED",
+    "issuerOfPatientId": "HOSPITAL_A",
+    "patientName": "Hong Gildong Updated",
+    "patientBirthDate": "1990-01-15",
+    "patientSex": "M",
+    "emrPatientId": "EMR001",
+    "matchingConfidence": 0.95,
+    "matchingStatus": "MANUAL_MATCHED"
+  }
+}
+
+docs {
+  # Update Patient
+
+  환자 정보를 수정합니다.
+
+  ## Path Parameters
+
+  | Parameter | Type | Required | Description |
+  |-----------|------|----------|-------------|
+  | patientId | number | **Yes** | 환자 ID |
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | dicomPatientId | string | No | DICOM Patient ID |
+  | issuerOfPatientId | string | No | Patient ID 발급 기관 |
+  | patientName | string | No | 환자 이름 |
+  | patientBirthDate | string | No | 생년월일 (YYYY-MM-DD) |
+  | patientSex | string | No | 성별 (M/F/O) |
+  | emrPatientId | string | No | EMR 환자 ID |
+  | matchingConfidence | number | No | 매칭 신뢰도 (0.0 ~ 1.0) |
+  | matchingStatus | string | No | 매칭 상태 (AUTO_MATCHED, MANUAL_MATCHED, UNMATCHED) |
+
+  ## Request Example
+
+  ```json
+  {
+    "dicomPatientId": "PAT001-UPDATED",
+    "issuerOfPatientId": "HOSPITAL_A",
+    "patientName": "Hong Gildong Updated",
+    "patientBirthDate": "1990-01-15",
+    "patientSex": "M",
+    "emrPatientId": "EMR001",
+    "matchingConfidence": 0.95,
+    "matchingStatus": "MANUAL_MATCHED"
+  }
+  ```
+
+  ## Response
+
+  ### Success (200)
+  ```json
+  {
+    "code": 200000,
+    "message": "OK",
+    "data": {
+      "id": 1,
+      "uuid": "01936b6c-1234-7abc-def0-123456789abc",
+      "dicomPatientId": "PAT001-UPDATED",
+      "issuerOfPatientId": "HOSPITAL_A",
+      "issuerTypeCode": "ISO",
+      "patientName": "Hong Gildong Updated",
+      "patientBirthDate": "1990-01-15",
+      "patientSex": "M",
+      "emrPatientId": "EMR001",
+      "matchingConfidence": 0.95,
+      "matchingStatus": "MANUAL_MATCHED",
+      "studiesCount": 5,
+      "lastStudyDate": "2026-01-08",
+      "createdAt": "2026-01-08T10:30:00",
+      "updatedAt": "2026-01-08T11:00:00",
+      "tenantId": 1
+    }
+  }
+  ```
+
+  ### Error (404) - Not Found
+  ```json
+  {
+    "code": 404000,
+    "message": "Patient not found",
+    "data": null
+  }
+  ```
+}

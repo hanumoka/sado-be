@@ -1,0 +1,95 @@
+meta {
+  name: Create Series
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/series
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "studyId": 1,
+    "seriesInstanceUid": "1.2.840.113619.2.1.1.20260108",
+    "modality": "US",
+    "seriesNumber": 1,
+    "seriesDescription": "4 Chamber View",
+    "bodyPartExamined": "HEART",
+    "manufacturer": "GE Healthcare",
+    "manufacturerModelName": "VIVID E95"
+  }
+}
+
+docs {
+  # Create Series
+
+  새 시리즈를 생성합니다.
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | studyId | number | **Yes** | Study ID |
+  | seriesInstanceUid | string | No | DICOM Series Instance UID (자동 생성 가능) |
+  | modality | string | No | 모달리티 (US, CT, MR, etc.) |
+  | seriesNumber | number | No | 시리즈 번호 |
+  | seriesDescription | string | No | 시리즈 설명 |
+  | bodyPartExamined | string | No | 검사 부위 (HEART, CHEST, BRAIN, etc.) |
+  | manufacturer | string | No | 장비 제조사 |
+  | manufacturerModelName | string | No | 장비 모델명 |
+
+  ## Request Example
+
+  ```json
+  {
+    "studyId": 1,
+    "seriesInstanceUid": "1.2.840.113619.2.1.1.20260108",
+    "modality": "US",
+    "seriesNumber": 1,
+    "seriesDescription": "4 Chamber View",
+    "bodyPartExamined": "HEART",
+    "manufacturer": "GE Healthcare",
+    "manufacturerModelName": "VIVID E95"
+  }
+  ```
+
+  ## Response
+
+  ### Success (201)
+  ```json
+  {
+    "code": 201000,
+    "message": "Created",
+    "data": {
+      "id": 1,
+      "uuid": "01936b6c-1234-7abc-def0-123456789abc",
+      "studyId": 1,
+      "studyDescription": "Echocardiogram",
+      "patientName": "Hong Gildong",
+      "seriesInstanceUid": "1.2.840.113619.2.1.1.20260108",
+      "modality": "US",
+      "seriesDescription": "4 Chamber View",
+      "bodyPartExamined": "HEART",
+      "manufacturer": "GE Healthcare",
+      "manufacturerModelName": "VIVID E95",
+      "seriesNumber": 1,
+      "numberOfInstances": 0,
+      "createdAt": "2026-01-08T10:30:00",
+      "updatedAt": "2026-01-08T10:30:00",
+      "tenantId": 1
+    }
+  }
+  ```
+
+  ### Error (404) - Study Not Found
+  ```json
+  {
+    "code": 404000,
+    "message": "Study not found",
+    "data": null
+  }
+  ```
+}

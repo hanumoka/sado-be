@@ -1,0 +1,29 @@
+meta {
+  name: Download via Proxy
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/files/{{fileId}}/proxy
+  body: none
+  auth: none
+}
+
+docs {
+  # Download via Backend Proxy
+
+  Download a file through backend proxy with audit logging.
+
+  ## Path Parameters
+  - `fileId`: File ID
+
+  ## Features
+  - Tenant isolation via Hibernate Filter
+  - Audit logging (user, IP, user-agent, timestamp)
+  - Chunked transfer encoding (8KB chunks)
+  - HIPAA/GDPR compliant
+
+  ## Response
+  File stream with appropriate content type.
+}

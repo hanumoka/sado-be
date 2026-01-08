@@ -1,0 +1,26 @@
+meta {
+  name: WADO-RS Get Instance Metadata
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/dicomweb/studies/{{studyUID}}/series/{{seriesUID}}/instances/{{sopInstanceUID}}/metadata
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/dicom+json
+}
+
+docs {
+  # WADO-RS: Get Instance Metadata
+
+  Retrieve metadata for a specific instance.
+
+  ## Path Parameters
+  - `studyUID`: Study Instance UID
+  - `seriesUID`: Series Instance UID
+  - `sopInstanceUID`: SOP Instance UID
+}

@@ -1,0 +1,100 @@
+meta {
+  name: Update Series
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/series/{{seriesId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "seriesInstanceUid": "1.2.840.113619.2.1.1.20260108",
+    "modality": "US",
+    "seriesNumber": 1,
+    "seriesDescription": "4 Chamber View - Updated",
+    "bodyPartExamined": "HEART",
+    "manufacturer": "GE Healthcare",
+    "manufacturerModelName": "VIVID E95"
+  }
+}
+
+docs {
+  # Update Series
+
+  시리즈 정보를 수정합니다.
+
+  **Note**: studyId는 수정 불가합니다. Series는 생성 후 다른 Study로 이동할 수 없습니다.
+
+  ## Path Parameters
+
+  | Parameter | Type | Required | Description |
+  |-----------|------|----------|-------------|
+  | seriesId | number | **Yes** | 시리즈 ID |
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | seriesInstanceUid | string | No | DICOM Series Instance UID |
+  | modality | string | No | 모달리티 (US, CT, MR, etc.) |
+  | seriesNumber | number | No | 시리즈 번호 |
+  | seriesDescription | string | No | 시리즈 설명 |
+  | bodyPartExamined | string | No | 검사 부위 |
+  | manufacturer | string | No | 장비 제조사 |
+  | manufacturerModelName | string | No | 장비 모델명 |
+
+  ## Request Example
+
+  ```json
+  {
+    "seriesInstanceUid": "1.2.840.113619.2.1.1.20260108",
+    "modality": "US",
+    "seriesNumber": 1,
+    "seriesDescription": "4 Chamber View - Updated",
+    "bodyPartExamined": "HEART",
+    "manufacturer": "GE Healthcare",
+    "manufacturerModelName": "VIVID E95"
+  }
+  ```
+
+  ## Response
+
+  ### Success (200)
+  ```json
+  {
+    "code": 200000,
+    "message": "OK",
+    "data": {
+      "id": 1,
+      "uuid": "01936b6c-1234-7abc-def0-123456789abc",
+      "studyId": 1,
+      "studyDescription": "Echocardiogram",
+      "patientName": "Hong Gildong",
+      "seriesInstanceUid": "1.2.840.113619.2.1.1.20260108",
+      "modality": "US",
+      "seriesDescription": "4 Chamber View - Updated",
+      "bodyPartExamined": "HEART",
+      "manufacturer": "GE Healthcare",
+      "manufacturerModelName": "VIVID E95",
+      "seriesNumber": 1,
+      "numberOfInstances": 30,
+      "createdAt": "2026-01-08T10:30:00",
+      "updatedAt": "2026-01-08T11:00:00",
+      "tenantId": 1
+    }
+  }
+  ```
+
+  ### Error (404) - Not Found
+  ```json
+  {
+    "code": 404000,
+    "message": "Series not found",
+    "data": null
+  }
+  ```
+}

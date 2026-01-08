@@ -1,0 +1,120 @@
+meta {
+  name: Create Instance
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/instances
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "seriesId": 1,
+    "sopInstanceUid": "1.2.840.113619.2.1.1.1.20260108",
+    "sopClassUid": "1.2.840.10008.5.1.4.1.1.3.1",
+    "instanceNumber": 1,
+    "numberOfFrames": 30,
+    "rows": 768,
+    "columns": 1024,
+    "frameRate": 30.0,
+    "frameRateSource": "MEASURED",
+    "storagePath": "minipacs/2026/01/08/patient-1/study-1/series-1/instance-1.dcm",
+    "fileSize": 2048576
+  }
+}
+
+docs {
+  # Create Instance
+
+  새 영상(Instance) 메타데이터를 생성합니다.
+
+  **Note**: 실제 DICOM 파일 업로드는 STOW-RS (`/dicomweb/studies`) 사용을 권장합니다.
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | seriesId | number | **Yes** | Series ID |
+  | sopInstanceUid | string | No | DICOM SOP Instance UID (자동 생성 가능) |
+  | sopClassUid | string | No | DICOM SOP Class UID |
+  | instanceNumber | number | No | Instance 번호 |
+  | numberOfFrames | number | No | 프레임 수 (동영상인 경우) |
+  | rows | number | No | 이미지 높이 (픽셀) |
+  | columns | number | No | 이미지 너비 (픽셀) |
+  | frameRate | number | No | 프레임 레이트 (fps) |
+  | frameRateSource | string | No | 프레임 레이트 소스 (MEASURED, DERIVED, UNKNOWN) |
+  | storagePath | string | No | 저장 경로 |
+  | fileSize | number | No | 파일 크기 (bytes) |
+
+  ## Request Example
+
+  ```json
+  {
+    "seriesId": 1,
+    "sopInstanceUid": "1.2.840.113619.2.1.1.1.20260108",
+    "sopClassUid": "1.2.840.10008.5.1.4.1.1.3.1",
+    "instanceNumber": 1,
+    "numberOfFrames": 30,
+    "rows": 768,
+    "columns": 1024,
+    "frameRate": 30.0,
+    "frameRateSource": "MEASURED",
+    "storagePath": "minipacs/2026/01/08/patient-1/study-1/series-1/instance-1.dcm",
+    "fileSize": 2048576
+  }
+  ```
+
+  ## DICOM SOP Class UIDs (Common)
+
+  | UID | Description |
+  |-----|-------------|
+  | 1.2.840.10008.5.1.4.1.1.3.1 | Ultrasound Multi-frame Image |
+  | 1.2.840.10008.5.1.4.1.1.6.1 | Ultrasound Image |
+  | 1.2.840.10008.5.1.4.1.1.2 | CT Image |
+  | 1.2.840.10008.5.1.4.1.1.4 | MR Image |
+
+  ## Response
+
+  ### Success (201)
+  ```json
+  {
+    "code": 201000,
+    "message": "Created",
+    "data": {
+      "id": 1,
+      "uuid": "01936b6c-1234-7abc-def0-123456789abc",
+      "seriesId": 1,
+      "sopInstanceUid": "1.2.840.113619.2.1.1.1.20260108",
+      "sopClassUid": "1.2.840.10008.5.1.4.1.1.3.1",
+      "rows": 768,
+      "columns": 1024,
+      "numberOfFrames": 30,
+      "frameRate": 30.0,
+      "frameRateSource": "MEASURED",
+      "instanceNumber": 1,
+      "storagePath": "minipacs/2026/01/08/patient-1/study-1/series-1/instance-1.dcm",
+      "storageUri": null,
+      "fileSize": 2048576,
+      "transcodingStatus": null,
+      "thumbnailPath": null,
+      "videoPath": null,
+      "storageTier": "HOT",
+      "createdAt": "2026-01-08T10:30:00",
+      "updatedAt": "2026-01-08T10:30:00",
+      "tenantId": 1
+    }
+  }
+  ```
+
+  ### Error (404) - Series Not Found
+  ```json
+  {
+    "code": 404000,
+    "message": "Series not found",
+    "data": null
+  }
+  ```
+}

@@ -1,0 +1,116 @@
+meta {
+  name: Transition File Tier
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/admin/files/{{fileId}}/tier
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "tier": "WARM",
+    "reason": "Cost optimization for old studies"
+  }
+}
+
+docs {
+  # Manual Tier Transition
+
+  파일의 스토리지 티어를 수동으로 전환합니다.
+
+  **Note**: 자동 티어링 스케줄러와 별개로 관리자가 수동으로 즉시 전환할 때 사용합니다.
+
+  ## Path Parameters
+
+  | Parameter | Type | Required | Description |
+  |-----------|------|----------|-------------|
+  | fileId | number | **Yes** | 파일 ID (Instance의 Storage File ID) |
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | tier | string | **Yes** | 목표 티어 (HOT, WARM, COLD) |
+  | reason | string | No | 전환 사유 (감사 로그용) |
+
+  ## Storage Tiers
+
+  | Value | Description | Use Case |
+  |-------|-------------|----------|
+  | HOT | 빠른 접근 | 최근 데이터, 자주 조회되는 영상 |
+  | WARM | 보통 접근 | 30일~1년된 데이터 |
+  | COLD | 아카이브 | 오래된 데이터, 법적 보관 의무 |
+
+  ## Request Example
+
+  ```json
+  {
+    "tier": "WARM",
+    "reason": "Cost optimization for old studies"
+  }
+  ```
+
+  ## Response
+
+  ### Success (200)
+  ```json
+  {
+    "code": 200000,
+    "message": "OK",
+    "data": {
+      "id": 1,
+      "storagePath": "minipacs/2026/01/08/patient-1/study-1/series-1/instance-1.dcm",
+      "fileCategory": "DICOM",
+      "storageTier": "WARM",
+      "fileSize": 2048576,
+      "lastAccessedAt": "2026-01-08T10:30:00",
+      "createdAt": "2026-01-08T09:00:00"
+    }
+  }
+  ```
+
+  ### Response Fields (FileAssetSummary)
+
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | id | number | 파일 ID |
+  | storagePath | string | 저장소 경로 |
+  | fileCategory | string | 파일 카테고리 (DICOM, THUMBNAIL, VIDEO) |
+  | storageTier | string | 현재 티어 (전환 후) |
+  | fileSize | number | 파일 크기 (bytes) |
+  | lastAccessedAt | string | 마지막 접근 일시 |
+  | createdAt | string | 생성 일시 |
+
+  ### Error (404) - File Not Found
+  ```json
+  {
+    "code": 404000,
+    "message": "File not found",
+    "data": null
+  }
+  ```
+
+  ### Error (400) - Invalid Tier Transition
+  ```json
+  {
+    "code": 400000,
+    "message": "Cannot transition from COLD to HOT directly",
+    "data": null
+  }
+  ```
+
+  ## Tier Transition Rules
+
+  | From | To | Allowed | Notes |
+  |------|-----|---------|-------|
+  | HOT | WARM | Yes | - |
+  | HOT | COLD | Yes | Skip WARM |
+  | WARM | HOT | Yes | Restore |
+  | WARM | COLD | Yes | - |
+  | COLD | WARM | Yes | - |
+  | COLD | HOT | No | Must go through WARM first |
+}

@@ -1,0 +1,39 @@
+meta {
+  name: STOW-RS Store Instance
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/dicomweb/studies
+  body: multipartForm
+  auth: none
+}
+
+body:multipart-form {
+  file: @file(sample.dcm)
+}
+
+headers {
+  Accept: application/dicom+json
+}
+
+docs {
+  # STOW-RS: Store Instance
+
+  Upload DICOM files using DICOMweb STOW-RS.
+
+  ## Request Body
+  - `file`: DICOM file(s) (multipart/form-data)
+
+  ## Response Status Codes
+  - 200: Success
+  - 409: Duplicate file
+  - 413: File size exceeds limit (500MB)
+  - 415: Not a DICOM file
+  - 422: Invalid DICOM file
+  - 429: Too many concurrent uploads
+
+  ## Response
+  DICOM JSON format with stored instance references.
+}

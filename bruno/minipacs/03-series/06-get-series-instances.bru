@@ -1,0 +1,20 @@
+meta {
+  name: Get Series Instances
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/series/{{seriesId}}/instances
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Series Instances
+
+  Retrieve all instances for a specific series.
+
+  ## Path Parameters
+  - `id`: Series ID
+}

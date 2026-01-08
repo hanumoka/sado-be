@@ -1,0 +1,102 @@
+meta {
+  name: Update Tiering Policy
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/admin/tiering/policy
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "hotToWarmDays": 30,
+    "warmToColdDays": 365,
+    "schedulerEnabled": true,
+    "hotToWarmSchedule": "0 0 3 * * *",
+    "warmToColdSchedule": "0 0 4 * * *"
+  }
+}
+
+docs {
+  # Update Tiering Policy
+
+  스토리지 티어링 정책을 업데이트합니다.
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | hotToWarmDays | number | **Yes** | HOT → WARM 전환까지 경과일 (기본: 30일) |
+  | warmToColdDays | number | **Yes** | WARM → COLD 전환까지 경과일 (기본: 365일) |
+  | schedulerEnabled | boolean | **Yes** | 자동 티어링 스케줄러 활성화 여부 |
+  | hotToWarmSchedule | string | No | HOT → WARM 스케줄 (Cron 표현식) |
+  | warmToColdSchedule | string | No | WARM → COLD 스케줄 (Cron 표현식) |
+
+  ## Cron Expression Format
+
+  ```
+  초 분 시 일 월 요일
+  0  0  3  *  *  *     = 매일 새벽 3시
+  0  0  4  *  *  *     = 매일 새벽 4시
+  0  0  2  *  *  SUN   = 매주 일요일 새벽 2시
+  ```
+
+  ## Storage Tier Strategy
+
+  | Tier | Description | Access Speed | Storage Cost |
+  |------|-------------|--------------|--------------|
+  | HOT | 최근 데이터 (30일 이내) | 빠름 | 높음 |
+  | WARM | 중간 데이터 (30일~365일) | 보통 | 중간 |
+  | COLD | 오래된 데이터 (365일 이상) | 느림 | 낮음 |
+
+  ## Request Example
+
+  ```json
+  {
+    "hotToWarmDays": 30,
+    "warmToColdDays": 365,
+    "schedulerEnabled": true,
+    "hotToWarmSchedule": "0 0 3 * * *",
+    "warmToColdSchedule": "0 0 4 * * *"
+  }
+  ```
+
+  ## Response
+
+  ### Success (200)
+  ```json
+  {
+    "code": 200000,
+    "message": "OK",
+    "data": {
+      "hotToWarmDays": 30,
+      "warmToColdDays": 365,
+      "schedulerEnabled": true,
+      "hotToWarmSchedule": "0 0 3 * * *",
+      "warmToColdSchedule": "0 0 4 * * *"
+    }
+  }
+  ```
+
+  ### Response Fields (TieringPolicies)
+
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | hotToWarmDays | number | HOT → WARM 전환 일수 |
+  | warmToColdDays | number | WARM → COLD 전환 일수 |
+  | schedulerEnabled | boolean | 스케줄러 활성화 상태 |
+  | hotToWarmSchedule | string | HOT → WARM Cron 스케줄 |
+  | warmToColdSchedule | string | WARM → COLD Cron 스케줄 |
+
+  ### Error (400) - Invalid Schedule
+  ```json
+  {
+    "code": 400000,
+    "message": "Invalid cron expression",
+    "data": null
+  }
+  ```
+}

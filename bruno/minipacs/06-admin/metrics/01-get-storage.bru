@@ -1,0 +1,20 @@
+meta {
+  name: Get Storage Metrics
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/admin/metrics/storage
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Storage Metrics
+
+  Retrieve storage metrics by tier (HOT/WARM/COLD).
+
+  ## Response
+  Includes file counts and sizes per tier.
+}

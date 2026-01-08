@@ -1,0 +1,24 @@
+meta {
+  name: Get Tiering Policies
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/admin/tiering/policies
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Tiering Policies
+
+  Retrieve current storage tiering policies.
+
+  ## Response
+  Includes:
+  - HOT to WARM transition days
+  - WARM to COLD transition days
+  - Scheduler enabled status
+  - Cron schedules
+}

@@ -1,0 +1,27 @@
+meta {
+  name: Get Storage Trends
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/admin/metrics/trends
+  body: none
+  auth: none
+}
+
+params:query {
+  range: 7d
+}
+
+docs {
+  # Get Storage Trends
+
+  Retrieve storage usage trends over time.
+
+  ## Query Parameters
+  - `range`: Time range (7d, 30d, 90d)
+
+  ## Response
+  Time series data for storage metrics.
+}

@@ -1,0 +1,135 @@
+meta {
+  name: Update Instance
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/instances/{{instanceId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "sopInstanceUid": "1.2.840.113619.2.1.1.1.20260108",
+    "sopClassUid": "1.2.840.10008.5.1.4.1.1.3.1",
+    "instanceNumber": 1,
+    "numberOfFrames": 30,
+    "rows": 768,
+    "columns": 1024,
+    "frameRate": 30.0,
+    "frameRateSource": "MEASURED",
+    "storagePath": "minipacs/2026/01/08/patient-1/study-1/series-1/instance-1.dcm",
+    "fileSize": 2048576,
+    "transcodingStatus": "COMPLETED",
+    "thumbnailPath": "minipacs/.../instance-1-thumb.png",
+    "videoPath": "minipacs/.../instance-1.mp4",
+    "storageTier": "HOT"
+  }
+}
+
+docs {
+  # Update Instance
+
+  영상(Instance) 정보를 수정합니다.
+
+  **Note**: seriesId는 수정 불가합니다. Instance는 생성 후 다른 Series로 이동할 수 없습니다.
+
+  ## Path Parameters
+
+  | Parameter | Type | Required | Description |
+  |-----------|------|----------|-------------|
+  | instanceId | number | **Yes** | Instance ID |
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | sopInstanceUid | string | No | DICOM SOP Instance UID |
+  | sopClassUid | string | No | DICOM SOP Class UID |
+  | instanceNumber | number | No | Instance 번호 |
+  | numberOfFrames | number | No | 프레임 수 |
+  | rows | number | No | 이미지 높이 (픽셀) |
+  | columns | number | No | 이미지 너비 (픽셀) |
+  | frameRate | number | No | 프레임 레이트 (fps) |
+  | frameRateSource | string | No | 프레임 레이트 소스 |
+  | storagePath | string | No | 저장 경로 |
+  | fileSize | number | No | 파일 크기 (bytes) |
+  | transcodingStatus | string | No | 트랜스코딩 상태 |
+  | thumbnailPath | string | No | 썸네일 경로 |
+  | videoPath | string | No | 비디오 경로 |
+  | storageTier | string | No | 저장소 계층 (HOT, WARM, COLD) |
+
+  ## Transcoding Status Values
+
+  | Value | Description |
+  |-------|-------------|
+  | PENDING | 대기 중 |
+  | IN_PROGRESS | 처리 중 |
+  | COMPLETED | 완료 |
+  | FAILED | 실패 |
+
+  ## Request Example
+
+  ```json
+  {
+    "sopInstanceUid": "1.2.840.113619.2.1.1.1.20260108",
+    "sopClassUid": "1.2.840.10008.5.1.4.1.1.3.1",
+    "instanceNumber": 1,
+    "numberOfFrames": 30,
+    "rows": 768,
+    "columns": 1024,
+    "frameRate": 30.0,
+    "frameRateSource": "MEASURED",
+    "storagePath": "minipacs/2026/01/08/patient-1/study-1/series-1/instance-1.dcm",
+    "fileSize": 2048576,
+    "transcodingStatus": "COMPLETED",
+    "thumbnailPath": "minipacs/.../instance-1-thumb.png",
+    "videoPath": "minipacs/.../instance-1.mp4",
+    "storageTier": "HOT"
+  }
+  ```
+
+  ## Response
+
+  ### Success (200)
+  ```json
+  {
+    "code": 200000,
+    "message": "OK",
+    "data": {
+      "id": 1,
+      "uuid": "01936b6c-1234-7abc-def0-123456789abc",
+      "seriesId": 1,
+      "sopInstanceUid": "1.2.840.113619.2.1.1.1.20260108",
+      "sopClassUid": "1.2.840.10008.5.1.4.1.1.3.1",
+      "rows": 768,
+      "columns": 1024,
+      "numberOfFrames": 30,
+      "frameRate": 30.0,
+      "frameRateSource": "MEASURED",
+      "instanceNumber": 1,
+      "storagePath": "minipacs/2026/01/08/patient-1/study-1/series-1/instance-1.dcm",
+      "storageUri": "http://localhost:10405/minipacs/...",
+      "fileSize": 2048576,
+      "transcodingStatus": "COMPLETED",
+      "thumbnailPath": "minipacs/.../instance-1-thumb.png",
+      "videoPath": "minipacs/.../instance-1.mp4",
+      "storageTier": "HOT",
+      "createdAt": "2026-01-08T10:30:00",
+      "updatedAt": "2026-01-08T11:00:00",
+      "tenantId": 1
+    }
+  }
+  ```
+
+  ### Error (404) - Not Found
+  ```json
+  {
+    "code": 404000,
+    "message": "Instance not found",
+    "data": null
+  }
+  ```
+}

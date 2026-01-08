@@ -1,0 +1,23 @@
+meta {
+  name: Get Patient Studies
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/patients/{{patientId}}/studies
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Patient Studies
+
+  Retrieve all studies for a specific patient.
+
+  ## Path Parameters
+  - `id`: Patient ID
+
+  ## Response
+  Returns a list of Study objects associated with the patient.
+}

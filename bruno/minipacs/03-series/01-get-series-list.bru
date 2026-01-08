@@ -1,0 +1,91 @@
+meta {
+  name: Get Series List
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/series
+  body: none
+  auth: none
+}
+
+params:query {
+  ~modality: US
+  ~studyId: 1
+}
+
+docs {
+  # Get Series List
+
+  시리즈 목록을 조회합니다.
+
+  ## Query Parameters
+
+  | Parameter | Type | Required | Description |
+  |-----------|------|----------|-------------|
+  | modality | string | No | 모달리티로 필터링 (US, CT, MR, XA, etc.) |
+  | studyId | number | No | Study ID로 필터링 |
+
+  ## Modality Codes
+
+  | Code | Description |
+  |------|-------------|
+  | US | Ultrasound (초음파) |
+  | CT | Computed Tomography |
+  | MR | Magnetic Resonance |
+  | XA | X-Ray Angiography |
+  | CR | Computed Radiography |
+  | DX | Digital Radiography |
+
+  ## Response
+
+  ### Success (200)
+  ```json
+  {
+    "code": 200000,
+    "message": "OK",
+    "data": [
+      {
+        "id": 1,
+        "uuid": "01936b6c-1234-7abc-def0-123456789abc",
+        "studyId": 1,
+        "studyDescription": "Echocardiogram",
+        "patientName": "Hong Gildong",
+        "seriesInstanceUid": "1.2.840.113619.2.1.1.20260108",
+        "modality": "US",
+        "seriesDescription": "4 Chamber View",
+        "bodyPartExamined": "HEART",
+        "manufacturer": "GE Healthcare",
+        "manufacturerModelName": "VIVID E95",
+        "seriesNumber": 1,
+        "numberOfInstances": 30,
+        "createdAt": "2026-01-08T10:30:00",
+        "updatedAt": "2026-01-08T10:30:00",
+        "tenantId": 1
+      }
+    ]
+  }
+  ```
+
+  ### Response Fields
+
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | id | number | 시리즈 고유 ID |
+  | uuid | string | UUID v7 (외부 노출용) |
+  | studyId | number | Study ID |
+  | studyDescription | string | 검사 설명 |
+  | patientName | string | 환자 이름 |
+  | seriesInstanceUid | string | DICOM Series Instance UID |
+  | modality | string | 모달리티 (US, CT, MR, etc.) |
+  | seriesDescription | string | 시리즈 설명 |
+  | bodyPartExamined | string | 검사 부위 |
+  | manufacturer | string | 장비 제조사 |
+  | manufacturerModelName | string | 장비 모델명 |
+  | seriesNumber | number | 시리즈 번호 |
+  | numberOfInstances | number | 영상 수 |
+  | createdAt | string | 생성 일시 |
+  | updatedAt | string | 수정 일시 |
+  | tenantId | number | 테넌트 ID |
+}

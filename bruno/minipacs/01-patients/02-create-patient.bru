@@ -1,0 +1,89 @@
+meta {
+  name: Create Patient
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/patients
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "dicomPatientId": "PAT001",
+    "issuerOfPatientId": "HOSPITAL_A",
+    "patientName": "Hong Gildong",
+    "patientBirthDate": "1990-01-15",
+    "patientSex": "M",
+    "emrPatientId": "EMR001"
+  }
+}
+
+docs {
+  # Create Patient
+
+  새 환자를 생성합니다.
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | dicomPatientId | string | **Yes** | DICOM Patient ID |
+  | issuerOfPatientId | string | No | Patient ID 발급 기관 |
+  | patientName | string | No | 환자 이름 |
+  | patientBirthDate | string | No | 생년월일 (YYYY-MM-DD) |
+  | patientSex | string | No | 성별 (M: 남성, F: 여성, O: 기타) |
+  | emrPatientId | string | No | EMR 환자 ID |
+
+  ## Request Example
+
+  ```json
+  {
+    "dicomPatientId": "PAT001",
+    "issuerOfPatientId": "HOSPITAL_A",
+    "patientName": "Hong Gildong",
+    "patientBirthDate": "1990-01-15",
+    "patientSex": "M",
+    "emrPatientId": "EMR001"
+  }
+  ```
+
+  ## Response
+
+  ### Success (201)
+  ```json
+  {
+    "code": 201000,
+    "message": "Created",
+    "data": {
+      "id": 1,
+      "uuid": "01936b6c-1234-7abc-def0-123456789abc",
+      "dicomPatientId": "PAT001",
+      "issuerOfPatientId": "HOSPITAL_A",
+      "issuerTypeCode": null,
+      "patientName": "Hong Gildong",
+      "patientBirthDate": "1990-01-15",
+      "patientSex": "M",
+      "emrPatientId": "EMR001",
+      "matchingConfidence": null,
+      "matchingStatus": null,
+      "studiesCount": 0,
+      "lastStudyDate": null,
+      "createdAt": "2026-01-08T10:30:00",
+      "updatedAt": "2026-01-08T10:30:00",
+      "tenantId": 1
+    }
+  }
+  ```
+
+  ### Error (400) - Validation Error
+  ```json
+  {
+    "code": 400000,
+    "message": "Validation failed",
+    "data": null
+  }
+  ```
+}

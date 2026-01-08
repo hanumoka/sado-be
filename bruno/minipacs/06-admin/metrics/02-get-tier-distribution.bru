@@ -1,0 +1,23 @@
+meta {
+  name: Get Tier Distribution
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/admin/metrics/tier-distribution
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Tier Distribution
+
+  Retrieve file size distribution by storage tier.
+
+  ## Response
+  Includes:
+  - HOT tier size
+  - WARM tier size
+  - COLD tier size
+}

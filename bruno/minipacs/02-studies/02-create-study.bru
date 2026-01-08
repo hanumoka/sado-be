@@ -1,0 +1,88 @@
+meta {
+  name: Create Study
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/studies
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "patientId": 1,
+    "studyInstanceUid": "1.2.840.113619.2.1.20260108",
+    "studyDate": "2026-01-08",
+    "studyDescription": "Echocardiogram"
+  }
+}
+
+docs {
+  # Create Study
+
+  새 검사를 생성합니다.
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | patientId | number | **Yes** | 환자 ID |
+  | studyInstanceUid | string | No | DICOM Study Instance UID (자동 생성 가능) |
+  | studyDate | string | No | 검사 날짜 (YYYY-MM-DD) |
+  | studyDescription | string | No | 검사 설명 |
+
+  ## Request Example
+
+  ```json
+  {
+    "patientId": 1,
+    "studyInstanceUid": "1.2.840.113619.2.1.20260108",
+    "studyDate": "2026-01-08",
+    "studyDescription": "Echocardiogram"
+  }
+  ```
+
+  ## Response
+
+  ### Success (201)
+  ```json
+  {
+    "code": 201000,
+    "message": "Created",
+    "data": {
+      "id": 1,
+      "uuid": "01936b6c-1234-7abc-def0-123456789abc",
+      "patientId": 1,
+      "patientName": "Hong Gildong",
+      "studyInstanceUid": "1.2.840.113619.2.1.20260108",
+      "studyDate": "2026-01-08",
+      "studyDescription": "Echocardiogram",
+      "numberOfSeries": 0,
+      "numberOfInstances": 0,
+      "createdAt": "2026-01-08T10:30:00",
+      "updatedAt": "2026-01-08T10:30:00",
+      "tenantId": 1
+    }
+  }
+  ```
+
+  ### Error (400) - Validation Error
+  ```json
+  {
+    "code": 400000,
+    "message": "Patient ID is required",
+    "data": null
+  }
+  ```
+
+  ### Error (404) - Patient Not Found
+  ```json
+  {
+    "code": 404000,
+    "message": "Patient not found",
+    "data": null
+  }
+  ```
+}

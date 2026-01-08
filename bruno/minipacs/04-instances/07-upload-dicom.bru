@@ -1,0 +1,26 @@
+meta {
+  name: Upload DICOM (Deprecated)
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/instances/upload
+  body: multipartForm
+  auth: none
+}
+
+body:multipart-form {
+  file: @file(sample.dcm)
+}
+
+docs {
+  # Upload DICOM (Deprecated)
+
+  Upload a DICOM file directly.
+
+  **Note**: This endpoint is deprecated. Use STOW-RS (/dicomweb/studies) instead.
+
+  ## Request Body
+  - `file`: DICOM file (multipart/form-data)
+}

@@ -1,0 +1,32 @@
+meta {
+  name: QIDO-RS Search Instances
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/dicomweb/studies/{{studyUID}}/series/{{seriesUID}}/instances
+  body: none
+  auth: none
+}
+
+params:query {
+  ~SOPInstanceUID:
+}
+
+headers {
+  Accept: application/dicom+json
+}
+
+docs {
+  # QIDO-RS: Search Instances
+
+  Search for instances within a series using DICOMweb QIDO-RS.
+
+  ## Path Parameters
+  - `studyUID`: Study Instance UID
+  - `seriesUID`: Series Instance UID
+
+  ## Query Parameters
+  - `SOPInstanceUID`: Filter by SOP Instance UID
+}

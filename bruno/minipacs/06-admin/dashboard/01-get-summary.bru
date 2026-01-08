@@ -1,0 +1,23 @@
+meta {
+  name: Get Dashboard Summary
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/admin/dashboard/summary
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Dashboard Summary
+
+  Retrieve complete admin dashboard statistics.
+
+  ## Response
+  Includes:
+  - Total patients, studies, series, instances
+  - Storage summary by tier
+  - Recent activity
+}

@@ -1,0 +1,25 @@
+meta {
+  name: WADO-RS Get Series Metadata
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/dicomweb/studies/{{studyUID}}/series/{{seriesUID}}/metadata
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/dicom+json
+}
+
+docs {
+  # WADO-RS: Get Series Metadata
+
+  Retrieve metadata for all instances in a series.
+
+  ## Path Parameters
+  - `studyUID`: Study Instance UID
+  - `seriesUID`: Series Instance UID
+}

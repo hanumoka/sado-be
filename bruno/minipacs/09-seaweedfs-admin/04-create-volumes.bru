@@ -1,0 +1,32 @@
+meta {
+  name: Create Volumes
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/admin/seaweedfs/volumes
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "count": 1,
+    "dataCenter": "",
+    "rack": "",
+    "replication": ""
+  }
+}
+
+docs {
+  # Create SeaweedFS Volumes
+
+  Create new volumes in SeaweedFS cluster.
+
+  ## Request Body
+  - `count`: Number of volumes to create
+  - `dataCenter`: Target data center (optional)
+  - `rack`: Target rack (optional)
+  - `replication`: Replication strategy (optional)
+}

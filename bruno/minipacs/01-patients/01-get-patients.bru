@@ -1,0 +1,80 @@
+meta {
+  name: Get Patients
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/patients
+  body: none
+  auth: none
+}
+
+params:query {
+  ~name: Hong
+  ~gender: M
+}
+
+docs {
+  # Get Patients
+
+  환자 목록을 조회합니다.
+
+  ## Query Parameters
+
+  | Parameter | Type | Required | Description |
+  |-----------|------|----------|-------------|
+  | name | string | No | 환자 이름 (부분 일치) |
+  | gender | string | No | 성별 (M: 남성, F: 여성, O: 기타) |
+
+  ## Response
+
+  ### Success (200)
+  ```json
+  {
+    "code": 200000,
+    "message": "OK",
+    "data": [
+      {
+        "id": 1,
+        "uuid": "01936b6c-1234-7abc-def0-123456789abc",
+        "dicomPatientId": "PAT001",
+        "issuerOfPatientId": "HOSPITAL_A",
+        "issuerTypeCode": "ISO",
+        "patientName": "Hong Gildong",
+        "patientBirthDate": "1990-01-15",
+        "patientSex": "M",
+        "emrPatientId": "EMR001",
+        "matchingConfidence": 0.95,
+        "matchingStatus": "AUTO_MATCHED",
+        "studiesCount": 5,
+        "lastStudyDate": "2026-01-08",
+        "createdAt": "2026-01-08T10:30:00",
+        "updatedAt": "2026-01-08T10:30:00",
+        "tenantId": 1
+      }
+    ]
+  }
+  ```
+
+  ### Response Fields
+
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | id | number | 환자 고유 ID |
+  | uuid | string | UUID v7 (외부 노출용) |
+  | dicomPatientId | string | DICOM Patient ID |
+  | issuerOfPatientId | string | Patient ID 발급 기관 |
+  | issuerTypeCode | string | 발급 기관 유형 코드 |
+  | patientName | string | 환자 이름 |
+  | patientBirthDate | string | 생년월일 (YYYY-MM-DD) |
+  | patientSex | string | 성별 (M/F/O) |
+  | emrPatientId | string | EMR 환자 ID |
+  | matchingConfidence | number | 매칭 신뢰도 (0.0 ~ 1.0) |
+  | matchingStatus | string | 매칭 상태 (AUTO_MATCHED, MANUAL_MATCHED, UNMATCHED) |
+  | studiesCount | number | 검사 수 |
+  | lastStudyDate | string | 마지막 검사 날짜 |
+  | createdAt | string | 생성 일시 |
+  | updatedAt | string | 수정 일시 |
+  | tenantId | number | 테넌트 ID |
+}

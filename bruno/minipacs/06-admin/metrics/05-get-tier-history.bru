@@ -1,0 +1,31 @@
+meta {
+  name: Get Tier History
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/admin/metrics/tier-history
+  body: none
+  auth: none
+}
+
+params:query {
+  days: 30
+  page: 0
+  size: 20
+}
+
+docs {
+  # Get Tier Transition History
+
+  Retrieve tier transition history with pagination.
+
+  ## Query Parameters
+  - `days`: Number of days to look back (default: 30)
+  - `page`: Page number (default: 0)
+  - `size`: Page size (default: 20)
+
+  ## Response
+  Paginated list of tier transitions.
+}

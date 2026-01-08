@@ -1,0 +1,20 @@
+meta {
+  name: Delete Series
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/series/{{seriesId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Delete Series
+
+  Delete a series record.
+
+  ## Path Parameters
+  - `id`: Series ID
+}

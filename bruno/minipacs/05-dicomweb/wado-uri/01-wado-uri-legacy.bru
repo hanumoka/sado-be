@@ -1,0 +1,37 @@
+meta {
+  name: WADO-URI Legacy
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/dicomweb/wado
+  body: none
+  auth: none
+}
+
+params:query {
+  requestType: WADO
+  studyUID: {{studyUID}}
+  seriesUID: {{seriesUID}}
+  objectUID: {{sopInstanceUID}}
+}
+
+headers {
+  Accept: application/dicom
+}
+
+docs {
+  # WADO-URI: Legacy Support
+  
+  Retrieve DICOM objects using WADO-URI (legacy protocol).
+  
+  ## Query Parameters
+  - `requestType`: Must be "WADO"
+  - `studyUID`: Study Instance UID
+  - `seriesUID`: Series Instance UID
+  - `objectUID`: SOP Instance UID
+  
+  ## Response
+  DICOM file or rendered image based on accept headers.
+}

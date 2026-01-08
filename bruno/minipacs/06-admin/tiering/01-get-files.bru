@@ -1,0 +1,28 @@
+meta {
+  name: Get Tier Files
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/admin/tiering/files
+  body: none
+  auth: none
+}
+
+params:query {
+  tier: HOT
+  page: 0
+  size: 20
+}
+
+docs {
+  # Get Files by Tier
+
+  Retrieve files in a specific storage tier.
+
+  ## Query Parameters
+  - `tier`: Storage tier (HOT, WARM, COLD)
+  - `page`: Page number (default: 0)
+  - `size`: Page size (default: 20)
+}
