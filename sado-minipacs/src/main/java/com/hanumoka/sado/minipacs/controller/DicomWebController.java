@@ -528,6 +528,73 @@ public class DicomWebController {
     }
 
     /**
+     * WADO-RS: Frame BulkData (Raw Pixel Data)
+     *
+     * <p>DICOM 파일의 특정 프레임을 raw 픽셀 데이터로 반환합니다.
+     * Cornerstone3D의 wadors: scheme에서 사용됩니다.
+     *
+     * <p>응답 형식:
+     * <ul>
+     *   <li>Content-Type: application/octet-stream</li>
+     *   <li>Body: DICOM 파일 전체 (Cornerstone이 프레임 추출)</li>
+     * </ul>
+     *
+     * @param studyUID Study Instance UID
+     * @param seriesUID Series Instance UID
+     * @param sopInstanceUID SOP Instance UID
+     * @param frameNumber 프레임 번호 (1부터 시작)
+     * @return DICOM 파일 바이트
+     */
+    @GetMapping(value = "/studies/{studyUID}/series/{seriesUID}/instances/{sopInstanceUID}/frames/{frameNumber}",
+            produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @Operation(summary = "WADO-RS: Frame BulkData", description = "DICOM 멀티프레임의 특정 프레임을 raw 픽셀 데이터로 반환합니다 (Cornerstone3D wadors: 지원).")
+    public ResponseEntity<byte[]> retrieveFrame(
+            @Parameter(description = "Study Instance UID") @PathVariable String studyUID,
+            @Parameter(description = "Series Instance UID") @PathVariable String seriesUID,
+            @Parameter(description = "SOP Instance UID") @PathVariable String sopInstanceUID,
+            @Parameter(description = "프레임 번호 (1부터 시작)") @PathVariable int frameNumber
+    ) {
+        log.info("WADO-RS BulkData: frame - sopInstanceUID={}, frame={}", sopInstanceUID, frameNumber);
+
+        Instance instance = instanceService.findBySopInstanceUid(sopInstanceUID)
+                .orElseThrow(() -> new BusinessException(MiniPacsErrorCode.INSTANCE_NOT_FOUND));
+
+        // UID 검증
+        validateInstanceUIDs(instance, studyUID, seriesUID);
+
+        // 프레임 번호 검증
+        int totalFrames = instance.getNumberOfFrames() != null ? instance.getNumberOfFrames() : 1;
+        if (frameNumber < 1 || frameNumber > totalFrames) {
+            throw new BusinessException(MiniPacsErrorCode.INVALID_FRAME_NUMBER,
+                    "Frame " + frameNumber + " out of range (1-" + totalFrames + ")");
+        }
+
+        // DICOM 파일 바이트 조회 (Cornerstone이 프레임 추출 수행)
+        byte[] dicomBytes = dicomRenderingService.getDicomFileBytes(instance.getStoragePath());
+
+        // Transfer Syntax 정보를 헤더로 전달 (클라이언트 힌트)
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setCacheControl(CacheControl.maxAge(Duration.ofHours(1)));
+
+        // DICOM 메타데이터 헤더 추가 (클라이언트 디코딩 힌트)
+        if (instance.getTransferSyntaxUid() != null) {
+            headers.set("X-DICOM-TransferSyntax", instance.getTransferSyntaxUid());
+        }
+        if (instance.getPhotometricInterpretation() != null) {
+            headers.set("X-DICOM-PhotometricInterpretation", instance.getPhotometricInterpretation());
+        }
+        if (instance.getBitsAllocated() != null) {
+            headers.set("X-DICOM-BitsAllocated", String.valueOf(instance.getBitsAllocated()));
+        }
+        if (instance.getBitsStored() != null) {
+            headers.set("X-DICOM-BitsStored", String.valueOf(instance.getBitsStored()));
+        }
+
+        return new ResponseEntity<>(dicomBytes, headers, HttpStatus.OK);
+    }
+
+    /**
      * UID 검증 헬퍼 메서드
      */
     private void validateInstanceUIDs(Instance instance, String studyUID, String seriesUID) {

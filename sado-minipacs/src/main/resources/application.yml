@@ -4,6 +4,13 @@ spring:
   output:
     ansi:
       enabled: ALWAYS
+  # Virtual Thread (Java 21 Project Loom) 설정
+  # - I/O-bound 작업(DB, S3, HTTP)에서 처리량 20-50% 향상 기대
+  # - Platform Thread 대비 메모리 효율 ~100배 (1MB → ~10KB/thread)
+  # - ThreadLocal은 Virtual Thread에서도 정상 동작 (TenantContext 호환)
+  threads:
+    virtual:
+      enabled: true
 
   # 파일 업로드 설정 (DICOM 파일 업로드)
   servlet:
@@ -21,12 +28,17 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
     # HikariCP 커넥션 풀 설정
+    # 최적화 기준: AMD Ryzen 7 8845HS (16스레드), 32GB RAM
+    # 공식: connections = (core_count × 2) + spindle_count = (16 × 2) + 1 = 33
+    # 실제 적용: 로컬 개발환경 고려하여 20으로 설정 (MySQL, SeaweedFS 등 공유)
     hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
+      pool-name: sado-minipacs-pool
+      maximum-pool-size: 20           # 10 → 20 (Virtual Thread 병목 해소)
+      minimum-idle: 10                # 5 → 10 (빠른 응답을 위해 유휴 커넥션 확보)
+      connection-timeout: 30000       # 30초 (유지)
+      idle-timeout: 300000            # 5분 (600000 → 300000, 리소스 절약)
+      max-lifetime: 1800000           # 30분 (유지)
+      leak-detection-threshold: 60000 # 커넥션 누수 감지 (60초)
 
   # JPA 설정
   jpa:
@@ -46,6 +58,16 @@ spring:
 # 서버 설정
 server:
   port: 10201
+  # Tomcat 설정 (Virtual Thread 환경 최적화)
+  tomcat:
+    # Virtual Thread 사용 시 스레드 수보다 커넥션 수가 중요
+    max-connections: 2000           # 8192 → 2000 (로컬 개발환경 적정 수준)
+    accept-count: 200               # 100 → 200 (연결 대기 큐 확장)
+    connection-timeout: 20000       # 20초 (커넥션 타임아웃)
+    # Virtual Thread 환경에서는 스레드 풀 설정이 덜 중요하지만 명시적 설정
+    threads:
+      max: 200                      # 기본값 유지 (Virtual Thread가 실제 처리)
+      min-spare: 10                 # 기본값 유지
 
 # 로깅 설정 (상세 설정은 logback-spring.xml 참조)
 logging:
@@ -139,12 +161,13 @@ minipacs:
   # Week 12+ Spring Security 도입 후 SecurityContext에서 추출
   default-user-id: 1
 
-# 업로드 동시성 제한 설정 (2026-01-05 추가)
+# 업로드 동시성 제한 설정 (2026-01-05 추가, 2026-01-08 최적화)
 upload:
   # 최대 동시 업로드 수 (Semaphore permits)
-  # - DB 풀(10)의 절반으로 설정하여 다른 요청용 여유 확보
-  # - 메모리 고려: 500MB × 5 = 2.5GB 최대 동시 처리
-  max-concurrent: 5
+  # 최적화 기준: 32GB RAM, DB 풀 20개
+  # - DB 풀(20)의 절반으로 설정하여 다른 요청용 여유 확보
+  # - 메모리 고려: 500MB × 10 = 5GB 최대 동시 처리 (32GB 중 약 16%)
+  max-concurrent: 10              # 5 → 10 (DB 풀 확장에 맞춰 증가)
   # permit 획득 대기 시간 (밀리초)
   # - 초과 시 429 Too Many Requests 반환
   acquire-timeout-ms: 30000

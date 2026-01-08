@@ -184,6 +184,29 @@ public class DicomRenderingService {
     }
 
     /**
+     * DICOM 파일 바이트 조회 (WADO-RS BulkData 지원)
+     *
+     * <p>Cornerstone3D의 wadors: scheme에서 사용됩니다.
+     * 클라이언트가 직접 DICOM을 파싱하여 프레임을 추출합니다.
+     *
+     * @param storagePath S3 저장 경로
+     * @return DICOM 파일 바이트 배열
+     * @throws BusinessException DICOM_DOWNLOAD_FAILED - 다운로드 실패 시
+     */
+    public byte[] getDicomFileBytes(String storagePath) {
+        log.debug("Getting DICOM file bytes: path={}", storagePath);
+
+        try (InputStream dicomStream = dicomStorageService.downloadDicomFile(storagePath)) {
+            byte[] bytes = dicomStream.readAllBytes();
+            log.debug("DICOM file bytes: {} bytes", bytes.length);
+            return bytes;
+        } catch (IOException e) {
+            log.error("Failed to download DICOM file: path={}", storagePath, e);
+            throw new BusinessException(MiniPacsErrorCode.STORAGE_DOWNLOAD_FAILED, e.getMessage());
+        }
+    }
+
+    /**
      * DICOM 파일의 총 프레임 수 조회
      *
      * @param storagePath S3 저장 경로

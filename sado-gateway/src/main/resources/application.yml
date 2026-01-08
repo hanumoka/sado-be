@@ -1,6 +1,12 @@
 spring:
   application:
     name: sado-gateway
+  # Virtual Thread (Java 21 Project Loom) 설정
+  # - I/O-bound 작업(DB, Kafka)에서 처리량 20-50% 향상 기대
+  # - Platform Thread 대비 메모리 효율 ~100배 (1MB → ~10KB/thread)
+  threads:
+    virtual:
+      enabled: true
 
   # MySQL 데이터소스 설정
   datasource:

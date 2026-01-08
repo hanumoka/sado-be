@@ -81,6 +81,60 @@ public class Instance extends TenantAwareEntity {
     @Column(name = "number_of_frames")
     private Integer numberOfFrames;
 
+    // ========== Pixel Data 메타데이터 (WADO-RS BulkData 지원) ==========
+
+    /**
+     * Transfer Syntax UID (0002,0010)
+     * DICOM 파일의 압축/인코딩 방식
+     * 예: 1.2.840.10008.1.2.4.90 (JPEG 2000 Lossless)
+     */
+    @Column(name = "transfer_syntax_uid", length = 128)
+    private String transferSyntaxUid;
+
+    /**
+     * Bits Allocated (0028,0100)
+     * 픽셀당 할당된 비트 수 (8, 16)
+     */
+    @Column(name = "bits_allocated")
+    private Integer bitsAllocated;
+
+    /**
+     * Bits Stored (0028,0101)
+     * 실제 저장된 비트 수
+     */
+    @Column(name = "bits_stored")
+    private Integer bitsStored;
+
+    /**
+     * High Bit (0028,0102)
+     * 최상위 비트 위치
+     */
+    @Column(name = "high_bit")
+    private Integer highBit;
+
+    /**
+     * Pixel Representation (0028,0103)
+     * 0 = unsigned, 1 = signed (2's complement)
+     */
+    @Column(name = "pixel_representation")
+    private Integer pixelRepresentation;
+
+    /**
+     * Photometric Interpretation (0028,0004)
+     * 픽셀 데이터 해석 방법
+     * 예: MONOCHROME1, MONOCHROME2, RGB, YBR_FULL_422
+     */
+    @Column(name = "photometric_interpretation", length = 32)
+    private String photometricInterpretation;
+
+    /**
+     * Samples per Pixel (0028,0002)
+     * 픽셀당 샘플 수 (채널 수)
+     * 1 = grayscale, 3 = RGB
+     */
+    @Column(name = "samples_per_pixel")
+    private Integer samplesPerPixel;
+
     // ========== 계산값 (Application Layer) ==========
 
     /**
@@ -263,6 +317,41 @@ public class Instance extends TenantAwareEntity {
 
         public Builder numberOfFrames(Integer numberOfFrames) {
             instance.numberOfFrames = numberOfFrames;
+            return this;
+        }
+
+        public Builder transferSyntaxUid(String transferSyntaxUid) {
+            instance.transferSyntaxUid = transferSyntaxUid;
+            return this;
+        }
+
+        public Builder bitsAllocated(Integer bitsAllocated) {
+            instance.bitsAllocated = bitsAllocated;
+            return this;
+        }
+
+        public Builder bitsStored(Integer bitsStored) {
+            instance.bitsStored = bitsStored;
+            return this;
+        }
+
+        public Builder highBit(Integer highBit) {
+            instance.highBit = highBit;
+            return this;
+        }
+
+        public Builder pixelRepresentation(Integer pixelRepresentation) {
+            instance.pixelRepresentation = pixelRepresentation;
+            return this;
+        }
+
+        public Builder photometricInterpretation(String photometricInterpretation) {
+            instance.photometricInterpretation = photometricInterpretation;
+            return this;
+        }
+
+        public Builder samplesPerPixel(Integer samplesPerPixel) {
+            instance.samplesPerPixel = samplesPerPixel;
             return this;
         }
 

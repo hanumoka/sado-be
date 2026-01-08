@@ -136,6 +136,14 @@ tasks.named('bootRun') {
     dependsOn 'copyOpenCVNatives'
     systemProperty 'java.library.path', nativesDir.get().asFile.absolutePath
 
+    // JVM 메모리 설정 (32GB RAM 노트북 최적화)
+    // - 초기 힙: 2GB (빠른 시작)
+    // - 최대 힙: 8GB (대용량 DICOM 처리, 동시 업로드 고려)
+    // - G1GC: 대용량 힙에서 낮은 지연시간
+    jvmArgs '-Xms2g', '-Xmx8g',
+            '-XX:+UseG1GC',
+            '-XX:MaxGCPauseMillis=200'
+
     // DCM4CHE ImageIO OpenCV가 내부 Java 클래스에 리플렉션 접근 필요
     // Java 9+ 모듈 시스템(JPMS)이 기본적으로 차단하므로 명시적으로 열어줘야 함
     jvmArgs '--add-opens', 'java.desktop/javax.imageio.stream=ALL-UNNAMED',

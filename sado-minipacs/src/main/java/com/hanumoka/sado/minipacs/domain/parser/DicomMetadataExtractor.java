@@ -57,8 +57,17 @@ public class DicomMetadataExtractor {
      */
     public static DicomMetadata extract(InputStream inputStream) throws IOException {
         try (DicomInputStream dis = new DicomInputStream(inputStream)) {
+            // File Meta Information (Transfer Syntax UID 포함)
+            Attributes fmi = dis.readFileMetaInformation();
+
             // DICOM 파일 파싱
             Attributes attributes = dis.readDataset();
+
+            // Transfer Syntax UID 추출 (File Meta Information에서)
+            String transferSyntaxUid = null;
+            if (fmi != null) {
+                transferSyntaxUid = fmi.getString(Tag.TransferSyntaxUID);
+            }
 
             // 메타데이터 추출
             DicomMetadata metadata = DicomMetadata.builder()
@@ -88,6 +97,15 @@ public class DicomMetadataExtractor {
                     .imageRows(attributes.getInt(Tag.Rows, 0))
                     .imageColumns(attributes.getInt(Tag.Columns, 0))
                     .numberOfFrames(attributes.getInt(Tag.NumberOfFrames, 1))
+
+                    // Pixel Data Metadata (WADO-RS BulkData 지원)
+                    .transferSyntaxUid(transferSyntaxUid)
+                    .bitsAllocated(getIntOrNull(attributes, Tag.BitsAllocated))
+                    .bitsStored(getIntOrNull(attributes, Tag.BitsStored))
+                    .highBit(getIntOrNull(attributes, Tag.HighBit))
+                    .pixelRepresentation(getIntOrNull(attributes, Tag.PixelRepresentation))
+                    .photometricInterpretation(attributes.getString(Tag.PhotometricInterpretation))
+                    .samplesPerPixel(getIntOrNull(attributes, Tag.SamplesPerPixel))
                     .build();
 
             // 필수 DICOM 태그 검증
@@ -95,6 +113,20 @@ public class DicomMetadataExtractor {
 
             return metadata;
         }
+    }
+
+    /**
+     * DICOM 태그에서 Integer 값을 가져오되, 존재하지 않으면 null 반환
+     *
+     * @param attributes DICOM attributes
+     * @param tag 추출할 태그
+     * @return 태그 값 또는 null
+     */
+    private static Integer getIntOrNull(Attributes attributes, int tag) {
+        if (attributes.contains(tag)) {
+            return attributes.getInt(tag, 0);
+        }
+        return null;
     }
 
     /**
@@ -237,5 +269,14 @@ public class DicomMetadataExtractor {
         private final Integer imageRows;
         private final Integer imageColumns;
         private final Integer numberOfFrames;
+
+        // Pixel Data Metadata (WADO-RS BulkData 지원)
+        private final String transferSyntaxUid;
+        private final Integer bitsAllocated;
+        private final Integer bitsStored;
+        private final Integer highBit;
+        private final Integer pixelRepresentation;
+        private final String photometricInterpretation;
+        private final Integer samplesPerPixel;
     }
 }
