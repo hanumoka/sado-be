@@ -38,6 +38,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * DICOMweb REST API Controller
@@ -523,32 +524,40 @@ public class DicomWebController {
     }
 
     /**
-     * WADO-RS: Frame Rendered (멀티프레임)
+     * WADO-RS: Frame Rendered (멀티프레임) - DICOMweb Part 18 표준
      *
-     * <p>DICOM 파일의 특정 프레임을 PNG 이미지로 렌더링하여 반환합니다.
+     * <p>DICOM 파일의 프레임을 PNG 이미지로 렌더링하여 반환합니다.
+     *
+     * <p>지원 형식 (DICOMweb FrameList 표준):
+     * <ul>
+     *   <li>/frames/1/rendered - 단일 프레임</li>
+     *   <li>/frames/1,2,3,4,5/rendered - 다중 프레임 (쉼표 구분, multipart/related 응답)</li>
+     * </ul>
      *
      * <p>성능 최적화 (2026-01-09):
      * <ul>
-     *   <li>기존: byte[] 전체 메모리 로드 → 동시 10개 요청 시 2.5GB 메모리</li>
-     *   <li>개선: StreamingResponseBody로 직접 스트리밍 → 메모리 90% 절감</li>
+     *   <li>기존: 프레임당 1 HTTP 요청</li>
+     *   <li>개선: 다중 프레임 1 HTTP 요청으로 DICOM 파일 1회 로드</li>
      * </ul>
      *
      * @param studyUID Study Instance UID
      * @param seriesUID Series Instance UID
      * @param sopInstanceUID SOP Instance UID
-     * @param frameNumber 프레임 번호 (1부터 시작)
-     * @return PNG 이미지 (StreamingResponseBody)
+     * @param frameList 프레임 번호 (1부터 시작) 또는 쉼표로 구분된 목록
+     * @return PNG 이미지 (단일) 또는 multipart/related (다중)
      */
-    @GetMapping(value = "/studies/{studyUID}/series/{seriesUID}/instances/{sopInstanceUID}/frames/{frameNumber}/rendered",
-            produces = MediaType.IMAGE_PNG_VALUE)
-    @Operation(summary = "WADO-RS: Frame Rendered", description = "DICOM 멀티프레임의 특정 프레임을 PNG 이미지로 렌더링합니다.")
-    public ResponseEntity<StreamingResponseBody> renderFrame(
+    @GetMapping(value = "/studies/{studyUID}/series/{seriesUID}/instances/{sopInstanceUID}/frames/{frameList}/rendered")
+    @Operation(summary = "WADO-RS: Frame Rendered", description = "DICOM 프레임을 PNG 이미지로 렌더링 (단일/다중 프레임 지원)")
+    public ResponseEntity<StreamingResponseBody> renderFrames(
             @Parameter(description = "Study Instance UID") @PathVariable String studyUID,
             @Parameter(description = "Series Instance UID") @PathVariable String seriesUID,
             @Parameter(description = "SOP Instance UID") @PathVariable String sopInstanceUID,
-            @Parameter(description = "프레임 번호 (1부터 시작)") @PathVariable int frameNumber
+            @Parameter(description = "프레임 번호 또는 쉼표로 구분된 목록") @PathVariable String frameList
     ) {
-        log.info("WADO-RS Rendered: frame - sopInstanceUID={}, frame={}", sopInstanceUID, frameNumber);
+        // frameList 파싱
+        List<Integer> frameNumbers = parseFrameList(frameList);
+
+        log.info("WADO-RS Rendered: frames - sopInstanceUID={}, frames={}", sopInstanceUID, frameNumbers);
 
         Instance instance = instanceService.findBySopInstanceUid(sopInstanceUID)
                 .orElseThrow(() -> new BusinessException(MiniPacsErrorCode.INSTANCE_NOT_FOUND));
@@ -558,56 +567,82 @@ public class DicomWebController {
 
         // 프레임 번호 검증
         int totalFrames = instance.getNumberOfFrames() != null ? instance.getNumberOfFrames() : 1;
-        if (frameNumber < 1 || frameNumber > totalFrames) {
-            throw new BusinessException(MiniPacsErrorCode.INVALID_FRAME_NUMBER,
-                    "Frame " + frameNumber + " out of range (1-" + totalFrames + ")");
+        validateFrameNumbers(frameNumbers, totalFrames);
+
+        String storagePath = instance.getStoragePath();
+
+        // 단일 프레임: 기존 로직 (image/png 반환, 하위 호환성)
+        if (frameNumbers.size() == 1) {
+            int frameNumber = frameNumbers.get(0);
+            StreamingResponseBody responseBody = outputStream -> {
+                dicomRenderingService.renderToPngStream(storagePath, frameNumber, outputStream);
+            };
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_PNG)
+                    .cacheControl(CacheControl.maxAge(Duration.ofHours(1)))
+                    .body(responseBody);
         }
 
-        // CRITICAL: StreamingResponseBody로 메모리 최적화
-        String storagePath = instance.getStoragePath();
+        // 다중 프레임: multipart/related로 여러 PNG 반환 (DICOMweb FrameList 표준)
+        String boundary = "rendered_boundary_" + System.currentTimeMillis();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(
+                "multipart/related; type=\"image/png\"; boundary=" + boundary));
+        headers.setCacheControl(CacheControl.maxAge(Duration.ofHours(1)));
+
         StreamingResponseBody responseBody = outputStream -> {
-            dicomRenderingService.renderToPngStream(storagePath, frameNumber, outputStream);
+            dicomRenderingService.renderMultipleFramesToStream(
+                    storagePath, frameNumbers, boundary, outputStream);
         };
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_PNG)
-                .cacheControl(CacheControl.maxAge(Duration.ofHours(1)))
-                .body(responseBody);
+        return new ResponseEntity<>(responseBody, headers, HttpStatus.OK);
     }
 
     /**
-     * WADO-RS: Frame BulkData (Raw Pixel Data)
+     * WADO-RS: Frame BulkData (Raw Pixel Data) - DICOMweb Part 18 표준
      *
-     * <p>DICOMweb 표준 (DICOM Part 18 - 6.5.4)에 따라 특정 프레임의 PixelData만 반환합니다.
+     * <p>DICOMweb 표준 (DICOM Part 18 - 6.5.4)에 따라 프레임의 PixelData를 반환합니다.
      * Cornerstone3D의 wadors: 로더가 기대하는 형식입니다.
+     *
+     * <p>지원 형식 (DICOMweb FrameList 표준):
+     * <ul>
+     *   <li>/frames/1 - 단일 프레임</li>
+     *   <li>/frames/1,2,3,4,5 - 다중 프레임 (쉼표 구분)</li>
+     * </ul>
      *
      * <p>응답 형식:
      * <ul>
      *   <li>Content-Type: multipart/related; type="application/octet-stream"; boundary=...</li>
-     *   <li>Body: 해당 프레임의 raw PixelData만 (전체 DICOM 파일 아님)</li>
+     *   <li>Body: 요청된 프레임들의 raw PixelData (multipart 파트로 구분)</li>
      * </ul>
      *
      * <p>성능 최적화 (2026-01-09):
      * <ul>
-     *   <li>기존: byte[] pixelData + byte[] multipartBody 두 번 메모리 할당</li>
-     *   <li>개선: StreamingResponseBody로 직접 스트리밍 → 메모리 50% 절감</li>
+     *   <li>기존: 프레임당 1 HTTP 요청 → 100프레임 시 100 요청</li>
+     *   <li>개선: 다중 프레임 1 HTTP 요청 → 100프레임 시 10 요청 (배치 크기 10)</li>
+     *   <li>DICOM 파일 1회 로드로 다중 프레임 추출 → I/O 90% 절감</li>
      * </ul>
      *
      * @param studyUID Study Instance UID
      * @param seriesUID Series Instance UID
      * @param sopInstanceUID SOP Instance UID
-     * @param frameNumber 프레임 번호 (1부터 시작)
+     * @param frameList 프레임 번호 (1부터 시작) 또는 쉼표로 구분된 목록 (예: "1" 또는 "1,2,3,4,5")
      * @return multipart/related 형식의 PixelData (StreamingResponseBody)
      */
-    @GetMapping(value = "/studies/{studyUID}/series/{seriesUID}/instances/{sopInstanceUID}/frames/{frameNumber}")
-    @Operation(summary = "WADO-RS: Frame BulkData", description = "DICOMweb 표준에 따라 특정 프레임의 raw PixelData를 multipart/related 형식으로 반환 (Cornerstone3D wadors: 지원)")
-    public ResponseEntity<StreamingResponseBody> retrieveFrame(
+    @GetMapping(value = "/studies/{studyUID}/series/{seriesUID}/instances/{sopInstanceUID}/frames/{frameList}")
+    @Operation(summary = "WADO-RS: Frame BulkData", description = "DICOMweb 표준에 따라 프레임의 raw PixelData를 반환 (단일/다중 프레임 지원)")
+    public ResponseEntity<StreamingResponseBody> retrieveFrames(
             @Parameter(description = "Study Instance UID") @PathVariable String studyUID,
             @Parameter(description = "Series Instance UID") @PathVariable String seriesUID,
             @Parameter(description = "SOP Instance UID") @PathVariable String sopInstanceUID,
-            @Parameter(description = "프레임 번호 (1부터 시작)") @PathVariable int frameNumber
+            @Parameter(description = "프레임 번호 또는 쉼표로 구분된 목록 (예: 1 또는 1,2,3,4,5)") @PathVariable String frameList
     ) {
-        log.info("WADO-RS BulkData: frame - sopInstanceUID={}, frame={}", sopInstanceUID, frameNumber);
+        // frameList 파싱 (예: "1" → [1], "1,2,3" → [1,2,3])
+        List<Integer> frameNumbers = parseFrameList(frameList);
+
+        log.info("WADO-RS BulkData: frames - sopInstanceUID={}, frames={}", sopInstanceUID, frameNumbers);
 
         Instance instance = instanceService.findBySopInstanceUid(sopInstanceUID)
                 .orElseThrow(() -> new BusinessException(MiniPacsErrorCode.INSTANCE_NOT_FOUND));
@@ -617,10 +652,7 @@ public class DicomWebController {
 
         // 프레임 번호 검증
         int totalFrames = instance.getNumberOfFrames() != null ? instance.getNumberOfFrames() : 1;
-        if (frameNumber < 1 || frameNumber > totalFrames) {
-            throw new BusinessException(MiniPacsErrorCode.INVALID_FRAME_NUMBER,
-                    "Frame " + frameNumber + " out of range (1-" + totalFrames + ")");
-        }
+        validateFrameNumbers(frameNumbers, totalFrames);
 
         // Transfer Syntax 조회 (원본 - 로깅용)
         String originalTransferSyntax = instance.getTransferSyntaxUid() != null
@@ -660,15 +692,28 @@ public class DicomWebController {
             headers.set("X-DICOM-BitsStored", String.valueOf(instance.getBitsStored()));
         }
 
-        // CRITICAL: StreamingResponseBody로 메모리 최적화
-        // byte[] multipartBody 생성 없이 직접 OutputStream에 쓰기
         String storagePath = instance.getStoragePath();
-        StreamingResponseBody responseBody = outputStream -> {
-            int pixelDataSize = dicomRenderingService.extractFramePixelDataToStream(
-                    storagePath, frameNumber, boundary, outputTransferSyntax, mimeType, outputStream);
-            log.info("WADO-RS BulkData: frame={}, originalTsUid={}, decompressedSize={}",
-                    frameNumber, originalTransferSyntax, pixelDataSize);
-        };
+
+        // 단일 프레임 vs 다중 프레임 분기
+        StreamingResponseBody responseBody;
+        if (frameNumbers.size() == 1) {
+            // 단일 프레임: 기존 로직 그대로 (하위 호환성)
+            int frameNumber = frameNumbers.get(0);
+            responseBody = outputStream -> {
+                int pixelDataSize = dicomRenderingService.extractFramePixelDataToStream(
+                        storagePath, frameNumber, boundary, outputTransferSyntax, mimeType, outputStream);
+                log.info("WADO-RS BulkData: frame={}, originalTsUid={}, decompressedSize={}",
+                        frameNumber, originalTransferSyntax, pixelDataSize);
+            };
+        } else {
+            // 다중 프레임: DICOM 1회 로드로 최적화 (DICOMweb FrameList 표준)
+            responseBody = outputStream -> {
+                int totalSize = dicomRenderingService.extractMultipleFramesToStream(
+                        storagePath, frameNumbers, boundary, outputTransferSyntax, mimeType, outputStream);
+                log.info("WADO-RS BulkData: frames={}, totalSize={}, originalTsUid={}",
+                        frameNumbers.size(), totalSize, originalTransferSyntax);
+            };
+        }
 
         return new ResponseEntity<>(responseBody, headers, HttpStatus.OK);
     }
@@ -756,6 +801,48 @@ public class DicomWebController {
                 !studyUID.equals(series.getStudy().getStudyInstanceUid())) {
             throw new BusinessException(MiniPacsErrorCode.INSTANCE_NOT_FOUND,
                     "Instance UID hierarchy mismatch");
+        }
+    }
+
+    /**
+     * frameList 문자열 파싱 (DICOMweb Part 18 표준)
+     *
+     * <p>예시:
+     * <ul>
+     *   <li>"1" → [1]</li>
+     *   <li>"1,2,3,4,5" → [1, 2, 3, 4, 5]</li>
+     * </ul>
+     *
+     * @param frameList 쉼표로 구분된 프레임 번호 문자열
+     * @return 프레임 번호 목록
+     * @throws BusinessException INVALID_FRAME_NUMBER - 파싱 실패 시
+     */
+    private List<Integer> parseFrameList(String frameList) {
+        try {
+            return Arrays.stream(frameList.split(","))
+                    .map(String::trim)
+                    .map(Integer::parseInt)
+                    .distinct()  // 중복 제거
+                    .collect(Collectors.toList());  // 순서 유지
+        } catch (NumberFormatException e) {
+            throw new BusinessException(MiniPacsErrorCode.INVALID_FRAME_NUMBER,
+                    "Invalid frame list format: " + frameList);
+        }
+    }
+
+    /**
+     * 프레임 번호 목록 유효성 검증
+     *
+     * @param frameNumbers 검증할 프레임 번호 목록
+     * @param totalFrames 총 프레임 수
+     * @throws BusinessException INVALID_FRAME_NUMBER - 범위 초과 시
+     */
+    private void validateFrameNumbers(List<Integer> frameNumbers, int totalFrames) {
+        for (int frame : frameNumbers) {
+            if (frame < 1 || frame > totalFrames) {
+                throw new BusinessException(MiniPacsErrorCode.INVALID_FRAME_NUMBER,
+                        "Frame " + frame + " out of range (1-" + totalFrames + ")");
+            }
         }
     }
 

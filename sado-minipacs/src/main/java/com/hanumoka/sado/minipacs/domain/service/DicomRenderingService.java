@@ -14,6 +14,7 @@ import org.dcm4che3.imageio.plugins.dcm.DicomImageReadParam;
 import org.dcm4che3.io.DicomInputStream;
 
 import java.util.Arrays;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -838,6 +839,225 @@ public class DicomRenderingService {
             throw e;
         } catch (IOException e) {
             log.error("Frame PixelData streaming failed: path={}, frame={}", storagePath, frameNumber, e);
+            throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED, e.getMessage());
+        }
+    }
+
+    // ==================== 다중 프레임 최적화: DICOMweb FrameList 지원 ====================
+
+    /**
+     * 다중 프레임 PixelData를 Multipart 형식으로 OutputStream에 직접 쓰기 (DICOMweb Part 18 표준)
+     *
+     * <p>DICOMweb FrameList 표준 (/frames/1,2,3,4,5) 지원으로 HTTP 요청 최적화.
+     *
+     * <p>성능 최적화:
+     * <ul>
+     *   <li>DICOM 파일 1회만 로드 (프레임 10개 요청 시 기존 10회 I/O → 1회)</li>
+     *   <li>ImageReader 1회 초기화로 다중 프레임 추출</li>
+     *   <li>StreamingResponseBody로 메모리 최적화</li>
+     * </ul>
+     *
+     * <p>응답 형식 (DICOMweb Part 18 Section 8.7.3.4):
+     * <pre>
+     * --boundary
+     * Content-Type: application/octet-stream; transfer-syntax=...
+     * Content-Location: frames/1
+     * Content-Length: ...
+     *
+     * [PixelData bytes]
+     * --boundary
+     * Content-Type: application/octet-stream; transfer-syntax=...
+     * Content-Location: frames/2
+     * ...
+     * --boundary--
+     * </pre>
+     *
+     * @param storagePath S3 저장 경로
+     * @param frameNumbers 프레임 번호 목록 (1부터 시작)
+     * @param boundary multipart boundary 문자열
+     * @param transferSyntax Transfer Syntax UID
+     * @param mimeType Content-Type MIME 타입
+     * @param outputStream 결과를 쓸 OutputStream
+     * @return 추출된 총 pixelData 크기 (bytes)
+     * @throws BusinessException DICOM_RENDER_FAILED - 추출 실패 시
+     */
+    public int extractMultipleFramesToStream(
+            String storagePath,
+            List<Integer> frameNumbers,
+            String boundary,
+            String transferSyntax,
+            String mimeType,
+            java.io.OutputStream outputStream) {
+
+        log.info("Extracting multiple frames (DICOMweb FrameList): path={}, frames={}", storagePath, frameNumbers);
+
+        try (InputStream dicomStream = dicomStorageService.downloadDicomFile(storagePath)) {
+            // CRITICAL: DICOM 파일 1회만 로드 (기존: 프레임 수만큼 반복 로드)
+            byte[] dicomBytes = dicomStream.readAllBytes();
+
+            // Transfer Syntax 로깅
+            logTransferSyntax(dicomBytes);
+
+            // DCM4CHE ImageIO 사용
+            Iterator<ImageReader> readers = ImageIO.getImageReadersByFormatName("DICOM");
+            if (!readers.hasNext()) {
+                throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
+                        "DICOM ImageReader not found. DCM4CHE ImageIO is not installed.");
+            }
+
+            ImageReader reader = readers.next();
+            int totalPixelDataSize = 0;
+
+            try (ByteArrayInputStream bais = new ByteArrayInputStream(dicomBytes);
+                 ImageInputStream iis = ImageIO.createImageInputStream(bais)) {
+
+                reader.setInput(iis);
+                int numFrames = reader.getNumImages(true);
+
+                log.debug("Multi-frame extraction: {} frames requested, {} total frames in DICOM",
+                        frameNumbers.size(), numFrames);
+
+                // 각 프레임 추출 및 multipart 파트로 출력
+                for (int frameNumber : frameNumbers) {
+                    int frameIndex = frameNumber - 1;
+
+                    if (frameIndex < 0 || frameIndex >= numFrames) {
+                        throw new BusinessException(MiniPacsErrorCode.INVALID_FRAME_NUMBER,
+                                String.format("Frame %d out of range (1-%d)", frameNumber, numFrames));
+                    }
+
+                    // CRITICAL: readRaster()로 W/L 미적용 raw pixels 추출
+                    java.awt.image.Raster raster = reader.readRaster(frameIndex, null);
+                    byte[] pixelData = extractRawBytesFromRaster(raster, dicomBytes);
+
+                    // Multipart 파트 헤더 작성 (DICOMweb Part 18 표준)
+                    String partHeader = "--" + boundary + "\r\n"
+                            + "Content-Type: " + mimeType + "; transfer-syntax=" + transferSyntax + "\r\n"
+                            + "Content-Location: /frames/" + frameNumber + "\r\n"
+                            + "Content-Length: " + pixelData.length + "\r\n"
+                            + "\r\n";
+
+                    outputStream.write(partHeader.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    outputStream.write(pixelData);
+                    outputStream.write("\r\n".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+                    totalPixelDataSize += pixelData.length;
+                    log.debug("Extracted frame {}/{}: {} bytes", frameNumber, numFrames, pixelData.length);
+                }
+
+                // 종료 boundary
+                String endBoundary = "--" + boundary + "--\r\n";
+                outputStream.write(endBoundary.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                outputStream.flush();
+
+                log.info("Multi-frame extraction complete: {} frames, {} total bytes",
+                        frameNumbers.size(), totalPixelDataSize);
+                return totalPixelDataSize;
+
+            } finally {
+                reader.dispose();
+            }
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (IOException e) {
+            log.error("Failed to extract multiple frames: path={}, frames={}", storagePath, frameNumbers, e);
+            throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED, e.getMessage());
+        }
+    }
+
+    /**
+     * 다중 프레임을 PNG로 렌더링하여 Multipart 형식으로 출력 (DICOMweb Part 18 표준)
+     *
+     * <p>WADO-RS Rendered API의 FrameList 지원.
+     *
+     * @param storagePath S3 저장 경로
+     * @param frameNumbers 프레임 번호 목록 (1부터 시작)
+     * @param boundary multipart boundary 문자열
+     * @param outputStream 결과를 쓸 OutputStream
+     * @throws BusinessException DICOM_RENDER_FAILED - 렌더링 실패 시
+     */
+    public void renderMultipleFramesToStream(
+            String storagePath,
+            List<Integer> frameNumbers,
+            String boundary,
+            java.io.OutputStream outputStream) {
+
+        log.info("Rendering multiple frames to PNG (DICOMweb FrameList): path={}, frames={}",
+                storagePath, frameNumbers);
+
+        try (InputStream dicomStream = dicomStorageService.downloadDicomFile(storagePath)) {
+            // CRITICAL: DICOM 파일 1회만 로드
+            byte[] dicomBytes = dicomStream.readAllBytes();
+
+            Iterator<ImageReader> readers = ImageIO.getImageReadersByFormatName("DICOM");
+            if (!readers.hasNext()) {
+                throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
+                        "DICOM ImageReader not found. DCM4CHE ImageIO is not installed.");
+            }
+
+            ImageReader reader = readers.next();
+
+            try (ByteArrayInputStream bais = new ByteArrayInputStream(dicomBytes);
+                 ImageInputStream iis = ImageIO.createImageInputStream(bais)) {
+
+                reader.setInput(iis);
+                int numFrames = reader.getNumImages(true);
+
+                DicomImageReadParam param = (DicomImageReadParam) reader.getDefaultReadParam();
+
+                int totalPngSize = 0;
+                for (int frameNumber : frameNumbers) {
+                    int frameIndex = frameNumber - 1;
+
+                    if (frameIndex < 0 || frameIndex >= numFrames) {
+                        throw new BusinessException(MiniPacsErrorCode.INVALID_FRAME_NUMBER,
+                                String.format("Frame %d out of range (1-%d)", frameNumber, numFrames));
+                    }
+
+                    // BufferedImage로 렌더링 (W/L 적용)
+                    BufferedImage image = reader.read(frameIndex, param);
+
+                    // PNG로 변환
+                    ByteArrayOutputStream pngBuffer = new ByteArrayOutputStream();
+                    boolean written = ImageIO.write(image, "PNG", pngBuffer);
+                    if (!written) {
+                        throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
+                                "Failed to encode frame " + frameNumber + " to PNG");
+                    }
+                    byte[] pngData = pngBuffer.toByteArray();
+
+                    // Multipart 파트 작성
+                    String partHeader = "--" + boundary + "\r\n"
+                            + "Content-Type: image/png\r\n"
+                            + "Content-Location: /frames/" + frameNumber + "/rendered\r\n"
+                            + "Content-Length: " + pngData.length + "\r\n"
+                            + "\r\n";
+
+                    outputStream.write(partHeader.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    outputStream.write(pngData);
+                    outputStream.write("\r\n".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+                    totalPngSize += pngData.length;
+                    log.debug("Rendered frame {}/{} to PNG: {} bytes", frameNumber, numFrames, pngData.length);
+                }
+
+                // 종료 boundary
+                String endBoundary = "--" + boundary + "--\r\n";
+                outputStream.write(endBoundary.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                outputStream.flush();
+
+                log.info("Multi-frame PNG rendering complete: {} frames, {} total bytes",
+                        frameNumbers.size(), totalPngSize);
+
+            } finally {
+                reader.dispose();
+            }
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (IOException e) {
+            log.error("Failed to render multiple frames: path={}, frames={}", storagePath, frameNumbers, e);
             throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED, e.getMessage());
         }
     }
