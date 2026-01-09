@@ -587,15 +587,21 @@ public class DicomWebController {
      *   <li>Body: 해당 프레임의 raw PixelData만 (전체 DICOM 파일 아님)</li>
      * </ul>
      *
+     * <p>성능 최적화 (2026-01-09):
+     * <ul>
+     *   <li>기존: byte[] pixelData + byte[] multipartBody 두 번 메모리 할당</li>
+     *   <li>개선: StreamingResponseBody로 직접 스트리밍 → 메모리 50% 절감</li>
+     * </ul>
+     *
      * @param studyUID Study Instance UID
      * @param seriesUID Series Instance UID
      * @param sopInstanceUID SOP Instance UID
      * @param frameNumber 프레임 번호 (1부터 시작)
-     * @return multipart/related 형식의 PixelData
+     * @return multipart/related 형식의 PixelData (StreamingResponseBody)
      */
     @GetMapping(value = "/studies/{studyUID}/series/{seriesUID}/instances/{sopInstanceUID}/frames/{frameNumber}")
     @Operation(summary = "WADO-RS: Frame BulkData", description = "DICOMweb 표준에 따라 특정 프레임의 raw PixelData를 multipart/related 형식으로 반환 (Cornerstone3D wadors: 지원)")
-    public ResponseEntity<byte[]> retrieveFrame(
+    public ResponseEntity<StreamingResponseBody> retrieveFrame(
             @Parameter(description = "Study Instance UID") @PathVariable String studyUID,
             @Parameter(description = "Series Instance UID") @PathVariable String seriesUID,
             @Parameter(description = "SOP Instance UID") @PathVariable String sopInstanceUID,
@@ -616,11 +622,6 @@ public class DicomWebController {
                     "Frame " + frameNumber + " out of range (1-" + totalFrames + ")");
         }
 
-        // 특정 프레임의 PixelData 추출 (서버에서 압축 해제됨)
-        // DCM4CHE Decompressor가 압축된 DICOM을 raw pixels로 변환
-        byte[] framePixelData = dicomRenderingService.extractFramePixelData(
-                instance.getStoragePath(), frameNumber);
-
         // Transfer Syntax 조회 (원본 - 로깅용)
         String originalTransferSyntax = instance.getTransferSyntaxUid() != null
                 ? instance.getTransferSyntaxUid()
@@ -632,9 +633,8 @@ public class DicomWebController {
         String outputTransferSyntax = UID.ExplicitVRLittleEndian;  // 1.2.840.10008.1.2.1
         String mimeType = "application/octet-stream";
 
-        // Multipart 응답 생성 (출력 Transfer-Syntax 사용)
+        // Multipart boundary 생성
         String boundary = "frame_boundary_" + System.currentTimeMillis();
-        byte[] multipartBody = buildMultipartFrameBody(framePixelData, boundary, outputTransferSyntax, mimeType);
 
         // 응답 헤더 설정
         HttpHeaders headers = new HttpHeaders();
@@ -660,10 +660,17 @@ public class DicomWebController {
             headers.set("X-DICOM-BitsStored", String.valueOf(instance.getBitsStored()));
         }
 
-        log.info("WADO-RS BulkData: frame={}, originalTsUid={}, decompressedSize={}",
-                frameNumber, originalTransferSyntax, framePixelData.length);
+        // CRITICAL: StreamingResponseBody로 메모리 최적화
+        // byte[] multipartBody 생성 없이 직접 OutputStream에 쓰기
+        String storagePath = instance.getStoragePath();
+        StreamingResponseBody responseBody = outputStream -> {
+            int pixelDataSize = dicomRenderingService.extractFramePixelDataToStream(
+                    storagePath, frameNumber, boundary, outputTransferSyntax, mimeType, outputStream);
+            log.info("WADO-RS BulkData: frame={}, originalTsUid={}, decompressedSize={}",
+                    frameNumber, originalTransferSyntax, pixelDataSize);
+        };
 
-        return new ResponseEntity<>(multipartBody, headers, HttpStatus.OK);
+        return new ResponseEntity<>(responseBody, headers, HttpStatus.OK);
     }
 
     /**

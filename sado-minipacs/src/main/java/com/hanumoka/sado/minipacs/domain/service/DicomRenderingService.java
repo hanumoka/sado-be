@@ -781,4 +781,64 @@ public class DicomRenderingService {
             throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED, e.getMessage());
         }
     }
+
+    /**
+     * Multipart/Related 형식으로 Frame PixelData를 OutputStream에 직접 쓰기 (메모리 최적화)
+     *
+     * <p>성능 최적화 (2026-01-09):
+     * <ul>
+     *   <li>기존: byte[] pixelData + byte[] multipartBody 두 번 복사</li>
+     *   <li>개선: StreamingResponseBody로 한 번만 쓰기 → 메모리 50% 절감</li>
+     * </ul>
+     *
+     * @param storagePath S3 저장 경로
+     * @param frameNumber 프레임 번호 (1부터 시작)
+     * @param boundary multipart boundary 문자열
+     * @param transferSyntax Transfer Syntax UID
+     * @param mimeType Content-Type MIME 타입
+     * @param outputStream 결과를 쓸 OutputStream
+     * @return 추출된 pixelData 크기 (bytes)
+     * @throws BusinessException DICOM_RENDER_FAILED - 추출 실패 시
+     */
+    public int extractFramePixelDataToStream(
+            String storagePath,
+            int frameNumber,
+            String boundary,
+            String transferSyntax,
+            String mimeType,
+            java.io.OutputStream outputStream) {
+
+        log.debug("Streaming Frame PixelData: path={}, frame={}", storagePath, frameNumber);
+
+        try {
+            // PixelData 추출
+            byte[] pixelData = extractFramePixelData(storagePath, frameNumber);
+
+            // Multipart 헤더 작성
+            String partHeader = "--" + boundary + "\r\n"
+                    + "Content-Type: " + mimeType + "; transfer-syntax=" + transferSyntax + "\r\n"
+                    + "Content-Length: " + pixelData.length + "\r\n"
+                    + "\r\n";
+
+            outputStream.write(partHeader.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+            // PixelData 본문 직접 쓰기 (복사 없음)
+            outputStream.write(pixelData);
+
+            // Part 종료
+            String partFooter = "\r\n--" + boundary + "--\r\n";
+            outputStream.write(partFooter.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+            outputStream.flush();
+            log.debug("Streamed Frame {} PixelData: {} bytes", frameNumber, pixelData.length);
+
+            return pixelData.length;
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (IOException e) {
+            log.error("Frame PixelData streaming failed: path={}, frame={}", storagePath, frameNumber, e);
+            throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED, e.getMessage());
+        }
+    }
 }
