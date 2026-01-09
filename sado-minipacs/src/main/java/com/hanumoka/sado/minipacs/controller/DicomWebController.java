@@ -433,7 +433,7 @@ public class DicomWebController {
      */
     @GetMapping(value = "/wado", produces = DICOM_MEDIA_TYPE)
     @Operation(summary = "WADO-URI: 레거시 WADO 지원", description = "레거시 WADO-URI 형식을 지원합니다.")
-    public ResponseEntity<Resource> wadoUri(
+    public ResponseEntity<Resource> retrieveInstanceViaWadoUri(
             @RequestParam String requestType,
             @RequestParam @Pattern(regexp = "^[0-9.]+$", message = "Invalid DICOM UID format") String studyUID,
             @RequestParam @Pattern(regexp = "^[0-9.]+$", message = "Invalid DICOM UID format") String seriesUID,
