@@ -42,7 +42,12 @@ public class WebConfig implements WebMvcConfigurer {
                         "Content-Disposition",
                         "Accept",
                         "X-Request-ID",
-                        "X-Tenant-Id"
+                        "X-Tenant-Id",
+                        // WADO-RS BulkData 지원을 위한 DICOM 메타데이터 헤더
+                        "X-DICOM-TransferSyntax",
+                        "X-DICOM-PhotometricInterpretation",
+                        "X-DICOM-BitsAllocated",
+                        "X-DICOM-BitsStored"
                 )
                 .allowCredentials(true)
                 .maxAge(3600);  // Pre-flight 캐시 1시간

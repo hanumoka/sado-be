@@ -29,7 +29,11 @@ import java.time.Duration;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.dcm4che3.data.UID;
+
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -530,24 +534,23 @@ public class DicomWebController {
     /**
      * WADO-RS: Frame BulkData (Raw Pixel Data)
      *
-     * <p>DICOM 파일의 특정 프레임을 raw 픽셀 데이터로 반환합니다.
-     * Cornerstone3D의 wadors: scheme에서 사용됩니다.
+     * <p>DICOMweb 표준 (DICOM Part 18 - 6.5.4)에 따라 특정 프레임의 PixelData만 반환합니다.
+     * Cornerstone3D의 wadors: 로더가 기대하는 형식입니다.
      *
      * <p>응답 형식:
      * <ul>
-     *   <li>Content-Type: application/octet-stream</li>
-     *   <li>Body: DICOM 파일 전체 (Cornerstone이 프레임 추출)</li>
+     *   <li>Content-Type: multipart/related; type="application/octet-stream"; boundary=...</li>
+     *   <li>Body: 해당 프레임의 raw PixelData만 (전체 DICOM 파일 아님)</li>
      * </ul>
      *
      * @param studyUID Study Instance UID
      * @param seriesUID Series Instance UID
      * @param sopInstanceUID SOP Instance UID
      * @param frameNumber 프레임 번호 (1부터 시작)
-     * @return DICOM 파일 바이트
+     * @return multipart/related 형식의 PixelData
      */
-    @GetMapping(value = "/studies/{studyUID}/series/{seriesUID}/instances/{sopInstanceUID}/frames/{frameNumber}",
-            produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    @Operation(summary = "WADO-RS: Frame BulkData", description = "DICOM 멀티프레임의 특정 프레임을 raw 픽셀 데이터로 반환합니다 (Cornerstone3D wadors: 지원).")
+    @GetMapping(value = "/studies/{studyUID}/series/{seriesUID}/instances/{sopInstanceUID}/frames/{frameNumber}")
+    @Operation(summary = "WADO-RS: Frame BulkData", description = "DICOMweb 표준에 따라 특정 프레임의 raw PixelData를 multipart/related 형식으로 반환 (Cornerstone3D wadors: 지원)")
     public ResponseEntity<byte[]> retrieveFrame(
             @Parameter(description = "Study Instance UID") @PathVariable String studyUID,
             @Parameter(description = "Series Instance UID") @PathVariable String seriesUID,
@@ -569,18 +572,40 @@ public class DicomWebController {
                     "Frame " + frameNumber + " out of range (1-" + totalFrames + ")");
         }
 
-        // DICOM 파일 바이트 조회 (Cornerstone이 프레임 추출 수행)
-        byte[] dicomBytes = dicomRenderingService.getDicomFileBytes(instance.getStoragePath());
+        // 특정 프레임의 PixelData 추출 (서버에서 압축 해제됨)
+        // DCM4CHE Decompressor가 압축된 DICOM을 raw pixels로 변환
+        byte[] framePixelData = dicomRenderingService.extractFramePixelData(
+                instance.getStoragePath(), frameNumber);
 
-        // Transfer Syntax 정보를 헤더로 전달 (클라이언트 힌트)
+        // Transfer Syntax 조회 (원본 - 로깅용)
+        String originalTransferSyntax = instance.getTransferSyntaxUid() != null
+                ? instance.getTransferSyntaxUid()
+                : dicomRenderingService.getTransferSyntaxUid(instance.getStoragePath());
+
+        // CRITICAL: 서버에서 압축 해제되어 raw pixels 반환
+        // Cornerstone wadors 로더는 raw pixels (application/octet-stream)을 기대함
+        // 출력 Transfer-Syntax는 Explicit VR Little Endian (비압축)
+        String outputTransferSyntax = UID.ExplicitVRLittleEndian;  // 1.2.840.10008.1.2.1
+        String mimeType = "application/octet-stream";
+
+        // Multipart 응답 생성 (출력 Transfer-Syntax 사용)
+        String boundary = "frame_boundary_" + System.currentTimeMillis();
+        byte[] multipartBody = buildMultipartFrameBody(framePixelData, boundary, outputTransferSyntax, mimeType);
+
+        // 응답 헤더 설정
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+
+        // Content-Type: raw pixels (서버에서 디코딩 완료)
+        headers.setContentType(MediaType.parseMediaType(
+                "multipart/related; type=\"application/octet-stream\"; boundary=" + boundary));
         headers.setCacheControl(CacheControl.maxAge(Duration.ofHours(1)));
 
-        // DICOM 메타데이터 헤더 추가 (클라이언트 디코딩 힌트)
-        if (instance.getTransferSyntaxUid() != null) {
-            headers.set("X-DICOM-TransferSyntax", instance.getTransferSyntaxUid());
-        }
+        // DICOM 메타데이터 헤더 추가 (클라이언트가 픽셀 해석에 필요)
+        // 출력 Transfer-Syntax: 서버에서 디코딩된 raw pixels 형식
+        headers.set("X-DICOM-TransferSyntax", outputTransferSyntax);
+        // 원본 Transfer-Syntax: 참고용 (원본 DICOM 파일의 압축 형식)
+        headers.set("X-DICOM-OriginalTransferSyntax", originalTransferSyntax);
+        headers.set("X-DICOM-DecompressedOnServer", "true");
         if (instance.getPhotometricInterpretation() != null) {
             headers.set("X-DICOM-PhotometricInterpretation", instance.getPhotometricInterpretation());
         }
@@ -591,7 +616,84 @@ public class DicomWebController {
             headers.set("X-DICOM-BitsStored", String.valueOf(instance.getBitsStored()));
         }
 
-        return new ResponseEntity<>(dicomBytes, headers, HttpStatus.OK);
+        log.info("WADO-RS BulkData: frame={}, originalTsUid={}, decompressedSize={}",
+                frameNumber, originalTransferSyntax, framePixelData.length);
+
+        return new ResponseEntity<>(multipartBody, headers, HttpStatus.OK);
+    }
+
+    /**
+     * Multipart/Related 형식의 Frame Body 생성
+     *
+     * <p>DICOMweb WADO-RS Part 18, Section 8.7.3.4 표준에 따른 multipart 형식:
+     * <pre>
+     * --boundary
+     * Content-Type: {mimeType}; transfer-syntax={transferSyntax}
+     * Content-Length: {length}
+     *
+     * [PixelData bytes]
+     * --boundary--
+     * </pre>
+     *
+     * @param pixelData 프레임 픽셀 데이터 (압축 또는 비압축)
+     * @param boundary multipart boundary 문자열
+     * @param transferSyntax Transfer Syntax UID
+     * @param mimeType Content-Type MIME 타입 (예: image/jp2, image/jpeg)
+     * @return multipart body 바이트 배열
+     */
+    private byte[] buildMultipartFrameBody(byte[] pixelData, String boundary,
+                                           String transferSyntax, String mimeType) {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+            // Part 헤더 - MIME Type과 Transfer Syntax 포함
+            String partHeader = "--" + boundary + "\r\n"
+                    + "Content-Type: " + mimeType + "; transfer-syntax=" + transferSyntax + "\r\n"
+                    + "Content-Length: " + pixelData.length + "\r\n"
+                    + "\r\n";
+
+            baos.write(partHeader.getBytes(StandardCharsets.UTF_8));
+
+            // PixelData 본문
+            baos.write(pixelData);
+
+            // Part 종료
+            String partFooter = "\r\n--" + boundary + "--\r\n";
+            baos.write(partFooter.getBytes(StandardCharsets.UTF_8));
+
+            return baos.toByteArray();
+
+        } catch (IOException e) {
+            throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
+                    "Failed to build multipart body: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Transfer Syntax UID를 MIME Type으로 변환
+     *
+     * <p>DICOMweb Part 18, Section 8.7.3.4 표준 준수:
+     * 압축된 프레임 데이터는 해당 압축 포맷의 MIME 타입으로 반환해야 함
+     *
+     * @param tsUid Transfer Syntax UID
+     * @return 해당하는 MIME Type (비압축/알 수 없는 경우 application/octet-stream)
+     */
+    private String getMediaTypeForTransferSyntax(String tsUid) {
+        if (tsUid == null) return "application/octet-stream";
+
+        return switch (tsUid) {
+            // JPEG 2000 (Lossless 및 Lossy)
+            case UID.JPEG2000Lossless, UID.JPEG2000 -> "image/jp2";
+            // JPEG (Baseline, Extended, Lossless)
+            case UID.JPEGBaseline8Bit, UID.JPEGExtended12Bit,
+                 UID.JPEGLossless, UID.JPEGLosslessSV1 -> "image/jpeg";
+            // JPEG-LS
+            case UID.JPEGLSLossless, UID.JPEGLSNearLossless -> "image/jls";
+            // RLE (별도 MIME 타입 없음)
+            case UID.RLELossless -> "application/octet-stream";
+            // 비압축 (Implicit/Explicit VR Little/Big Endian)
+            default -> "application/octet-stream";
+        };
     }
 
     /**
@@ -683,6 +785,9 @@ public class DicomWebController {
 
     /**
      * Instance → DICOM JSON 변환
+     *
+     * <p>Cornerstone wadors 로더가 PixelData를 디코딩하는데 필요한
+     * 모든 픽셀 메타데이터를 포함합니다.
      */
     private Map<String, Object> instanceToDicomJson(Instance instance, String studyUID, String seriesUID) {
         Map<String, Object> json = new LinkedHashMap<>();
@@ -720,6 +825,45 @@ public class DicomWebController {
         if (instance.getNumberOfFrames() != null) {
             json.put("00280008", createDicomValue("IS", String.valueOf(instance.getNumberOfFrames())));
         }
+
+        // ===== Pixel Metadata (Cornerstone wadors 로더 지원) =====
+
+        // Samples per Pixel (0028,0002) - 픽셀당 채널 수 (1=grayscale, 3=RGB)
+        if (instance.getSamplesPerPixel() != null) {
+            json.put("00280002", createDicomValue("US", instance.getSamplesPerPixel()));
+        }
+
+        // Photometric Interpretation (0028,0004) - 픽셀 해석 방법
+        if (instance.getPhotometricInterpretation() != null) {
+            json.put("00280004", createDicomValue("CS", instance.getPhotometricInterpretation()));
+        }
+
+        // Bits Allocated (0028,0100) - 픽셀당 할당 비트
+        if (instance.getBitsAllocated() != null) {
+            json.put("00280100", createDicomValue("US", instance.getBitsAllocated()));
+        }
+
+        // Bits Stored (0028,0101) - 실제 저장 비트
+        if (instance.getBitsStored() != null) {
+            json.put("00280101", createDicomValue("US", instance.getBitsStored()));
+        }
+
+        // High Bit (0028,0102) - 최상위 비트 위치
+        if (instance.getHighBit() != null) {
+            json.put("00280102", createDicomValue("US", instance.getHighBit()));
+        }
+
+        // Pixel Representation (0028,0103) - 0=unsigned, 1=signed
+        if (instance.getPixelRepresentation() != null) {
+            json.put("00280103", createDicomValue("US", instance.getPixelRepresentation()));
+        }
+
+        // ===== Transfer Syntax (Cornerstone wadors 로더 필수) =====
+
+        // Transfer Syntax UID (0002,0010) - PixelData 인코딩 방식
+        // 서버에서 디코딩된 raw pixels를 반환하므로 Explicit VR Little Endian 사용
+        // 원본 Transfer-Syntax는 Frame BulkData 응답 헤더에서 제공
+        json.put("00020010", createDicomValue("UI", "1.2.840.10008.1.2.1"));
 
         return json;
     }
