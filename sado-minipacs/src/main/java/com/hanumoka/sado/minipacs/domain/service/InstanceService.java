@@ -15,6 +15,7 @@ import com.hanumoka.sado.minipacs.domain.util.DicomFileValidator;
 import com.hanumoka.sado.minipacs.storage.dto.DicomFileMetadata;
 import com.hanumoka.sado.minipacs.storage.dto.StorageResult;
 import com.hanumoka.sado.minipacs.storage.service.DicomStorageService;
+import com.hanumoka.sado.minipacs.domain.service.PreRenderingService;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,8 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -60,6 +63,9 @@ public class InstanceService {
     private final DicomMetadataRecordRepository dicomMetadataRecordRepository;
     private final FileAssetRepository fileAssetRepository;
     private final ObjectMapper objectMapper;
+
+    // 사전 렌더링 서비스
+    private final PreRenderingService preRenderingService;
 
     /**
      * CRITICAL: Self-injection for AOP proxy access
@@ -670,6 +676,34 @@ public class InstanceService {
 
             log.debug("FileAsset created: id={}, instanceId={}, storagePath={}",
                     dicomFileAsset.getId(), savedInstance.getId(), s3Key);
+
+            // 13. 비동기 사전 렌더링 트리거 (업로드 응답에 영향 없음)
+            // PENDING 상태로 설정
+            savedInstance.setTranscodingStatus(Instance.TranscodingStatus.PENDING);
+            instanceRepository.save(savedInstance);
+
+            // CRITICAL: 트랜잭션 커밋 후에 비동기 작업 실행
+            // - @Transactional 메서드에서 바로 @Async 호출 시, 비동기 스레드가
+            //   메인 트랜잭션 커밋 전에 DB를 조회하여 Instance not found 에러 발생
+            // - TransactionSynchronizationManager.afterCommit()을 사용하여
+            //   트랜잭션이 커밋된 후에만 비동기 작업이 시작되도록 보장
+            final Long instanceId = savedInstance.getId();
+            final String studyUid = metadata.getStudyInstanceUid();
+            final String seriesUid = metadata.getSeriesInstanceUid();
+
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            log.info("Transaction committed, triggering pre-rendering: instanceId={}",
+                                    instanceId);
+                            preRenderingService.preRenderAsync(instanceId, studyUid, seriesUid);
+                        }
+                    }
+            );
+
+            log.info("Pre-rendering scheduled for after commit: instanceId={}, sopInstanceUid={}",
+                    savedInstance.getId(), savedInstance.getSopInstanceUid());
 
             return savedInstance;
 

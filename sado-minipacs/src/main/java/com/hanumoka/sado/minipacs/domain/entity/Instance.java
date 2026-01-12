@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Objects;
 
@@ -203,6 +204,40 @@ public class Instance extends TenantAwareEntity {
     @Column(name = "video_path", length = 512)
     private String videoPath;
 
+    // ========== 사전 렌더링 (Pre-rendering) ==========
+
+    /**
+     * Pre-rendered Base Path
+     * 사전 렌더링된 데이터의 기본 경로 (S3/SeaweedFS)
+     * 예: studies/{studyUID}/series/{seriesUID}/instances/{sopInstanceUID}/
+     */
+    @Column(name = "prerendered_base_path", length = 512)
+    private String prerenderedBasePath;
+
+    /**
+     * Pre-rendered Frame Count
+     * 사전 렌더링된 프레임 수
+     * - bulkdata/frame-{NNN}.raw
+     * - rendered/frame-{NNN}.png
+     */
+    @Column(name = "prerendered_frame_count")
+    private Integer prerenderedFrameCount;
+
+    /**
+     * Pre-rendered Total Size (bytes)
+     * 사전 렌더링된 모든 파일의 총 용량
+     * - thumbnail.jpg + bulkdata/*.raw + rendered/*.png
+     */
+    @Column(name = "prerendered_total_size")
+    private Long prerenderedTotalSize;
+
+    /**
+     * Pre-rendered At
+     * 사전 렌더링 완료 시각
+     */
+    @Column(name = "prerendered_at")
+    private LocalDateTime prerenderedAt;
+
     // ========== 스토리지 티어링 ==========
 
     /**
@@ -397,6 +432,26 @@ public class Instance extends TenantAwareEntity {
 
         public Builder storageTier(StorageTier storageTier) {
             instance.storageTier = storageTier;
+            return this;
+        }
+
+        public Builder prerenderedBasePath(String prerenderedBasePath) {
+            instance.prerenderedBasePath = prerenderedBasePath;
+            return this;
+        }
+
+        public Builder prerenderedFrameCount(Integer prerenderedFrameCount) {
+            instance.prerenderedFrameCount = prerenderedFrameCount;
+            return this;
+        }
+
+        public Builder prerenderedTotalSize(Long prerenderedTotalSize) {
+            instance.prerenderedTotalSize = prerenderedTotalSize;
+            return this;
+        }
+
+        public Builder prerenderedAt(LocalDateTime prerenderedAt) {
+            instance.prerenderedAt = prerenderedAt;
             return this;
         }
 

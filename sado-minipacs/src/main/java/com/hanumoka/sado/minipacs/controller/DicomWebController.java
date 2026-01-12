@@ -515,6 +515,36 @@ public class DicomWebController {
         // UID 검증
         validateInstanceUIDs(instance, studyUID, seriesUID);
 
+        // 응답 타입 결정
+        MediaType mediaType = contentType.contains("png") ? MediaType.IMAGE_PNG : MediaType.IMAGE_JPEG;
+        boolean isPng = mediaType.equals(MediaType.IMAGE_PNG);
+
+        // 사전 렌더링된 썸네일 사용 여부 확인 (JPEG, 128x128일 때만)
+        boolean usePrerenderedThumbnail = !isPng
+                && instance.getTranscodingStatus() == Instance.TranscodingStatus.COMPLETED
+                && instance.getThumbnailPath() != null
+                && (rows == null || rows == 128) && (columns == null || columns == 128);
+
+        if (usePrerenderedThumbnail) {
+            // 사전 렌더링된 썸네일 사용
+            try (var inputStream = dicomStorageService.downloadFileStream(instance.getThumbnailPath())) {
+                byte[] imageBytes = inputStream.readAllBytes();
+
+                log.info("WADO-URI Thumbnail (prerendered): objectUID={}, path={}, bytes={}",
+                        objectUID, instance.getThumbnailPath(), imageBytes.length);
+
+                return ResponseEntity.ok()
+                        .contentType(mediaType)
+                        .cacheControl(CacheControl.maxAge(Duration.ofHours(24)))
+                        .body(imageBytes);
+            } catch (Exception e) {
+                log.warn("Failed to load prerendered thumbnail, falling back to real-time rendering: {}",
+                        e.getMessage());
+                // 실패 시 아래의 기존 로직으로 fallback
+            }
+        }
+
+        // 기존 실시간 렌더링 로직
         String storagePath = instance.getStoragePath();
 
         // 기본 크기: 128x128
@@ -524,10 +554,6 @@ public class DicomWebController {
         // 최대 크기 제한 (보안/성능)
         targetWidth = Math.min(targetWidth, 512);
         targetHeight = Math.min(targetHeight, 512);
-
-        // 응답 타입 결정
-        MediaType mediaType = contentType.contains("png") ? MediaType.IMAGE_PNG : MediaType.IMAGE_JPEG;
-        boolean isPng = mediaType.equals(MediaType.IMAGE_PNG);
 
         // 썸네일은 작으므로 byte[]로 반환 (StreamingResponseBody 대신)
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -646,17 +672,41 @@ public class DicomWebController {
 
         String storagePath = instance.getStoragePath();
 
-        // 단일 프레임: 기존 로직 (image/png 반환, 하위 호환성)
+        // 사전 렌더링 데이터 사용 여부 확인
+        boolean usePrerendered = instance.getTranscodingStatus() == Instance.TranscodingStatus.COMPLETED
+                && instance.getPrerenderedBasePath() != null;
+
+        // 단일 프레임
         if (frameNumbers.size() == 1) {
             int frameNumber = frameNumbers.get(0);
-            StreamingResponseBody responseBody = outputStream -> {
-                dicomRenderingService.renderToPngStream(storagePath, frameNumber, outputStream);
-            };
 
-            return ResponseEntity.ok()
-                    .contentType(MediaType.IMAGE_PNG)
-                    .cacheControl(CacheControl.maxAge(Duration.ofHours(1)))
-                    .body(responseBody);
+            if (usePrerendered) {
+                // 사전 렌더링 데이터 사용 (S3에서 직접 반환)
+                String prerenderedPath = String.format("%s/rendered/frame-%03d.png",
+                        instance.getPrerenderedBasePath(), frameNumber);
+                StreamingResponseBody responseBody = outputStream -> {
+                    try (var inputStream = dicomStorageService.downloadFileStream(prerenderedPath)) {
+                        inputStream.transferTo(outputStream);
+                        log.info("WADO-RS Rendered (prerendered): frame={}, path={}",
+                                frameNumber, prerenderedPath);
+                    }
+                };
+
+                return ResponseEntity.ok()
+                        .contentType(MediaType.IMAGE_PNG)
+                        .cacheControl(CacheControl.maxAge(Duration.ofHours(1)))
+                        .body(responseBody);
+            } else {
+                // 기존 실시간 렌더링 로직
+                StreamingResponseBody responseBody = outputStream -> {
+                    dicomRenderingService.renderToPngStream(storagePath, frameNumber, outputStream);
+                };
+
+                return ResponseEntity.ok()
+                        .contentType(MediaType.IMAGE_PNG)
+                        .cacheControl(CacheControl.maxAge(Duration.ofHours(1)))
+                        .body(responseBody);
+            }
         }
 
         // 다중 프레임: multipart/related로 여러 PNG 반환 (DICOMweb FrameList 표준)
@@ -667,10 +717,43 @@ public class DicomWebController {
                 "multipart/related; type=\"image/png\"; boundary=" + boundary));
         headers.setCacheControl(CacheControl.maxAge(Duration.ofHours(1)));
 
-        StreamingResponseBody responseBody = outputStream -> {
-            dicomRenderingService.renderMultipleFramesToStream(
-                    storagePath, frameNumbers, boundary, outputStream);
-        };
+        StreamingResponseBody responseBody;
+        if (usePrerendered) {
+            // 다중 프레임: 사전 렌더링 데이터 사용
+            String basePath = instance.getPrerenderedBasePath();
+            responseBody = outputStream -> {
+                for (int frameNumber : frameNumbers) {
+                    String prerenderedPath = String.format("%s/rendered/frame-%03d.png", basePath, frameNumber);
+
+                    try (var inputStream = dicomStorageService.downloadFileStream(prerenderedPath)) {
+                        // Multipart 헤더 작성
+                        String partHeader = "--" + boundary + "\r\n"
+                                + "Content-Type: image/png\r\n"
+                                + "Content-Location: /frames/" + frameNumber + "/rendered\r\n"
+                                + "\r\n";
+                        outputStream.write(partHeader.getBytes(StandardCharsets.UTF_8));
+
+                        // 사전 렌더링 데이터 스트리밍
+                        inputStream.transferTo(outputStream);
+
+                        outputStream.write("\r\n".getBytes(StandardCharsets.UTF_8));
+                    }
+                }
+                // 종료 boundary
+                String endBoundary = "--" + boundary + "--\r\n";
+                outputStream.write(endBoundary.getBytes(StandardCharsets.UTF_8));
+                outputStream.flush();
+
+                log.info("WADO-RS Rendered (prerendered): frames={}, basePath={}",
+                        frameNumbers.size(), basePath);
+            };
+        } else {
+            // 기존 실시간 렌더링
+            responseBody = outputStream -> {
+                dicomRenderingService.renderMultipleFramesToStream(
+                        storagePath, frameNumbers, boundary, outputStream);
+            };
+        }
 
         return new ResponseEntity<>(responseBody, headers, HttpStatus.OK);
     }
@@ -769,25 +852,88 @@ public class DicomWebController {
 
         String storagePath = instance.getStoragePath();
 
+        // 사전 렌더링 데이터 사용 여부 확인
+        boolean usePrerendered = instance.getTranscodingStatus() == Instance.TranscodingStatus.COMPLETED
+                && instance.getPrerenderedBasePath() != null;
+
         // 단일 프레임 vs 다중 프레임 분기
         StreamingResponseBody responseBody;
         if (frameNumbers.size() == 1) {
-            // 단일 프레임: 기존 로직 그대로 (하위 호환성)
             int frameNumber = frameNumbers.get(0);
-            responseBody = outputStream -> {
-                int pixelDataSize = dicomRenderingService.extractFramePixelDataToStream(
-                        storagePath, frameNumber, boundary, outputTransferSyntax, mimeType, outputStream);
-                log.info("WADO-RS BulkData: frame={}, originalTsUid={}, decompressedSize={}",
-                        frameNumber, originalTransferSyntax, pixelDataSize);
-            };
+
+            if (usePrerendered) {
+                // 사전 렌더링 데이터 사용 (S3에서 직접 반환)
+                String prerenderedPath = String.format("%s/bulkdata/frame-%03d.raw",
+                        instance.getPrerenderedBasePath(), frameNumber);
+                responseBody = outputStream -> {
+                    try (var inputStream = dicomStorageService.downloadFileStream(prerenderedPath)) {
+                        // Multipart 헤더 작성
+                        String partHeader = "--" + boundary + "\r\n"
+                                + "Content-Type: " + mimeType + "; transfer-syntax=" + outputTransferSyntax + "\r\n"
+                                + "\r\n";
+                        outputStream.write(partHeader.getBytes(StandardCharsets.UTF_8));
+
+                        // 사전 렌더링 데이터 스트리밍
+                        inputStream.transferTo(outputStream);
+
+                        // Part 종료
+                        String partFooter = "\r\n--" + boundary + "--\r\n";
+                        outputStream.write(partFooter.getBytes(StandardCharsets.UTF_8));
+                        outputStream.flush();
+
+                        log.info("WADO-RS BulkData (prerendered): frame={}, path={}",
+                                frameNumber, prerenderedPath);
+                    }
+                };
+            } else {
+                // 기존 실시간 렌더링 로직
+                responseBody = outputStream -> {
+                    int pixelDataSize = dicomRenderingService.extractFramePixelDataToStream(
+                            storagePath, frameNumber, boundary, outputTransferSyntax, mimeType, outputStream);
+                    log.info("WADO-RS BulkData: frame={}, originalTsUid={}, decompressedSize={}",
+                            frameNumber, originalTransferSyntax, pixelDataSize);
+                };
+            }
         } else {
-            // 다중 프레임: DICOM 1회 로드로 최적화 (DICOMweb FrameList 표준)
-            responseBody = outputStream -> {
-                int totalSize = dicomRenderingService.extractMultipleFramesToStream(
-                        storagePath, frameNumbers, boundary, outputTransferSyntax, mimeType, outputStream);
-                log.info("WADO-RS BulkData: frames={}, totalSize={}, originalTsUid={}",
-                        frameNumbers.size(), totalSize, originalTransferSyntax);
-            };
+            if (usePrerendered) {
+                // 다중 프레임: 사전 렌더링 데이터 사용
+                String basePath = instance.getPrerenderedBasePath();
+                responseBody = outputStream -> {
+                    for (int i = 0; i < frameNumbers.size(); i++) {
+                        int frameNumber = frameNumbers.get(i);
+                        String prerenderedPath = String.format("%s/bulkdata/frame-%03d.raw", basePath, frameNumber);
+
+                        try (var inputStream = dicomStorageService.downloadFileStream(prerenderedPath)) {
+                            // Multipart 헤더 작성
+                            String partHeader = "--" + boundary + "\r\n"
+                                    + "Content-Type: " + mimeType + "; transfer-syntax=" + outputTransferSyntax + "\r\n"
+                                    + "Content-Location: /frames/" + frameNumber + "\r\n"
+                                    + "\r\n";
+                            outputStream.write(partHeader.getBytes(StandardCharsets.UTF_8));
+
+                            // 사전 렌더링 데이터 스트리밍
+                            inputStream.transferTo(outputStream);
+
+                            outputStream.write("\r\n".getBytes(StandardCharsets.UTF_8));
+                        }
+                    }
+                    // 종료 boundary
+                    String endBoundary = "--" + boundary + "--\r\n";
+                    outputStream.write(endBoundary.getBytes(StandardCharsets.UTF_8));
+                    outputStream.flush();
+
+                    log.info("WADO-RS BulkData (prerendered): frames={}, basePath={}",
+                            frameNumbers.size(), basePath);
+                };
+            } else {
+                // 기존 실시간 렌더링: DICOM 1회 로드로 최적화
+                responseBody = outputStream -> {
+                    int totalSize = dicomRenderingService.extractMultipleFramesToStream(
+                            storagePath, frameNumbers, boundary, outputTransferSyntax, mimeType, outputStream);
+                    log.info("WADO-RS BulkData: frames={}, totalSize={}, originalTsUid={}",
+                            frameNumbers.size(), totalSize, originalTransferSyntax);
+                };
+            }
         }
 
         return new ResponseEntity<>(responseBody, headers, HttpStatus.OK);
