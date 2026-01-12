@@ -447,32 +447,107 @@ public class DicomWebController {
     }
 
     /**
-     * WADO-URI: 레거시 WADO URL 지원
+     * WADO-URI: 레거시 WADO URL 지원 (썸네일 포함)
      *
      * <p>OHIF Viewer 호환성을 위해 WADO-URI도 지원합니다.
+     *
+     * <p>썸네일 지원 (2026-01-12):
+     * <ul>
+     *   <li>contentType=image/jpeg, rows, columns 파라미터로 썸네일 요청 가능</li>
+     *   <li>파라미터 없으면 기존 동작 (DICOM 파일 반환)</li>
+     * </ul>
      *
      * @param requestType WADO 요청 타입 (WADO)
      * @param studyUID Study Instance UID
      * @param seriesUID Series Instance UID
      * @param objectUID SOP Instance UID
-     * @return DICOM 파일 스트림
+     * @param contentType 요청 컨텐츠 타입 (optional, image/jpeg 또는 image/png)
+     * @param rows 썸네일 높이 (optional, 기본값 128)
+     * @param columns 썸네일 너비 (optional, 기본값 128)
+     * @return DICOM 파일 스트림 또는 이미지 썸네일
      */
-    @GetMapping(value = "/wado", produces = DICOM_MEDIA_TYPE)
-    @Operation(summary = "WADO-URI: 레거시 WADO 지원", description = "레거시 WADO-URI 형식을 지원합니다.")
-    public ResponseEntity<Resource> retrieveInstanceViaWadoUri(
+    @GetMapping(value = "/wado")
+    @Operation(summary = "WADO-URI: 레거시 WADO 지원 (썸네일 포함)",
+            description = "레거시 WADO-URI 형식을 지원합니다. contentType=image/jpeg 파라미터로 썸네일 요청 가능.")
+    public ResponseEntity<?> retrieveInstanceViaWadoUri(
             @RequestParam String requestType,
             @RequestParam @Pattern(regexp = "^[0-9.]+$", message = "Invalid DICOM UID format") String studyUID,
             @RequestParam @Pattern(regexp = "^[0-9.]+$", message = "Invalid DICOM UID format") String seriesUID,
-            @RequestParam @Pattern(regexp = "^[0-9.]+$", message = "Invalid DICOM UID format") String objectUID
+            @RequestParam @Pattern(regexp = "^[0-9.]+$", message = "Invalid DICOM UID format") String objectUID,
+            @RequestParam(required = false) String contentType,
+            @RequestParam(required = false) Integer rows,
+            @RequestParam(required = false) Integer columns
     ) {
         if (!"WADO".equals(requestType)) {
             return ResponseEntity.badRequest().build();
         }
 
-        log.info("WADO-URI: Request - studyUID={}, seriesUID={}, objectUID={}",
-                studyUID, seriesUID, objectUID);
+        log.info("WADO-URI: Request - objectUID={}, contentType={}, rows={}, columns={}",
+                objectUID, contentType, rows, columns);
 
+        // 썸네일 요청 (contentType이 image/jpeg 또는 image/png인 경우)
+        if (contentType != null && contentType.startsWith("image/")) {
+            return renderWadoUriThumbnail(studyUID, seriesUID, objectUID, contentType, rows, columns);
+        }
+
+        // 기본: DICOM 파일 반환
         return retrieveInstance(studyUID, seriesUID, objectUID);
+    }
+
+    /**
+     * WADO-URI 썸네일 렌더링
+     *
+     * @param studyUID Study Instance UID
+     * @param seriesUID Series Instance UID
+     * @param objectUID SOP Instance UID
+     * @param contentType 요청 컨텐츠 타입 (image/jpeg 또는 image/png)
+     * @param rows 썸네일 높이 (null이면 128)
+     * @param columns 썸네일 너비 (null이면 128)
+     * @return 썸네일 이미지 바이트 배열
+     */
+    private ResponseEntity<byte[]> renderWadoUriThumbnail(
+            String studyUID, String seriesUID, String objectUID,
+            String contentType, Integer rows, Integer columns
+    ) {
+        Instance instance = instanceService.findBySopInstanceUid(objectUID)
+                .orElseThrow(() -> new BusinessException(MiniPacsErrorCode.INSTANCE_NOT_FOUND));
+
+        // UID 검증
+        validateInstanceUIDs(instance, studyUID, seriesUID);
+
+        String storagePath = instance.getStoragePath();
+
+        // 기본 크기: 128x128
+        int targetWidth = (columns != null && columns > 0) ? columns : 128;
+        int targetHeight = (rows != null && rows > 0) ? rows : 128;
+
+        // 최대 크기 제한 (보안/성능)
+        targetWidth = Math.min(targetWidth, 512);
+        targetHeight = Math.min(targetHeight, 512);
+
+        // 응답 타입 결정
+        MediaType mediaType = contentType.contains("png") ? MediaType.IMAGE_PNG : MediaType.IMAGE_JPEG;
+        boolean isPng = mediaType.equals(MediaType.IMAGE_PNG);
+
+        // 썸네일은 작으므로 byte[]로 반환 (StreamingResponseBody 대신)
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        if (isPng) {
+            // PNG: 리사이징 없이 원본 크기 (기존 로직)
+            dicomRenderingService.renderToPngStream(storagePath, 1, baos);
+        } else {
+            // JPEG: 리사이징 적용 (썸네일용)
+            dicomRenderingService.renderToJpegStream(storagePath, 1, targetWidth, targetHeight, baos);
+        }
+
+        byte[] imageBytes = baos.toByteArray();
+
+        log.info("WADO-URI Thumbnail: objectUID={}, format={}, size={}x{}, bytes={}",
+                objectUID, isPng ? "PNG" : "JPEG", targetWidth, targetHeight, imageBytes.length);
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .cacheControl(CacheControl.maxAge(Duration.ofHours(24)))  // 썸네일 캐시 24시간
+                .body(imageBytes);
     }
 
     // ========== WADO-RS: Rendered Services ==========

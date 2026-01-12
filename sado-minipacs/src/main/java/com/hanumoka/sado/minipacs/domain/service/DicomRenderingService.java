@@ -20,6 +20,8 @@ import org.springframework.stereotype.Service;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -1060,5 +1062,108 @@ public class DicomRenderingService {
             log.error("Failed to render multiple frames: path={}, frames={}", storagePath, frameNumbers, e);
             throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED, e.getMessage());
         }
+    }
+
+    // ==================== WADO-URI 썸네일 지원 ====================
+
+    /**
+     * DICOM을 지정 크기의 JPEG로 렌더링하여 스트리밍 (WADO-URI 썸네일용)
+     *
+     * <p>WADO-URI contentType=image/jpeg, rows, columns 파라미터 지원
+     * 비율을 유지하면서 지정된 크기로 리사이징합니다.
+     *
+     * @param storagePath S3 저장 경로
+     * @param frameNumber 프레임 번호 (1부터 시작)
+     * @param targetWidth 목표 너비 (pixels)
+     * @param targetHeight 목표 높이 (pixels)
+     * @param outputStream 결과를 쓸 OutputStream
+     * @throws BusinessException DICOM_RENDER_FAILED - 렌더링 실패 시
+     */
+    public void renderToJpegStream(
+            String storagePath,
+            int frameNumber,
+            int targetWidth,
+            int targetHeight,
+            java.io.OutputStream outputStream) {
+
+        log.debug("Rendering DICOM to JPEG thumbnail: path={}, frame={}, size={}x{}",
+                storagePath, frameNumber, targetWidth, targetHeight);
+
+        try (InputStream dicomStream = dicomStorageService.downloadDicomFile(storagePath)) {
+            // DICOM 파일을 메모리로 읽기 (ImageIO가 seekable stream 필요)
+            byte[] dicomBytes = dicomStream.readAllBytes();
+
+            // BufferedImage 추출 (기존 extractFrame 재사용)
+            BufferedImage original = extractFrame(dicomBytes, frameNumber);
+
+            // 리사이징 (비율 유지)
+            BufferedImage resized = resizeImage(original, targetWidth, targetHeight);
+
+            // JPEG로 직접 스트리밍
+            boolean written = ImageIO.write(resized, "JPEG", outputStream);
+
+            if (!written) {
+                throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED, "JPEG 인코딩 실패");
+            }
+
+            outputStream.flush();
+            log.debug("Rendered JPEG thumbnail: {}x{} → {}x{}",
+                    original.getWidth(), original.getHeight(),
+                    resized.getWidth(), resized.getHeight());
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (IOException e) {
+            log.error("DICOM to JPEG rendering failed: path={}, frame={}", storagePath, frameNumber, e);
+            throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED, e.getMessage());
+        }
+    }
+
+    /**
+     * 이미지 리사이징 (비율 유지)
+     *
+     * <p>원본 비율을 유지하면서 지정된 크기에 맞게 축소합니다.
+     * 고품질 Bilinear Interpolation 사용.
+     *
+     * @param original 원본 BufferedImage
+     * @param targetWidth 목표 너비
+     * @param targetHeight 목표 높이
+     * @return 리사이징된 BufferedImage
+     */
+    private BufferedImage resizeImage(BufferedImage original, int targetWidth, int targetHeight) {
+        // 비율 계산 (축소만, 확대하지 않음)
+        double widthRatio = (double) targetWidth / original.getWidth();
+        double heightRatio = (double) targetHeight / original.getHeight();
+        double ratio = Math.min(widthRatio, heightRatio);
+
+        // 원본이 목표보다 작으면 리사이징 하지 않음
+        if (ratio >= 1.0) {
+            return original;
+        }
+
+        int newWidth = (int) (original.getWidth() * ratio);
+        int newHeight = (int) (original.getHeight() * ratio);
+
+        // 최소 1픽셀 보장
+        newWidth = Math.max(1, newWidth);
+        newHeight = Math.max(1, newHeight);
+
+        // 고품질 리사이징
+        BufferedImage resized = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2d = resized.createGraphics();
+
+        // 렌더링 힌트 설정 (고품질)
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        g2d.drawImage(original, 0, 0, newWidth, newHeight, null);
+        g2d.dispose();
+
+        log.debug("Resized image: {}x{} -> {}x{} (ratio: {})",
+                original.getWidth(), original.getHeight(), newWidth, newHeight,
+                String.format("%.2f", ratio));
+
+        return resized;
     }
 }
