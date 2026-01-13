@@ -37,6 +37,9 @@ public class InstanceResponse {
     private String frameRateSource;
     private Integer instanceNumber;
 
+    // 4-1. Transfer Syntax (압축 형식)
+    private String transferSyntaxUid;
+
     // 5. 스토리지
     private String storagePath;  // S3 Key
 

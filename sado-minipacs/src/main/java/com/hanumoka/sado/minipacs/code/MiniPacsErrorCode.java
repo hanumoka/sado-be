@@ -266,6 +266,18 @@ public enum MiniPacsErrorCode implements ApiCode {
             "이미 존재하는 영상입니다"
     ),
 
+    /**
+     * 트랜스코딩 미완료
+     *
+     * <p>발생 시점: MJPEG 스트리밍 요청 시 Pre-rendering 미완료
+     * <p>원인: Pre-rendering 진행 중, 실패, 또는 멀티프레임이 아닌 영상
+     */
+    TRANSCODING_NOT_COMPLETED(
+            HttpStatus.CONFLICT,
+            409602,
+            "트랜스코딩이 완료되지 않았습니다"
+    ),
+
     // ========== Tiering 에러 (400700~400799) ==========
 
     /**

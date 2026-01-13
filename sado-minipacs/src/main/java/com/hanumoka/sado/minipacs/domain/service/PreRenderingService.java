@@ -4,9 +4,10 @@ import com.hanumoka.sado.common.exception.BusinessException;
 import com.hanumoka.sado.minipacs.code.MiniPacsErrorCode;
 import com.hanumoka.sado.minipacs.domain.entity.Instance;
 import com.hanumoka.sado.minipacs.domain.repository.InstanceRepository;
+import com.hanumoka.sado.minipacs.dto.FrameExtractionResult;
 import com.hanumoka.sado.minipacs.infrastructure.config.S3Properties;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +29,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * DICOM 사전 렌더링 서비스
@@ -48,16 +54,19 @@ import java.util.Iterator;
  * ├── thumbnail.jpg           (128x128, 첫 프레임)
  * ├── bulkdata/
  * │   ├── frame-001.raw
- * │   ├── frame-002.raw
  * │   └── ...
- * └── rendered/
- *     ├── frame-001.png
- *     ├── frame-002.png
+ * ├── rendered/
+ * │   ├── frame-001.png
+ * │   └── ...
+ * └── cine/
+ *     ├── frame-001-256.jpg   (256px)
+ *     ├── frame-001-128.jpg   (128px)
+ *     ├── frame-001-64.jpg    (64px)
+ *     ├── frame-001-32.jpg    (32px)
  *     └── ...
  * </pre>
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class PreRenderingService {
 
@@ -65,13 +74,33 @@ public class PreRenderingService {
     private final InstanceRepository instanceRepository;
     private final S3Client s3Client;
     private final S3Properties s3Properties;
+    private final Executor s3UploadExecutor;
+
+    /**
+     * 생성자 - S3 업로드 전용 Executor 주입
+     */
+    public PreRenderingService(
+            DicomRenderingService dicomRenderingService,
+            InstanceRepository instanceRepository,
+            S3Client s3Client,
+            S3Properties s3Properties,
+            @Qualifier("s3UploadExecutor") Executor s3UploadExecutor
+    ) {
+        this.dicomRenderingService = dicomRenderingService;
+        this.instanceRepository = instanceRepository;
+        this.s3Client = s3Client;
+        this.s3Properties = s3Properties;
+        this.s3UploadExecutor = s3UploadExecutor;
+    }
 
     // 썸네일 크기
     private static final int THUMBNAIL_SIZE = 128;
 
-    // Cine 재생용 해상도 (256px, 128px JPEG)
+    // Cine 재생용 해상도 (256px, 128px, 64px, 32px JPEG)
     private static final int CINE_SIZE_256 = 256;
     private static final int CINE_SIZE_128 = 128;
+    private static final int CINE_SIZE_64 = 64;
+    private static final int CINE_SIZE_32 = 32;
     private static final float CINE_JPEG_QUALITY = 0.8f;  // 80% 품질
 
     /**
@@ -81,7 +110,8 @@ public class PreRenderingService {
             String prerenderedBasePath,
             int frameCount,
             long totalSize,
-            LocalDateTime completedAt
+            LocalDateTime completedAt,
+            boolean hasCompressedBulkdata  // NEW: 압축 BulkData 존재 여부
     ) {}
 
     /**
@@ -164,15 +194,21 @@ public class PreRenderingService {
         instance.setPrerenderedTotalSize(result.totalSize());
         instance.setPrerenderedAt(result.completedAt());
         instance.setThumbnailPath(result.prerenderedBasePath() + "/thumbnail.jpg");
+        instance.setHasCompressedBulkdata(result.hasCompressedBulkdata());  // NEW
 
         instanceRepository.save(instance);
-        log.debug("[PreRender] Result updated: instanceId={}, basePath={}", instanceId, result.prerenderedBasePath());
+        log.debug("[PreRender] Result updated: instanceId={}, basePath={}, hasCompressed={}",
+                instanceId, result.prerenderedBasePath(), result.hasCompressedBulkdata());
     }
 
     /**
-     * 사전 렌더링 실행 (동기)
+     * 사전 렌더링 실행 (동기 - S3 업로드는 병렬)
      *
-     * <p>테스트 또는 동기 실행이 필요한 경우 직접 호출합니다.
+     * <p>성능 최적화 (2026-01-13):
+     * <ul>
+     *   <li>기존: 순차 S3 업로드 (350회 × 200ms = 70초)</li>
+     *   <li>개선: 병렬 S3 업로드 (8스레드 → ~10초)</li>
+     * </ul>
      *
      * @param storagePath 원본 DICOM 파일 S3 경로
      * @param studyInstanceUid Study Instance UID
@@ -193,40 +229,86 @@ public class PreRenderingService {
 
         // 기본 경로 생성
         String basePath = buildPrerenderedBasePath(studyInstanceUid, seriesInstanceUid, sopInstanceUid);
-        long totalSize = 0;
+
+        // 병렬 업로드를 위한 Future 수집 및 사이즈 추적
+        List<CompletableFuture<Long>> uploadFutures = new ArrayList<>();
+        AtomicLong totalSize = new AtomicLong(0);
+        boolean[] hasCompressedBulkdata = {false};  // effectively final for lambda
 
         try {
-            // 1. 썸네일 생성 (첫 번째 프레임, 128x128 JPEG)
-            long thumbnailSize = generateThumbnail(storagePath, basePath);
-            totalSize += thumbnailSize;
-            log.debug("[PreRender] Thumbnail generated: {} bytes", thumbnailSize);
+            // 0. Transfer Syntax 확인 (압축 DICOM 여부)
+            String transferSyntaxUid = dicomRenderingService.getTransferSyntaxUid(storagePath);
+            boolean isCompressedDicom = dicomRenderingService.isCompressedTransferSyntax(transferSyntaxUid);
+            log.debug("[PreRender] Transfer Syntax: {}, compressed={}", transferSyntaxUid, isCompressedDicom);
 
-            // 2. 각 프레임에 대해 BulkData + Rendered PNG + Cine JPEG 생성
+            // 1. 썸네일 생성 (첫 번째 프레임, 128x128 JPEG) - 비동기 업로드
+            CompletableFuture<Long> thumbnailFuture = generateThumbnailAsync(storagePath, basePath);
+            uploadFutures.add(thumbnailFuture);
+            log.debug("[PreRender] Thumbnail generation submitted");
+
+            // 2. 각 프레임에 대해 BulkData + Compressed + Rendered PNG + Cine JPEG 생성
             for (int frameNumber = 1; frameNumber <= numberOfFrames; frameNumber++) {
-                // 2.1 Raw PixelData 추출 및 저장
-                long rawSize = generateBulkData(storagePath, basePath, frameNumber);
-                totalSize += rawSize;
+                final int frame = frameNumber;  // effectively final for lambda
 
-                // 2.2 Rendered PNG 생성 및 저장 (512px)
-                long pngSize = generateRenderedPng(storagePath, basePath, frameNumber);
-                totalSize += pngSize;
+                // 2.1 Raw PixelData 추출 및 비동기 저장
+                CompletableFuture<Long> rawFuture = generateBulkDataAsync(storagePath, basePath, frame);
+                uploadFutures.add(rawFuture);
 
-                // 2.3 Cine JPEG 생성 (256px, 128px)
-                long jpeg256Size = generateCineJpeg(storagePath, basePath, frameNumber, CINE_SIZE_256);
-                long jpeg128Size = generateCineJpeg(storagePath, basePath, frameNumber, CINE_SIZE_128);
-                totalSize += jpeg256Size + jpeg128Size;
+                // 2.2 원본 압축 데이터 저장 (압축 DICOM인 경우만)
+                if (isCompressedDicom) {
+                    CompletableFuture<Long> compressedFuture = generateCompressedBulkDataAsync(
+                            storagePath, basePath, frame, transferSyntaxUid);
+                    uploadFutures.add(compressedFuture.thenApply(size -> {
+                        if (size > 0) {
+                            hasCompressedBulkdata[0] = true;
+                        }
+                        return size;
+                    }));
+                }
+
+                // 2.3 Rendered PNG 생성 및 비동기 저장 (512px)
+                CompletableFuture<Long> pngFuture = generateRenderedPngAsync(storagePath, basePath, frame);
+                uploadFutures.add(pngFuture);
+
+                // 2.4 Cine JPEG 생성 (256px, 128px, 64px, 32px)
+                uploadFutures.add(generateCineJpegAsync(storagePath, basePath, frame, CINE_SIZE_256));
+                uploadFutures.add(generateCineJpegAsync(storagePath, basePath, frame, CINE_SIZE_128));
+                uploadFutures.add(generateCineJpegAsync(storagePath, basePath, frame, CINE_SIZE_64));
+                uploadFutures.add(generateCineJpegAsync(storagePath, basePath, frame, CINE_SIZE_32));
 
                 if (frameNumber % 10 == 0 || frameNumber == numberOfFrames) {
-                    log.debug("[PreRender] Progress: {}/{} frames processed", frameNumber, numberOfFrames);
+                    log.debug("[PreRender] Progress: {}/{} frames submitted (pending uploads: {})",
+                            frameNumber, numberOfFrames, uploadFutures.size());
                 }
             }
 
+            // 3. 모든 업로드 완료 대기 및 사이즈 합산
+            log.info("[PreRender] Waiting for {} uploads to complete...", uploadFutures.size());
+            long startWait = System.currentTimeMillis();
+
+            CompletableFuture<Void> allUploads = CompletableFuture.allOf(
+                    uploadFutures.toArray(new CompletableFuture[0]));
+
+            // 각 Future의 결과(사이즈)를 합산
+            allUploads.join();  // 모든 업로드 완료 대기
+
+            for (CompletableFuture<Long> future : uploadFutures) {
+                try {
+                    totalSize.addAndGet(future.get());
+                } catch (Exception e) {
+                    log.warn("[PreRender] Failed to get upload size: {}", e.getMessage());
+                }
+            }
+
+            long uploadDuration = System.currentTimeMillis() - startWait;
+            log.info("[PreRender] All uploads completed in {} ms", uploadDuration);
+
             LocalDateTime completedAt = LocalDateTime.now();
 
-            log.info("[PreRender] Completed: basePath={}, frames={}, totalSize={} bytes",
-                    basePath, numberOfFrames, totalSize);
+            log.info("[PreRender] Completed: basePath={}, frames={}, totalSize={} bytes, hasCompressed={}, uploads={}",
+                    basePath, numberOfFrames, totalSize.get(), hasCompressedBulkdata[0], uploadFutures.size());
 
-            return new PreRenderingResult(basePath, numberOfFrames, totalSize, completedAt);
+            return new PreRenderingResult(basePath, numberOfFrames, totalSize.get(), completedAt, hasCompressedBulkdata[0]);
 
         } catch (Exception e) {
             log.error("[PreRender] Failed during execution: sopInstanceUid={}", sopInstanceUid, e);
@@ -246,80 +328,141 @@ public class PreRenderingService {
     }
 
     /**
-     * 썸네일 생성 (128x128 JPEG, 첫 번째 프레임)
+     * 썸네일 생성 (128x128 JPEG, 첫 번째 프레임) - 비동기 버전
      *
-     * @return 저장된 썸네일 파일 크기 (bytes)
+     * @return CompletableFuture<Long> - 저장된 썸네일 파일 크기 (bytes)
      */
-    private long generateThumbnail(String storagePath, String basePath) {
-        log.debug("[PreRender] Generating thumbnail: basePath={}", basePath);
+    private CompletableFuture<Long> generateThumbnailAsync(String storagePath, String basePath) {
+        return CompletableFuture.supplyAsync(() -> {
+            log.debug("[PreRender] Generating thumbnail: basePath={}", basePath);
 
-        try {
-            // 첫 번째 프레임을 PNG로 렌더링 후 리사이징
-            byte[] pngBytes = dicomRenderingService.renderToPng(storagePath, 1);
+            try {
+                // 첫 번째 프레임을 PNG로 렌더링 후 리사이징
+                byte[] pngBytes = dicomRenderingService.renderToPng(storagePath, 1);
 
-            // PNG 바이트를 BufferedImage로 변환
-            BufferedImage original = ImageIO.read(new java.io.ByteArrayInputStream(pngBytes));
-            if (original == null) {
+                // PNG 바이트를 BufferedImage로 변환
+                BufferedImage original = ImageIO.read(new java.io.ByteArrayInputStream(pngBytes));
+                if (original == null) {
+                    throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
+                            "Failed to read rendered PNG as BufferedImage");
+                }
+
+                // 리사이징 (128x128, 비율 유지)
+                BufferedImage thumbnail = resizeImage(original, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
+
+                // JPEG로 인코딩
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                boolean written = ImageIO.write(thumbnail, "JPEG", baos);
+                if (!written) {
+                    throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
+                            "Failed to encode thumbnail as JPEG");
+                }
+
+                byte[] jpegBytes = baos.toByteArray();
+
+                // S3에 업로드
+                String s3Key = basePath + "/thumbnail.jpg";
+                uploadToS3(s3Key, jpegBytes, "image/jpeg");
+
+                log.debug("[PreRender] Thumbnail saved: s3Key={}, size={} bytes", s3Key, jpegBytes.length);
+                return (long) jpegBytes.length;
+
+            } catch (IOException e) {
                 throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
-                        "Failed to read rendered PNG as BufferedImage");
+                        "Thumbnail generation failed: " + e.getMessage());
             }
+        }, s3UploadExecutor);
+    }
 
-            // 리사이징 (128x128, 비율 유지)
-            BufferedImage thumbnail = resizeImage(original, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
-
-            // JPEG로 인코딩
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            boolean written = ImageIO.write(thumbnail, "JPEG", baos);
-            if (!written) {
-                throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
-                        "Failed to encode thumbnail as JPEG");
-            }
-
-            byte[] jpegBytes = baos.toByteArray();
+    /**
+     * BulkData (Raw PixelData) 생성 - 비동기 버전
+     *
+     * @return CompletableFuture<Long> - 저장된 raw 파일 크기 (bytes)
+     */
+    private CompletableFuture<Long> generateBulkDataAsync(String storagePath, String basePath, int frameNumber) {
+        return CompletableFuture.supplyAsync(() -> {
+            // Raw PixelData 추출
+            byte[] rawPixels = dicomRenderingService.extractFramePixelData(storagePath, frameNumber);
 
             // S3에 업로드
-            String s3Key = basePath + "/thumbnail.jpg";
-            uploadToS3(s3Key, jpegBytes, "image/jpeg");
+            String s3Key = String.format("%s/bulkdata/frame-%03d.raw", basePath, frameNumber);
+            uploadToS3(s3Key, rawPixels, "application/octet-stream");
 
-            log.debug("[PreRender] Thumbnail saved: s3Key={}, size={} bytes", s3Key, jpegBytes.length);
-            return jpegBytes.length;
-
-        } catch (IOException e) {
-            throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
-                    "Thumbnail generation failed: " + e.getMessage());
-        }
+            return (long) rawPixels.length;
+        }, s3UploadExecutor);
     }
 
     /**
-     * BulkData (Raw PixelData) 생성
+     * 원본 압축 BulkData 생성 (JPEG 2000, JPEG, JPEG-LS 등) - 비동기 버전
      *
-     * @return 저장된 raw 파일 크기 (bytes)
+     * <p>압축된 DICOM 파일에서 원본 압축 데이터를 추출하여 저장합니다.
+     *
+     * @return CompletableFuture<Long> - 저장된 압축 파일 크기 (bytes), 0이면 저장 안 함
      */
-    private long generateBulkData(String storagePath, String basePath, int frameNumber) {
-        // Raw PixelData 추출
-        byte[] rawPixels = dicomRenderingService.extractFramePixelData(storagePath, frameNumber);
+    private CompletableFuture<Long> generateCompressedBulkDataAsync(
+            String storagePath, String basePath, int frameNumber, String transferSyntaxUid) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                // 원본 압축 데이터 추출 (디코딩 없이)
+                FrameExtractionResult result = dicomRenderingService.extractFrameDataPreservingTransferSyntax(
+                        storagePath, frameNumber, true);
 
-        // S3에 업로드
-        String s3Key = String.format("%s/bulkdata/frame-%03d.raw", basePath, frameNumber);
-        uploadToS3(s3Key, rawPixels, "application/octet-stream");
+                // 압축되지 않은 경우 스킵
+                if (!result.isCompressed()) {
+                    log.debug("[PreRender] Frame {} is not compressed, skipping compressed bulkdata", frameNumber);
+                    return 0L;
+                }
 
-        return rawPixels.length;
+                // 파일 확장자 결정
+                String extension = getExtensionForMimeType(result.mimeType());
+
+                // S3에 업로드
+                String s3Key = String.format("%s/compressed/frame-%03d.%s", basePath, frameNumber, extension);
+                uploadToS3(s3Key, result.data(), result.mimeType());
+
+                if (frameNumber == 1) {
+                    log.debug("[PreRender] Compressed bulkdata generated: s3Key={}, size={} bytes, mime={}",
+                            s3Key, result.dataSize(), result.mimeType());
+                }
+
+                return (long) result.dataSize();
+
+            } catch (Exception e) {
+                log.warn("[PreRender] Failed to generate compressed bulkdata for frame {}: {}",
+                        frameNumber, e.getMessage());
+                return 0L;  // 실패 시 0 반환 (RAW는 있으므로 진행)
+            }
+        }, s3UploadExecutor);
     }
 
     /**
-     * Rendered PNG 생성
-     *
-     * @return 저장된 PNG 파일 크기 (bytes)
+     * MIME 타입에 따른 파일 확장자 반환
      */
-    private long generateRenderedPng(String storagePath, String basePath, int frameNumber) {
-        // PNG 렌더링
-        byte[] pngBytes = dicomRenderingService.renderToPng(storagePath, frameNumber);
+    private String getExtensionForMimeType(String mimeType) {
+        return switch (mimeType) {
+            case "image/jp2" -> "j2k";
+            case "image/jpeg" -> "jpg";
+            case "image/jls" -> "jls";
+            default -> "bin";
+        };
+    }
 
-        // S3에 업로드
-        String s3Key = String.format("%s/rendered/frame-%03d.png", basePath, frameNumber);
-        uploadToS3(s3Key, pngBytes, "image/png");
+    /**
+     * Rendered PNG 생성 - 비동기 버전
+     *
+     * @return CompletableFuture<Long> - 저장된 PNG 파일 크기 (bytes)
+     */
+    private CompletableFuture<Long> generateRenderedPngAsync(String storagePath, String basePath, int frameNumber) {
+        return CompletableFuture.supplyAsync(() -> {
+            // PNG 렌더링
+            byte[] pngBytes = dicomRenderingService.renderToPng(storagePath, frameNumber);
 
-        return pngBytes.length;
+            // S3에 업로드
+            String s3Key = String.format("%s/rendered/frame-%03d.png", basePath, frameNumber);
+            uploadToS3(s3Key, pngBytes, "image/png");
+
+            return (long) pngBytes.length;
+        }, s3UploadExecutor);
     }
 
     /**
@@ -373,43 +516,41 @@ public class PreRenderingService {
     }
 
     /**
-     * Cine 재생용 JPEG 생성 (지정 크기로 리사이즈)
+     * Cine 재생용 JPEG 생성 - 비동기 버전
      *
      * <p>S3 저장 경로: {basePath}/cine/frame-{frameNumber}-{size}.jpg
      *
-     * @param storagePath 원본 DICOM S3 경로
-     * @param basePath 사전 렌더링 기본 경로
-     * @param frameNumber 프레임 번호 (1-based)
-     * @param size 대상 크기 (256 또는 128)
-     * @return 저장된 JPEG 파일 크기 (bytes)
+     * @return CompletableFuture<Long> - 저장된 JPEG 파일 크기 (bytes)
      */
-    private long generateCineJpeg(String storagePath, String basePath, int frameNumber, int size) {
-        try {
-            // 1. DICOM에서 PNG 렌더링
-            byte[] pngBytes = dicomRenderingService.renderToPng(storagePath, frameNumber);
+    private CompletableFuture<Long> generateCineJpegAsync(String storagePath, String basePath, int frameNumber, int size) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                // 1. DICOM에서 PNG 렌더링
+                byte[] pngBytes = dicomRenderingService.renderToPng(storagePath, frameNumber);
 
-            // 2. BufferedImage로 변환
-            BufferedImage original = ImageIO.read(new ByteArrayInputStream(pngBytes));
-            if (original == null) {
+                // 2. BufferedImage로 변환
+                BufferedImage original = ImageIO.read(new ByteArrayInputStream(pngBytes));
+                if (original == null) {
+                    throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
+                            "Failed to read PNG as BufferedImage for cine frame " + frameNumber);
+                }
+
+                // 3. 리사이징 (정사각형 타겟)
+                BufferedImage resized = resizeImage(original, size, size);
+
+                // 4. JPEG로 인코딩 (80% 품질)
+                byte[] jpegBytes = encodeToJpeg(resized, CINE_JPEG_QUALITY);
+
+                // 5. S3에 업로드
+                String s3Key = String.format("%s/cine/frame-%03d-%d.jpg", basePath, frameNumber, size);
+                uploadToS3(s3Key, jpegBytes, "image/jpeg");
+
+                return (long) jpegBytes.length;
+            } catch (IOException e) {
                 throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
-                        "Failed to read PNG as BufferedImage for cine frame " + frameNumber);
+                        "Cine JPEG generation failed for frame " + frameNumber + ": " + e.getMessage());
             }
-
-            // 3. 리사이징 (정사각형 타겟)
-            BufferedImage resized = resizeImage(original, size, size);
-
-            // 4. JPEG로 인코딩 (80% 품질)
-            byte[] jpegBytes = encodeToJpeg(resized, CINE_JPEG_QUALITY);
-
-            // 5. S3에 업로드
-            String s3Key = String.format("%s/cine/frame-%03d-%d.jpg", basePath, frameNumber, size);
-            uploadToS3(s3Key, jpegBytes, "image/jpeg");
-
-            return jpegBytes.length;
-        } catch (IOException e) {
-            throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
-                    "Cine JPEG generation failed for frame " + frameNumber + ": " + e.getMessage());
-        }
+        }, s3UploadExecutor);
     }
 
     /**

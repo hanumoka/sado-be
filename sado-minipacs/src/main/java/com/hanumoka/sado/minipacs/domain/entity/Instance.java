@@ -238,6 +238,15 @@ public class Instance extends TenantAwareEntity {
     @Column(name = "prerendered_at")
     private LocalDateTime prerenderedAt;
 
+    /**
+     * Has Compressed BulkData
+     * 사전 렌더링된 압축 BulkData 존재 여부
+     * - true: compressed/ 폴더에 원본 압축 데이터 존재 (JPEG 2000, JPEG, JPEG-LS)
+     * - false: 비압축 DICOM이므로 RAW만 존재
+     */
+    @Column(name = "has_compressed_bulkdata")
+    private Boolean hasCompressedBulkdata = false;
+
     // ========== 스토리지 티어링 ==========
 
     /**
@@ -452,6 +461,11 @@ public class Instance extends TenantAwareEntity {
 
         public Builder prerenderedAt(LocalDateTime prerenderedAt) {
             instance.prerenderedAt = prerenderedAt;
+            return this;
+        }
+
+        public Builder hasCompressedBulkdata(Boolean hasCompressedBulkdata) {
+            instance.hasCompressedBulkdata = hasCompressedBulkdata;
             return this;
         }
 

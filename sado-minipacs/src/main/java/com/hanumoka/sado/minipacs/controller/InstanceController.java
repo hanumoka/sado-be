@@ -422,6 +422,7 @@ public class InstanceController {
                 .frameRate(instance.getFrameRate())
                 .frameRateSource(instance.getFrameRateSource())
                 .instanceNumber(instance.getInstanceNumber())
+                .transferSyntaxUid(instance.getTransferSyntaxUid())
                 .storagePath(instance.getStoragePath())
                 .storageUri(storageUri)  // Pre-signed URL 추가
                 .fileSize(instance.getFileSize())

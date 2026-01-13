@@ -248,6 +248,7 @@ public class SeriesController {
                 .frameRate(instance.getFrameRate())
                 .frameRateSource(instance.getFrameRateSource())
                 .instanceNumber(instance.getInstanceNumber())
+                .transferSyntaxUid(instance.getTransferSyntaxUid())
                 .storagePath(instance.getStoragePath())
                 .fileSize(instance.getFileSize())
                 .transcodingStatus(instance.getTranscodingStatus() != null ?

@@ -188,3 +188,20 @@ upload:
   # - Retry-After 헤더 값
   retry-after-seconds: 30
 
+# 비동기 처리 설정 (사전 렌더링, S3 업로드)
+async:
+  # 사전 렌더링 스레드 풀
+  # - CPU 집약적 작업 (이미지 렌더링)
+  # - 낮은 값으로 설정하여 시스템 부하 조절
+  pre-rendering:
+    core-pool-size: 2
+    max-pool-size: 3
+    queue-capacity: 500
+  # S3 업로드 스레드 풀
+  # - I/O 바운드 작업 (네트워크 대기)
+  # - 프레임당 최대 7개 업로드 (raw, compressed, png, 4 cine jpeg)
+  s3-upload:
+    core-pool-size: 2
+    max-pool-size: 3
+    queue-capacity: 500
+
