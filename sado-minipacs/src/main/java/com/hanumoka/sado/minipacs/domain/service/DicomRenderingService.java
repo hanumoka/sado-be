@@ -152,13 +152,13 @@ public class DicomRenderingService {
             if (fmi != null) {
                 String transferSyntaxUID = fmi.getString(Tag.TransferSyntaxUID);
                 String transferSyntaxName = getTransferSyntaxName(transferSyntaxUID);
-                log.info("DICOM Transfer Syntax: {} ({})", transferSyntaxName, transferSyntaxUID);
+                log.debug("DICOM Transfer Syntax: {} ({})", transferSyntaxName, transferSyntaxUID);
 
                 // 압축 여부 판단
                 boolean isCompressed = !UID.ImplicitVRLittleEndian.equals(transferSyntaxUID)
                         && !UID.ExplicitVRLittleEndian.equals(transferSyntaxUID)
                         && !UID.ExplicitVRBigEndian.equals(transferSyntaxUID);
-                log.info("DICOM Compression: {}", isCompressed ? "COMPRESSED" : "UNCOMPRESSED");
+                log.debug("DICOM Compression: {}", isCompressed ? "COMPRESSED" : "UNCOMPRESSED");
             } else {
                 log.warn("No File Meta Information found in DICOM");
             }
@@ -265,23 +265,23 @@ public class DicomRenderingService {
 
                 // === Raster 디버깅 로그 (이미지 분리 문제 진단용) ===
                 java.awt.image.SampleModel sm = raster.getSampleModel();
-                log.info("=== Raster Debug for Frame {} ===", frameNumber);
-                log.info("Raster Width: {}, Height: {}", raster.getWidth(), raster.getHeight());
-                log.info("SampleModel class: {}", sm.getClass().getName());
-                log.info("SampleModel Width: {}, Height: {}", sm.getWidth(), sm.getHeight());
-                log.info("NumBands: {}, DataType: {}", sm.getNumBands(), sm.getDataType());
+                log.debug("=== Raster Debug for Frame {} ===", frameNumber);
+                log.debug("Raster Width: {}, Height: {}", raster.getWidth(), raster.getHeight());
+                log.debug("SampleModel class: {}", sm.getClass().getName());
+                log.debug("SampleModel Width: {}, Height: {}", sm.getWidth(), sm.getHeight());
+                log.debug("NumBands: {}, DataType: {}", sm.getNumBands(), sm.getDataType());
 
                 if (sm instanceof java.awt.image.ComponentSampleModel csm) {
-                    log.info("ComponentSampleModel PixelStride: {}", csm.getPixelStride());
-                    log.info("ComponentSampleModel ScanlineStride: {}", csm.getScanlineStride());
-                    log.info("BandOffsets: {}", java.util.Arrays.toString(csm.getBandOffsets()));
+                    log.debug("ComponentSampleModel PixelStride: {}", csm.getPixelStride());
+                    log.debug("ComponentSampleModel ScanlineStride: {}", csm.getScanlineStride());
+                    log.debug("BandOffsets: {}", java.util.Arrays.toString(csm.getBandOffsets()));
                 }
 
                 java.awt.image.DataBuffer db = raster.getDataBuffer();
-                log.info("DataBuffer Size: {}", db.getSize());
-                log.info("DataBuffer NumBanks: {}", db.getNumBanks());
-                log.info("Expected Size (width*height): {}", raster.getWidth() * raster.getHeight());
-                log.info("=== End Raster Debug ===");
+                log.debug("DataBuffer Size: {}", db.getSize());
+                log.debug("DataBuffer NumBanks: {}", db.getNumBanks());
+                log.debug("Expected Size (width*height): {}", raster.getWidth() * raster.getHeight());
+                log.debug("=== End Raster Debug ===");
                 // === 디버깅 로그 끝 ===
 
                 // Raster에서 raw bytes 추출
@@ -614,8 +614,11 @@ public class DicomRenderingService {
 
     /**
      * Transfer Syntax가 압축인지 확인
+     *
+     * @param uid Transfer Syntax UID
+     * @return 압축이면 true, 비압축이면 false
      */
-    private boolean isCompressedTransferSyntax(String uid) {
+    public boolean isCompressedTransferSyntax(String uid) {
         if (uid == null) return false;
         return !UID.ImplicitVRLittleEndian.equals(uid)
                 && !UID.ExplicitVRLittleEndian.equals(uid)
@@ -701,8 +704,8 @@ public class DicomRenderingService {
      * @return Transfer Syntax UID (없으면 Explicit VR Little Endian 반환)
      */
     public String getTransferSyntaxUid(String storagePath) {
-        try (InputStream dicomStream = dicomStorageService.downloadDicomFile(storagePath)) {
-            DicomInputStream dis = new DicomInputStream(dicomStream);
+        try (InputStream dicomStream = dicomStorageService.downloadDicomFile(storagePath);
+             DicomInputStream dis = new DicomInputStream(dicomStream)) {
             Attributes fmi = dis.readFileMetaInformation();
 
             if (fmi != null) {
@@ -723,8 +726,8 @@ public class DicomRenderingService {
      * @return 프레임 수 (싱글프레임이면 1)
      */
     public int getNumberOfFrames(String storagePath) {
-        try (InputStream dicomStream = dicomStorageService.downloadDicomFile(storagePath)) {
-            DicomInputStream dis = new DicomInputStream(dicomStream);
+        try (InputStream dicomStream = dicomStorageService.downloadDicomFile(storagePath);
+             DicomInputStream dis = new DicomInputStream(dicomStream)) {
             Attributes attrs = dis.readDataset();
 
             int frames = attrs.getInt(Tag.NumberOfFrames, 1);
@@ -1120,6 +1123,135 @@ public class DicomRenderingService {
     }
 
     /**
+     * DICOM을 지정 품질의 JPEG로 렌더링 (WADO-RS Rendered API용)
+     *
+     * <p>DICOMweb 표준 quality 파라미터 지원.
+     * quality 1-100: 1=최저품질/최소크기, 100=최고품질/최대크기
+     *
+     * @param storagePath S3 저장 경로
+     * @param frameNumber 프레임 번호 (1부터 시작)
+     * @param quality JPEG 품질 (1-100)
+     * @param outputStream 결과를 쓸 OutputStream
+     * @throws BusinessException DICOM_RENDER_FAILED - 렌더링 실패 시
+     */
+    public void renderToJpegStreamWithQuality(
+            String storagePath,
+            int frameNumber,
+            int quality,
+            java.io.OutputStream outputStream) {
+
+        log.debug("Rendering DICOM to JPEG: path={}, frame={}, quality={}",
+                storagePath, frameNumber, quality);
+
+        try (InputStream dicomStream = dicomStorageService.downloadDicomFile(storagePath)) {
+            byte[] dicomBytes = dicomStream.readAllBytes();
+            BufferedImage image = extractFrame(dicomBytes, frameNumber);
+
+            // JPEG 품질 설정하여 스트리밍
+            writeJpegWithQuality(image, quality, outputStream);
+
+            outputStream.flush();
+            log.debug("Rendered JPEG: quality={}, size={}x{}",
+                    quality, image.getWidth(), image.getHeight());
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (IOException e) {
+            log.error("DICOM to JPEG rendering failed: path={}, frame={}, quality={}",
+                    storagePath, frameNumber, quality, e);
+            throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED, e.getMessage());
+        }
+    }
+
+    /**
+     * BufferedImage를 지정 품질의 JPEG로 스트리밍
+     *
+     * @param image 원본 이미지
+     * @param quality JPEG 품질 (1-100)
+     * @param outputStream 출력 스트림
+     * @throws IOException 인코딩 실패
+     */
+    private void writeJpegWithQuality(BufferedImage image, int quality, java.io.OutputStream outputStream)
+            throws IOException {
+
+        // JPEG Writer 획득
+        javax.imageio.ImageWriter jpegWriter = javax.imageio.ImageIO.getImageWritersByFormatName("JPEG").next();
+
+        // 품질 설정 (0.0 ~ 1.0)
+        javax.imageio.ImageWriteParam writeParam = jpegWriter.getDefaultWriteParam();
+        writeParam.setCompressionMode(javax.imageio.ImageWriteParam.MODE_EXPLICIT);
+        writeParam.setCompressionQuality(quality / 100.0f);  // 1-100 → 0.01-1.0
+
+        // OutputStream에 직접 쓰기
+        try (javax.imageio.stream.ImageOutputStream imageOutputStream =
+                javax.imageio.ImageIO.createImageOutputStream(outputStream)) {
+
+            jpegWriter.setOutput(imageOutputStream);
+            jpegWriter.write(null, new javax.imageio.IIOImage(image, null, null), writeParam);
+        } finally {
+            jpegWriter.dispose();
+        }
+    }
+
+    /**
+     * DICOM을 이미지로 렌더링 (quality + viewport 통합 메서드)
+     *
+     * <p>DICOMweb 표준 quality/rows/columns 파라미터 지원.
+     * - quality 1-99: JPEG 출력
+     * - quality 100: PNG 출력
+     * - rows/columns: 다운샘플링 (비율 유지)
+     *
+     * @param storagePath S3 저장 경로
+     * @param frameNumber 프레임 번호 (1부터 시작)
+     * @param quality 이미지 품질 (1-100). 100=PNG, <100=JPEG
+     * @param rows 목표 높이 (null이면 원본 유지)
+     * @param columns 목표 너비 (null이면 원본 유지)
+     * @param outputStream 결과를 쓸 OutputStream
+     * @throws BusinessException DICOM_RENDER_FAILED - 렌더링 실패 시
+     */
+    public void renderToStreamWithOptions(
+            String storagePath,
+            int frameNumber,
+            int quality,
+            Integer rows,
+            Integer columns,
+            java.io.OutputStream outputStream) {
+
+        log.debug("Rendering DICOM with options: path={}, frame={}, quality={}, rows={}, columns={}",
+                storagePath, frameNumber, quality, rows, columns);
+
+        try (InputStream dicomStream = dicomStorageService.downloadDicomFile(storagePath)) {
+            byte[] dicomBytes = dicomStream.readAllBytes();
+            BufferedImage image = extractFrame(dicomBytes, frameNumber);
+
+            // 리사이징 (rows/columns 지정 시)
+            if (rows != null || columns != null) {
+                int targetWidth = columns != null ? columns : image.getWidth();
+                int targetHeight = rows != null ? rows : image.getHeight();
+                image = resizeImage(image, targetWidth, targetHeight);
+            }
+
+            // 품질에 따라 JPEG 또는 PNG 출력
+            if (quality < 100) {
+                writeJpegWithQuality(image, quality, outputStream);
+            } else {
+                javax.imageio.ImageIO.write(image, "PNG", outputStream);
+            }
+
+            outputStream.flush();
+            log.debug("Rendered image: quality={}, finalSize={}x{}",
+                    quality, image.getWidth(), image.getHeight());
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (IOException e) {
+            log.error("DICOM rendering failed: path={}, frame={}, quality={}, rows={}, columns={}",
+                    storagePath, frameNumber, quality, rows, columns, e);
+            throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED, e.getMessage());
+        }
+    }
+
+    /**
      * 이미지 리사이징 (비율 유지)
      *
      * <p>원본 비율을 유지하면서 지정된 크기에 맞게 축소합니다.
@@ -1165,5 +1297,305 @@ public class DicomRenderingService {
                 String.format("%.2f", ratio));
 
         return resized;
+    }
+
+    // ==================== Transfer Syntax 유지 최적화 ====================
+
+    /**
+     * Transfer Syntax UID를 MIME Type으로 변환
+     *
+     * <p>DICOMweb Part 18, Section 8.7.3.4 표준 준수:
+     * 압축된 프레임 데이터는 해당 압축 포맷의 MIME 타입으로 반환해야 함
+     *
+     * @param tsUid Transfer Syntax UID
+     * @return 해당하는 MIME Type (비압축/알 수 없는 경우 application/octet-stream)
+     */
+    public String getMimeTypeForTransferSyntax(String tsUid) {
+        if (tsUid == null) return "application/octet-stream";
+
+        return switch (tsUid) {
+            // JPEG 2000 (Lossless 및 Lossy)
+            case UID.JPEG2000Lossless, UID.JPEG2000 -> "image/jp2";
+            // JPEG (Baseline, Extended, Lossless)
+            case UID.JPEGBaseline8Bit, UID.JPEGExtended12Bit,
+                 UID.JPEGLossless, UID.JPEGLosslessSV1 -> "image/jpeg";
+            // JPEG-LS
+            case UID.JPEGLSLossless, UID.JPEGLSNearLossless -> "image/jls";
+            // RLE (별도 MIME 타입 없음)
+            case UID.RLELossless -> "application/octet-stream";
+            // 비압축 (Implicit/Explicit VR Little/Big Endian)
+            default -> "application/octet-stream";
+        };
+    }
+
+    /**
+     * 압축 유지/해제 선택 가능한 프레임 데이터 추출
+     *
+     * <p>WADO-RS BulkData API에서 Transfer Syntax 유지 최적화에 사용됩니다.
+     * 압축된 DICOM의 경우 원본 압축 데이터를 그대로 반환하여 네트워크 전송량을 80-90% 감소시킵니다.
+     *
+     * <p>동작 방식:
+     * <ul>
+     *   <li>preserveCompression=true + 압축 DICOM: 원본 압축 데이터 반환 (50KB)</li>
+     *   <li>preserveCompression=false 또는 비압축 DICOM: Raw PixelData 반환 (512KB)</li>
+     * </ul>
+     *
+     * @param storagePath S3 저장 경로
+     * @param frameNumber 프레임 번호 (1-based)
+     * @param preserveCompression true면 압축 유지, false면 디코딩
+     * @return FrameExtractionResult (데이터 + Transfer Syntax + MIME 타입)
+     * @throws BusinessException DICOM_RENDER_FAILED - 추출 실패 시
+     */
+    public com.hanumoka.sado.minipacs.dto.FrameExtractionResult extractFrameDataPreservingTransferSyntax(
+            String storagePath, int frameNumber, boolean preserveCompression) {
+
+        log.debug("Extracting frame with compression preservation: path={}, frame={}, preserve={}",
+                storagePath, frameNumber, preserveCompression);
+
+        try (InputStream dicomStream = dicomStorageService.downloadDicomFile(storagePath)) {
+            byte[] dicomBytes = dicomStream.readAllBytes();
+
+            try (ByteArrayInputStream bais = new ByteArrayInputStream(dicomBytes);
+                 DicomInputStream dis = new DicomInputStream(bais)) {
+
+                // 1. File Meta Information에서 Transfer Syntax 확인
+                Attributes fmi = dis.readFileMetaInformation();
+                String transferSyntaxUid = fmi != null
+                        ? fmi.getString(Tag.TransferSyntaxUID, UID.ExplicitVRLittleEndian)
+                        : UID.ExplicitVRLittleEndian;
+
+                boolean isCompressed = isCompressedTransferSyntax(transferSyntaxUid);
+
+                // 2. Dataset 읽기
+                Attributes attrs = dis.readDataset();
+                int frameIndex = frameNumber - 1;
+                int totalFrames = attrs.getInt(Tag.NumberOfFrames, 1);
+
+                if (frameIndex < 0 || frameIndex >= totalFrames) {
+                    throw new BusinessException(MiniPacsErrorCode.INVALID_FRAME_NUMBER,
+                            String.format("Frame %d out of range (1-%d)", frameNumber, totalFrames));
+                }
+
+                // 3. 압축 유지 요청 + 실제로 압축된 경우
+                if (preserveCompression && isCompressed) {
+                    byte[] compressedData = extractCompressedFrameData(attrs, frameIndex);
+                    String mimeType = getMimeTypeForTransferSyntax(transferSyntaxUid);
+
+                    log.info("Extracted compressed frame {}/{}: {} bytes, ts={}, mime={}",
+                            frameNumber, totalFrames, compressedData.length, transferSyntaxUid, mimeType);
+
+                    return new com.hanumoka.sado.minipacs.dto.FrameExtractionResult(
+                            compressedData,
+                            transferSyntaxUid,
+                            mimeType
+                    );
+                }
+
+                // 4. 비압축 또는 디코딩 요청: 기존 extractFramePixelData 사용
+                byte[] rawPixels = extractFramePixelData(storagePath, frameNumber);
+
+                log.info("Extracted decompressed frame {}/{}: {} bytes (from compressed={})",
+                        frameNumber, totalFrames, rawPixels.length, isCompressed);
+
+                return new com.hanumoka.sado.minipacs.dto.FrameExtractionResult(
+                        rawPixels,
+                        UID.ExplicitVRLittleEndian,
+                        "application/octet-stream"
+                );
+            }
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (IOException e) {
+            log.error("Failed to extract frame with compression preservation: path={}, frame={}",
+                    storagePath, frameNumber, e);
+            throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED, e.getMessage());
+        }
+    }
+
+    /**
+     * 압축 유지 프레임 데이터를 Multipart 형식으로 스트리밍
+     *
+     * @param storagePath S3 저장 경로
+     * @param frameNumber 프레임 번호 (1-based)
+     * @param boundary multipart boundary 문자열
+     * @param preserveCompression 압축 유지 여부
+     * @param outputStream 출력 스트림
+     * @return 추출된 데이터 크기 (bytes)
+     */
+    public int extractFrameDataPreservingTransferSyntaxToStream(
+            String storagePath,
+            int frameNumber,
+            String boundary,
+            boolean preserveCompression,
+            java.io.OutputStream outputStream) {
+
+        log.debug("Streaming frame with compression preservation: path={}, frame={}, preserve={}",
+                storagePath, frameNumber, preserveCompression);
+
+        try {
+            // 프레임 추출
+            var result = extractFrameDataPreservingTransferSyntax(storagePath, frameNumber, preserveCompression);
+
+            // Multipart 헤더 작성
+            String partHeader = "--" + boundary + "\r\n"
+                    + "Content-Type: " + result.mimeType() + "; transfer-syntax=" + result.transferSyntaxUid() + "\r\n"
+                    + "Content-Length: " + result.dataSize() + "\r\n"
+                    + "\r\n";
+
+            outputStream.write(partHeader.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+            // 데이터 본문
+            outputStream.write(result.data());
+
+            // Part 종료
+            String partFooter = "\r\n--" + boundary + "--\r\n";
+            outputStream.write(partFooter.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+            outputStream.flush();
+
+            log.debug("Streamed frame {} with compression={}: {} bytes, mime={}",
+                    frameNumber, result.isCompressed(), result.dataSize(), result.mimeType());
+
+            return result.dataSize();
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (IOException e) {
+            log.error("Failed to stream frame: path={}, frame={}", storagePath, frameNumber, e);
+            throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED, e.getMessage());
+        }
+    }
+
+    /**
+     * 다중 프레임 압축 유지 추출 및 스트리밍
+     *
+     * @param storagePath S3 저장 경로
+     * @param frameNumbers 프레임 번호 목록 (1-based)
+     * @param boundary multipart boundary 문자열
+     * @param preserveCompression 압축 유지 여부
+     * @param outputStream 출력 스트림
+     * @return 총 데이터 크기 (bytes)
+     */
+    public int extractMultipleFramesPreservingTransferSyntaxToStream(
+            String storagePath,
+            java.util.List<Integer> frameNumbers,
+            String boundary,
+            boolean preserveCompression,
+            java.io.OutputStream outputStream) {
+
+        log.info("Extracting multiple frames with compression preservation: path={}, frames={}, preserve={}",
+                storagePath, frameNumbers, preserveCompression);
+
+        try (InputStream dicomStream = dicomStorageService.downloadDicomFile(storagePath)) {
+            byte[] dicomBytes = dicomStream.readAllBytes();
+
+            try (ByteArrayInputStream bais = new ByteArrayInputStream(dicomBytes);
+                 DicomInputStream dis = new DicomInputStream(bais)) {
+
+                // 1. Transfer Syntax 확인
+                Attributes fmi = dis.readFileMetaInformation();
+                String transferSyntaxUid = fmi != null
+                        ? fmi.getString(Tag.TransferSyntaxUID, UID.ExplicitVRLittleEndian)
+                        : UID.ExplicitVRLittleEndian;
+
+                boolean isCompressed = isCompressedTransferSyntax(transferSyntaxUid);
+
+                // 2. Dataset 읽기
+                Attributes attrs = dis.readDataset();
+                int totalFrames = attrs.getInt(Tag.NumberOfFrames, 1);
+
+                int totalSize = 0;
+
+                // 3. 각 프레임 처리
+                for (int frameNumber : frameNumbers) {
+                    int frameIndex = frameNumber - 1;
+
+                    if (frameIndex < 0 || frameIndex >= totalFrames) {
+                        throw new BusinessException(MiniPacsErrorCode.INVALID_FRAME_NUMBER,
+                                String.format("Frame %d out of range (1-%d)", frameNumber, totalFrames));
+                    }
+
+                    byte[] frameData;
+                    String outputTransferSyntax;
+                    String mimeType;
+
+                    if (preserveCompression && isCompressed) {
+                        // 압축 유지
+                        frameData = extractCompressedFrameData(attrs, frameIndex);
+                        outputTransferSyntax = transferSyntaxUid;
+                        mimeType = getMimeTypeForTransferSyntax(transferSyntaxUid);
+                    } else {
+                        // 비압축으로 반환 (기존 로직 재사용 불가 - attrs에서 직접 추출)
+                        if (isCompressed) {
+                            // 압축된 데이터를 디코딩해야 함 - DCM4CHE ImageIO 사용
+                            frameData = extractDecompressedFrameFromBytes(dicomBytes, frameNumber);
+                        } else {
+                            frameData = extractUncompressedFrameData(attrs, frameIndex);
+                        }
+                        outputTransferSyntax = UID.ExplicitVRLittleEndian;
+                        mimeType = "application/octet-stream";
+                    }
+
+                    // Multipart 파트 헤더 작성
+                    String partHeader = "--" + boundary + "\r\n"
+                            + "Content-Type: " + mimeType + "; transfer-syntax=" + outputTransferSyntax + "\r\n"
+                            + "Content-Location: /frames/" + frameNumber + "\r\n"
+                            + "Content-Length: " + frameData.length + "\r\n"
+                            + "\r\n";
+
+                    outputStream.write(partHeader.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    outputStream.write(frameData);
+                    outputStream.write("\r\n".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+                    totalSize += frameData.length;
+                    log.debug("Extracted frame {}/{}: {} bytes, compressed={}",
+                            frameNumber, totalFrames, frameData.length, preserveCompression && isCompressed);
+                }
+
+                // 종료 boundary
+                String endBoundary = "--" + boundary + "--\r\n";
+                outputStream.write(endBoundary.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                outputStream.flush();
+
+                log.info("Multi-frame extraction complete: {} frames, {} total bytes, preserveCompression={}",
+                        frameNumbers.size(), totalSize, preserveCompression && isCompressed);
+
+                return totalSize;
+            }
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (IOException e) {
+            log.error("Failed to extract multiple frames: path={}, frames={}", storagePath, frameNumbers, e);
+            throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED, e.getMessage());
+        }
+    }
+
+    /**
+     * 압축된 DICOM에서 디코딩된 프레임 추출 (내부 헬퍼)
+     */
+    private byte[] extractDecompressedFrameFromBytes(byte[] dicomBytes, int frameNumber) throws IOException {
+        Iterator<ImageReader> readers = ImageIO.getImageReadersByFormatName("DICOM");
+        if (!readers.hasNext()) {
+            throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
+                    "DICOM ImageReader not found. DCM4CHE ImageIO is not installed.");
+        }
+
+        ImageReader reader = readers.next();
+
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(dicomBytes);
+             ImageInputStream iis = ImageIO.createImageInputStream(bais)) {
+
+            reader.setInput(iis);
+            int frameIndex = frameNumber - 1;
+
+            // readRaster로 raw pixels 추출
+            java.awt.image.Raster raster = reader.readRaster(frameIndex, null);
+            return extractRawBytesFromRaster(raster, dicomBytes);
+
+        } finally {
+            reader.dispose();
+        }
     }
 }

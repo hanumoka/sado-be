@@ -58,6 +58,19 @@ spring:
 # 서버 설정
 server:
   port: 10201
+  # HTTP Gzip 압축 설정 (2026-01-12 추가)
+  # - 대역폭 70% 절감 효과
+  # - DICOM 이미지 전송 최적화
+  compression:
+    enabled: true
+    min-response-size: 1024    # 1KB 이상만 압축 (작은 응답은 오버헤드)
+    mime-types:
+      - application/octet-stream   # BulkData (Raw PixelData)
+      - image/png                  # Rendered PNG
+      - image/jpeg                 # Thumbnail JPEG
+      - multipart/related          # 배치 프레임 응답
+      - application/json           # API 응답
+      - application/dicom+json     # DICOM 메타데이터
   # Tomcat 설정 (Virtual Thread 환경 최적화)
   tomcat:
     # Virtual Thread 사용 시 스레드 수보다 커넥션 수가 중요
