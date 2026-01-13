@@ -660,7 +660,7 @@ public class DicomWebController {
      */
     @GetMapping(value = "/studies/{studyUID}/series/{seriesUID}/instances/{sopInstanceUID}/frames/{frameList}/rendered")
     @Operation(summary = "WADO-RS: Frame Rendered",
-            description = "DICOM 프레임을 이미지로 렌더링 (단일/다중 프레임 지원). quality < 100이면 JPEG, 100이면 PNG. rows/columns로 다운샘플링 가능.")
+            description = "DICOM 프레임을 이미지로 렌더링 (단일/다중 프레임 지원). quality < 100이면 JPEG, 100이면 PNG. rows/columns로 다운샘플링 가능. resolution으로 사전렌더링 이미지 선택 (512/256/128).")
     public ResponseEntity<StreamingResponseBody> renderFrames(
             @Parameter(description = "Study Instance UID") @PathVariable String studyUID,
             @Parameter(description = "Series Instance UID") @PathVariable String seriesUID,
@@ -671,13 +671,15 @@ public class DicomWebController {
             @Parameter(description = "출력 이미지 높이 (다운샘플링)")
             @RequestParam(required = false) Integer rows,
             @Parameter(description = "출력 이미지 너비 (다운샘플링)")
-            @RequestParam(required = false) Integer columns
+            @RequestParam(required = false) Integer columns,
+            @Parameter(description = "사전렌더링 해상도 (512=PNG, 256=JPEG, 128=JPEG). 기본값 512.")
+            @RequestParam(required = false, defaultValue = "512") Integer resolution
     ) {
         // frameList 파싱
         List<Integer> frameNumbers = parseFrameList(frameList);
 
-        log.info("WADO-RS Rendered: frames - sopInstanceUID={}, frames={}, quality={}, rows={}, columns={}",
-                sopInstanceUID, frameNumbers, quality, rows, columns);
+        log.info("WADO-RS Rendered: frames - sopInstanceUID={}, frames={}, quality={}, rows={}, columns={}, resolution={}",
+                sopInstanceUID, frameNumbers, quality, rows, columns, resolution);
 
         Instance instance = instanceService.findBySopInstanceUid(sopInstanceUID)
                 .orElseThrow(() -> new BusinessException(MiniPacsErrorCode.INSTANCE_NOT_FOUND));
@@ -717,21 +719,39 @@ public class DicomWebController {
                         .body(responseBody);
             }
 
-            // PNG 원본 (quality=100, rows/columns 미지정)
+            // PNG/JPEG 사전 렌더링 (quality=100, rows/columns 미지정)
             if (usePrerendered) {
-                // 사전 렌더링 데이터 사용 (S3에서 직접 반환)
-                String prerenderedPath = String.format("%s/rendered/frame-%03d.png",
-                        instance.getPrerenderedBasePath(), frameNumber);
+                // resolution에 따라 사전 렌더링 경로 및 Content-Type 결정
+                String prerenderedPath;
+                MediaType contentType;
+
+                switch (resolution) {
+                    case 256:
+                        prerenderedPath = String.format("%s/cine/frame-%03d-256.jpg",
+                                instance.getPrerenderedBasePath(), frameNumber);
+                        contentType = MediaType.IMAGE_JPEG;
+                        break;
+                    case 128:
+                        prerenderedPath = String.format("%s/cine/frame-%03d-128.jpg",
+                                instance.getPrerenderedBasePath(), frameNumber);
+                        contentType = MediaType.IMAGE_JPEG;
+                        break;
+                    default: // 512 또는 기타
+                        prerenderedPath = String.format("%s/rendered/frame-%03d.png",
+                                instance.getPrerenderedBasePath(), frameNumber);
+                        contentType = MediaType.IMAGE_PNG;
+                }
+
                 StreamingResponseBody responseBody = outputStream -> {
                     try (var inputStream = dicomStorageService.downloadFileStream(prerenderedPath)) {
                         inputStream.transferTo(outputStream);
-                        log.info("WADO-RS Rendered (prerendered): frame={}, path={}",
-                                frameNumber, prerenderedPath);
+                        log.info("WADO-RS Rendered (prerendered): frame={}, resolution={}, path={}",
+                                frameNumber, resolution, prerenderedPath);
                     }
                 };
 
                 return ResponseEntity.ok()
-                        .contentType(MediaType.IMAGE_PNG)
+                        .contentType(contentType)
                         .cacheControl(CacheControl.maxAge(Duration.ofHours(1)))
                         .body(responseBody);
             } else {
@@ -792,16 +812,34 @@ public class DicomWebController {
                         frameNumbers.size(), renderQuality, renderRows, renderColumns);
             };
         } else if (usePrerendered) {
-            // 다중 프레임: 사전 렌더링 PNG 데이터 사용 (quality=100, rows/columns 미지정)
+            // 다중 프레임: 사전 렌더링 데이터 사용 (quality=100, rows/columns 미지정)
+            // resolution에 따라 경로 및 Content-Type 결정
             String basePath = instance.getPrerenderedBasePath();
+            final String multipartImageType;
+            final String pathPattern;
+
+            switch (resolution) {
+                case 256:
+                    multipartImageType = "image/jpeg";
+                    pathPattern = "%s/cine/frame-%03d-256.jpg";
+                    break;
+                case 128:
+                    multipartImageType = "image/jpeg";
+                    pathPattern = "%s/cine/frame-%03d-128.jpg";
+                    break;
+                default: // 512 또는 기타
+                    multipartImageType = "image/png";
+                    pathPattern = "%s/rendered/frame-%03d.png";
+            }
+
             responseBody = outputStream -> {
                 for (int frameNumber : frameNumbers) {
-                    String prerenderedPath = String.format("%s/rendered/frame-%03d.png", basePath, frameNumber);
+                    String prerenderedPath = String.format(pathPattern, basePath, frameNumber);
 
                     try (var inputStream = dicomStorageService.downloadFileStream(prerenderedPath)) {
                         // Multipart 헤더 작성
                         String partHeader = "--" + boundary + "\r\n"
-                                + "Content-Type: image/png\r\n"
+                                + "Content-Type: " + multipartImageType + "\r\n"
                                 + "Content-Location: /frames/" + frameNumber + "/rendered\r\n"
                                 + "\r\n";
                         outputStream.write(partHeader.getBytes(StandardCharsets.UTF_8));
@@ -817,8 +855,8 @@ public class DicomWebController {
                 outputStream.write(endBoundary.getBytes(StandardCharsets.UTF_8));
                 outputStream.flush();
 
-                log.info("WADO-RS Rendered (prerendered): frames={}, basePath={}",
-                        frameNumbers.size(), basePath);
+                log.info("WADO-RS Rendered (prerendered): frames={}, resolution={}, basePath={}",
+                        frameNumbers.size(), resolution, basePath);
             };
         } else {
             // 기존 실시간 PNG 렌더링 (quality=100, rows/columns 미지정, 사전 렌더링 없음)

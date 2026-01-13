@@ -15,13 +15,20 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
+import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Iterator;
 
 /**
  * DICOM 사전 렌더링 서비스
@@ -61,6 +68,11 @@ public class PreRenderingService {
 
     // 썸네일 크기
     private static final int THUMBNAIL_SIZE = 128;
+
+    // Cine 재생용 해상도 (256px, 128px JPEG)
+    private static final int CINE_SIZE_256 = 256;
+    private static final int CINE_SIZE_128 = 128;
+    private static final float CINE_JPEG_QUALITY = 0.8f;  // 80% 품질
 
     /**
      * 사전 렌더링 결과 DTO
@@ -189,15 +201,20 @@ public class PreRenderingService {
             totalSize += thumbnailSize;
             log.debug("[PreRender] Thumbnail generated: {} bytes", thumbnailSize);
 
-            // 2. 각 프레임에 대해 BulkData + Rendered PNG 생성
+            // 2. 각 프레임에 대해 BulkData + Rendered PNG + Cine JPEG 생성
             for (int frameNumber = 1; frameNumber <= numberOfFrames; frameNumber++) {
                 // 2.1 Raw PixelData 추출 및 저장
                 long rawSize = generateBulkData(storagePath, basePath, frameNumber);
                 totalSize += rawSize;
 
-                // 2.2 Rendered PNG 생성 및 저장
+                // 2.2 Rendered PNG 생성 및 저장 (512px)
                 long pngSize = generateRenderedPng(storagePath, basePath, frameNumber);
                 totalSize += pngSize;
+
+                // 2.3 Cine JPEG 생성 (256px, 128px)
+                long jpeg256Size = generateCineJpeg(storagePath, basePath, frameNumber, CINE_SIZE_256);
+                long jpeg128Size = generateCineJpeg(storagePath, basePath, frameNumber, CINE_SIZE_128);
+                totalSize += jpeg256Size + jpeg128Size;
 
                 if (frameNumber % 10 == 0 || frameNumber == numberOfFrames) {
                     log.debug("[PreRender] Progress: {}/{} frames processed", frameNumber, numberOfFrames);
@@ -353,5 +370,106 @@ public class PreRenderingService {
         g2d.dispose();
 
         return resized;
+    }
+
+    /**
+     * Cine 재생용 JPEG 생성 (지정 크기로 리사이즈)
+     *
+     * <p>S3 저장 경로: {basePath}/cine/frame-{frameNumber}-{size}.jpg
+     *
+     * @param storagePath 원본 DICOM S3 경로
+     * @param basePath 사전 렌더링 기본 경로
+     * @param frameNumber 프레임 번호 (1-based)
+     * @param size 대상 크기 (256 또는 128)
+     * @return 저장된 JPEG 파일 크기 (bytes)
+     */
+    private long generateCineJpeg(String storagePath, String basePath, int frameNumber, int size) {
+        try {
+            // 1. DICOM에서 PNG 렌더링
+            byte[] pngBytes = dicomRenderingService.renderToPng(storagePath, frameNumber);
+
+            // 2. BufferedImage로 변환
+            BufferedImage original = ImageIO.read(new ByteArrayInputStream(pngBytes));
+            if (original == null) {
+                throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
+                        "Failed to read PNG as BufferedImage for cine frame " + frameNumber);
+            }
+
+            // 3. 리사이징 (정사각형 타겟)
+            BufferedImage resized = resizeImage(original, size, size);
+
+            // 4. JPEG로 인코딩 (80% 품질)
+            byte[] jpegBytes = encodeToJpeg(resized, CINE_JPEG_QUALITY);
+
+            // 5. S3에 업로드
+            String s3Key = String.format("%s/cine/frame-%03d-%d.jpg", basePath, frameNumber, size);
+            uploadToS3(s3Key, jpegBytes, "image/jpeg");
+
+            return jpegBytes.length;
+        } catch (IOException e) {
+            throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
+                    "Cine JPEG generation failed for frame " + frameNumber + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * BufferedImage를 지정된 품질의 JPEG 바이트 배열로 변환
+     *
+     * @param image 원본 이미지
+     * @param quality JPEG 품질 (0.0f ~ 1.0f)
+     * @return JPEG 바이트 배열
+     */
+    private byte[] encodeToJpeg(BufferedImage image, float quality) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        // JPEG Writer 획득
+        Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpeg");
+        if (!writers.hasNext()) {
+            throw new IOException("No JPEG writer available");
+        }
+
+        ImageWriter writer = writers.next();
+        ImageWriteParam param = writer.getDefaultWriteParam();
+
+        // 압축 품질 설정
+        param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+        param.setCompressionQuality(quality);
+
+        // 출력 스트림 설정
+        try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
+            writer.setOutput(ios);
+
+            // RGB로 변환 (JPEG는 알파 채널 미지원)
+            BufferedImage rgbImage = convertToRgb(image);
+
+            writer.write(null, new IIOImage(rgbImage, null, null), param);
+        } finally {
+            writer.dispose();
+        }
+
+        return baos.toByteArray();
+    }
+
+    /**
+     * 이미지를 RGB 포맷으로 변환 (알파 채널 제거)
+     */
+    private BufferedImage convertToRgb(BufferedImage image) {
+        if (image.getType() == BufferedImage.TYPE_INT_RGB) {
+            return image;
+        }
+
+        BufferedImage rgbImage = new BufferedImage(
+                image.getWidth(),
+                image.getHeight(),
+                BufferedImage.TYPE_INT_RGB
+        );
+
+        Graphics2D g = rgbImage.createGraphics();
+        g.setColor(Color.WHITE);  // 배경색 (투명 영역 대체)
+        g.fillRect(0, 0, image.getWidth(), image.getHeight());
+        g.drawImage(image, 0, 0, null);
+        g.dispose();
+
+        return rgbImage;
     }
 }
