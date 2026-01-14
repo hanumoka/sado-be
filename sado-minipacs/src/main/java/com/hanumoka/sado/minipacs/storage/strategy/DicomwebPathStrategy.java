@@ -1,5 +1,6 @@
 package com.hanumoka.sado.minipacs.storage.strategy;
 
+import com.hanumoka.sado.common.tenant.TenantContext;
 import com.hanumoka.sado.minipacs.storage.dto.DicomFileMetadata;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -58,13 +59,20 @@ public class DicomwebPathStrategy implements StoragePathStrategy {
             throw new IllegalArgumentException("SopInstanceUid cannot be null or empty");
         }
 
-        // DICOMweb 표준 경로 생성
-        String path = String.format("studies/%s/series/%s/instances/%s.dcm",
+        // 테넌트 ID 조회 (멀티테넌시 격리)
+        Long tenantId = TenantContext.getCurrentTenantId();
+        if (tenantId == null) {
+            throw new IllegalStateException("TenantContext is not set. Cannot generate storage path without tenant isolation.");
+        }
+
+        // 테넌트 격리 DICOMweb 경로 생성: tenant-{tenantId}/studies/{studyUid}/series/{seriesUid}/instances/{sopUid}.dcm
+        String path = String.format("tenant-%d/studies/%s/series/%s/instances/%s.dcm",
+                tenantId,
                 metadata.getStudyInstanceUid(),
                 metadata.getSeriesInstanceUid(),
                 metadata.getSopInstanceUid());
 
-        log.debug("Generated DICOMweb path: {}", path);
+        log.debug("Generated tenant-isolated DICOMweb path: tenantId={}, path={}", tenantId, path);
 
         return path;
     }

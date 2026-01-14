@@ -1,5 +1,7 @@
 package com.hanumoka.sado.minipacs;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
@@ -33,6 +35,8 @@ import java.nio.file.StandardCopyOption;
 @EnableScheduling   // Scheduled 작업 활성화 (@Scheduled 어노테이션 사용)
 @EnableRetry        // Spring Retry 활성화 (@Retryable 어노테이션 사용)
 public class MiniPacsApplication {
+
+    private static final Logger log = LoggerFactory.getLogger(MiniPacsApplication.class);
 
     /**
      * OpenCV 네이티브 라이브러리 준비
@@ -74,7 +78,7 @@ public class MiniPacsApplication {
             targetLibName = "libopencv_java.dylib";
             sourcePattern = "libopencv_java";
         } else {
-            System.err.println("[OpenCV] Unsupported OS: " + osName);
+            log.warn("[OpenCV] Unsupported OS: {}", osName);
             return;
         }
 
@@ -83,7 +87,7 @@ public class MiniPacsApplication {
 
         // 이미 존재하면 스킵
         if (Files.exists(targetPath)) {
-            System.out.println("[OpenCV] Native library already exists: " + targetPath.toAbsolutePath());
+            log.info("[OpenCV] Native library already exists: {}", targetPath.toAbsolutePath());
             return;
         }
 
@@ -114,17 +118,17 @@ public class MiniPacsApplication {
                     return;
                 }
             } catch (IOException e) {
-                System.err.println("[OpenCV] Failed to search Gradle cache: " + e.getMessage());
+                log.warn("[OpenCV] Failed to search Gradle cache: {}", e.getMessage());
             }
         }
 
         // 3. 찾지 못한 경우 경고
-        System.err.println("[OpenCV] WARNING: Could not find OpenCV native library.");
-        System.err.println("[OpenCV] JPEG/JPEG2000 compressed DICOM rendering will fail.");
-        System.err.println("[OpenCV] Solutions:");
-        System.err.println("[OpenCV]   1. Run: ./gradlew :sado-minipacs:copyOpenCVNatives");
-        System.err.println("[OpenCV]   2. Then restart the application");
-        System.err.println("[OpenCV] Or run via: ./gradlew :sado-minipacs:bootRun");
+        log.warn("[OpenCV] Could not find OpenCV native library.");
+        log.warn("[OpenCV] JPEG/JPEG2000 compressed DICOM rendering will fail.");
+        log.warn("[OpenCV] Solutions:");
+        log.warn("[OpenCV]   1. Run: ./gradlew :sado-minipacs:copyOpenCVNatives");
+        log.warn("[OpenCV]   2. Then restart the application");
+        log.warn("[OpenCV] Or run via: ./gradlew :sado-minipacs:bootRun");
     }
 
     /**
@@ -133,11 +137,11 @@ public class MiniPacsApplication {
     private static void copyNativeLibrary(Path source, Path target) {
         try {
             Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
-            System.out.println("[OpenCV] Copied native library:");
-            System.out.println("[OpenCV]   Source: " + source.toAbsolutePath());
-            System.out.println("[OpenCV]   Target: " + target.toAbsolutePath());
+            log.info("[OpenCV] Copied native library:");
+            log.info("[OpenCV]   Source: {}", source.toAbsolutePath());
+            log.info("[OpenCV]   Target: {}", target.toAbsolutePath());
         } catch (IOException e) {
-            System.err.println("[OpenCV] Failed to copy native library: " + e.getMessage());
+            log.error("[OpenCV] Failed to copy native library: {}", e.getMessage());
         }
     }
 

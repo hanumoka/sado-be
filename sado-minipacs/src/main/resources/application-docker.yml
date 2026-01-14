@@ -1,0 +1,66 @@
+# =============================================================================
+# SADO MiniPACS - Docker Profile (application-docker.yml)
+# =============================================================================
+# Docker 컨테이너 환경 전용 설정
+# - 서비스명 기반 호스트 (localhost 대신 컨테이너명)
+# - 환경변수로 설정 오버라이드 가능
+# =============================================================================
+
+spring:
+  # 데이터소스 설정 (Docker 네트워크)
+  datasource:
+    url: jdbc:mysql://${DB_HOST:mysql}:${DB_PORT:3306}/sado_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${DB_USERNAME:sado_user}
+    password: ${DB_PASSWORD:sado1234}
+
+  # JPA 설정 (Docker 환경)
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        use_sql_comments: false
+
+# 로깅 설정 (Docker 환경 - 간결한 로그)
+logging:
+  level:
+    root: INFO
+    com.hanumoka.sado: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: WARN
+    org.springframework.web: INFO
+
+# SeaweedFS S3 API 설정 (Docker 네트워크)
+seaweedfs:
+  s3:
+    endpoint: ${SEAWEEDFS_S3_ENDPOINT:http://seaweedfs-filer:8333}
+    region: us-east-1
+    access-key: ${SEAWEEDFS_ACCESS_KEY:any}
+    secret-key: ${SEAWEEDFS_SECRET_KEY:any}
+    bucket: minipacs
+    path-style-access: true
+    api-call-timeout: 300000
+    api-call-attempt-timeout: 60000
+    max-retries: 3
+
+  # SeaweedFS Admin API 설정 (Docker 네트워크)
+  admin:
+    master-url: ${SEAWEEDFS_MASTER_URL:http://seaweedfs-master:9333}
+    volume-url: ${SEAWEEDFS_VOLUME_URL:http://seaweedfs-volume:8080}
+    filer-url: ${SEAWEEDFS_FILER_URL:http://seaweedfs-filer:8888}
+    connection-timeout: 5000
+    read-timeout: 30000
+
+# 서버 설정
+server:
+  port: 10201
+
+# HikariCP 커넥션 풀 (Docker 환경)
+spring.datasource.hikari:
+  maximum-pool-size: 20
+  minimum-idle: 5
+  connection-timeout: 30000
+  idle-timeout: 300000
+  max-lifetime: 1800000

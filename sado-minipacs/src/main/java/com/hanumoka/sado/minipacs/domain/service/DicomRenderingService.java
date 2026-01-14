@@ -1506,60 +1506,88 @@ public class DicomRenderingService {
                 int totalFrames = attrs.getInt(Tag.NumberOfFrames, 1);
 
                 int totalSize = 0;
+                int successCount = 0;
+                int failCount = 0;
 
-                // 3. 각 프레임 처리
+                // 기본 출력 설정 (에러 마커용)
+                String defaultMimeType = preserveCompression && isCompressed
+                        ? getMimeTypeForTransferSyntax(transferSyntaxUid)
+                        : "application/octet-stream";
+                String defaultTransferSyntax = preserveCompression && isCompressed
+                        ? transferSyntaxUid
+                        : UID.ExplicitVRLittleEndian;
+
+                // 3. 각 프레임 처리 (개별 예외 처리)
                 for (int frameNumber : frameNumbers) {
                     int frameIndex = frameNumber - 1;
 
-                    if (frameIndex < 0 || frameIndex >= totalFrames) {
-                        throw new BusinessException(MiniPacsErrorCode.INVALID_FRAME_NUMBER,
-                                String.format("Frame %d out of range (1-%d)", frameNumber, totalFrames));
-                    }
-
-                    byte[] frameData;
-                    String outputTransferSyntax;
-                    String mimeType;
-
-                    if (preserveCompression && isCompressed) {
-                        // 압축 유지
-                        frameData = extractCompressedFrameData(attrs, frameIndex);
-                        outputTransferSyntax = transferSyntaxUid;
-                        mimeType = getMimeTypeForTransferSyntax(transferSyntaxUid);
-                    } else {
-                        // 비압축으로 반환 (기존 로직 재사용 불가 - attrs에서 직접 추출)
-                        if (isCompressed) {
-                            // 압축된 데이터를 디코딩해야 함 - DCM4CHE ImageIO 사용
-                            frameData = extractDecompressedFrameFromBytes(dicomBytes, frameNumber);
-                        } else {
-                            frameData = extractUncompressedFrameData(attrs, frameIndex);
+                    try {
+                        if (frameIndex < 0 || frameIndex >= totalFrames) {
+                            throw new BusinessException(MiniPacsErrorCode.INVALID_FRAME_NUMBER,
+                                    String.format("Frame %d out of range (1-%d)", frameNumber, totalFrames));
                         }
-                        outputTransferSyntax = UID.ExplicitVRLittleEndian;
-                        mimeType = "application/octet-stream";
+
+                        byte[] frameData;
+                        String outputTransferSyntax;
+                        String mimeType;
+
+                        if (preserveCompression && isCompressed) {
+                            // 압축 유지
+                            frameData = extractCompressedFrameData(attrs, frameIndex);
+                            outputTransferSyntax = transferSyntaxUid;
+                            mimeType = getMimeTypeForTransferSyntax(transferSyntaxUid);
+                        } else {
+                            // 비압축으로 반환 (기존 로직 재사용 불가 - attrs에서 직접 추출)
+                            if (isCompressed) {
+                                // 압축된 데이터를 디코딩해야 함 - DCM4CHE ImageIO 사용
+                                frameData = extractDecompressedFrameFromBytes(dicomBytes, frameNumber);
+                            } else {
+                                frameData = extractUncompressedFrameData(attrs, frameIndex);
+                            }
+                            outputTransferSyntax = UID.ExplicitVRLittleEndian;
+                            mimeType = "application/octet-stream";
+                        }
+
+                        // Multipart 파트 헤더 작성
+                        String partHeader = "--" + boundary + "\r\n"
+                                + "Content-Type: " + mimeType + "; transfer-syntax=" + outputTransferSyntax + "\r\n"
+                                + "Content-Location: /frames/" + frameNumber + "\r\n"
+                                + "Content-Length: " + frameData.length + "\r\n"
+                                + "\r\n";
+
+                        outputStream.write(partHeader.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                        outputStream.write(frameData);
+                        outputStream.write("\r\n".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+                        totalSize += frameData.length;
+                        successCount++;
+                        log.debug("Extracted frame {}/{}: {} bytes, compressed={}",
+                                frameNumber, totalFrames, frameData.length, preserveCompression && isCompressed);
+
+                    } catch (Exception e) {
+                        // 개별 프레임 실패 시 에러 마커 프레임 반환 (빈 데이터)
+                        log.error("Failed to extract frame {}/{}: error={}",
+                                frameNumber, totalFrames, e.getMessage());
+
+                        // 에러 마커 파트 작성 (Content-Length: 0)
+                        String errorPartHeader = "--" + boundary + "\r\n"
+                                + "Content-Type: " + defaultMimeType + "; transfer-syntax=" + defaultTransferSyntax + "\r\n"
+                                + "Content-Location: /frames/" + frameNumber + "\r\n"
+                                + "Content-Length: 0\r\n"
+                                + "\r\n";
+                        outputStream.write(errorPartHeader.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                        outputStream.write("\r\n".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                        failCount++;
                     }
-
-                    // Multipart 파트 헤더 작성
-                    String partHeader = "--" + boundary + "\r\n"
-                            + "Content-Type: " + mimeType + "; transfer-syntax=" + outputTransferSyntax + "\r\n"
-                            + "Content-Location: /frames/" + frameNumber + "\r\n"
-                            + "Content-Length: " + frameData.length + "\r\n"
-                            + "\r\n";
-
-                    outputStream.write(partHeader.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                    outputStream.write(frameData);
-                    outputStream.write("\r\n".getBytes(java.nio.charset.StandardCharsets.UTF_8));
-
-                    totalSize += frameData.length;
-                    log.debug("Extracted frame {}/{}: {} bytes, compressed={}",
-                            frameNumber, totalFrames, frameData.length, preserveCompression && isCompressed);
                 }
 
-                // 종료 boundary
+                // 종료 boundary (항상 작성)
                 String endBoundary = "--" + boundary + "--\r\n";
                 outputStream.write(endBoundary.getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 outputStream.flush();
 
-                log.info("Multi-frame extraction complete: {} frames, {} total bytes, preserveCompression={}",
-                        frameNumbers.size(), totalSize, preserveCompression && isCompressed);
+                log.info("Multi-frame extraction complete: frames={}, success={}, failed={}, totalBytes={}, preserveCompression={}",
+                        frameNumbers.size(), successCount, failCount, totalSize, preserveCompression && isCompressed);
 
                 return totalSize;
             }
@@ -1569,6 +1597,335 @@ public class DicomRenderingService {
         } catch (IOException e) {
             log.error("Failed to extract multiple frames: path={}, frames={}", storagePath, frameNumbers, e);
             throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED, e.getMessage());
+        }
+    }
+
+    // ==================== JPEG Baseline Transcoding ====================
+
+    /**
+     * 원본 DICOM을 JPEG Baseline으로 변환하여 PixelData 반환
+     *
+     * <p>원본 Transfer Syntax와 관계없이 JPEG Baseline (8-bit)로 변환합니다.
+     * DICOM 메타데이터의 Window/Level을 적용하여 적절한 밝기/대비로 변환합니다.
+     *
+     * <p>변환 과정:
+     * <ol>
+     *   <li>원본 DICOM에서 raw pixel data 추출</li>
+     *   <li>Window/Level 적용 (메타데이터 우선, 없으면 Auto W/L)</li>
+     *   <li>16-bit → 8-bit 변환</li>
+     *   <li>JPEG Baseline으로 인코딩</li>
+     * </ol>
+     *
+     * @param storagePath S3 저장 경로
+     * @param frameNumber 프레임 번호 (1-based)
+     * @param quality JPEG 품질 (0.0-1.0, 권장: 0.9)
+     * @return JPEG Baseline 압축된 PixelData 바이트 배열
+     * @throws BusinessException DICOM_RENDER_FAILED - 변환 실패 시
+     */
+    public byte[] transcodeToJpegBaseline(String storagePath, int frameNumber, float quality) {
+        log.debug("Transcoding DICOM to JPEG Baseline: path={}, frame={}, quality={}",
+                storagePath, frameNumber, quality);
+
+        try (InputStream dicomStream = dicomStorageService.downloadDicomFile(storagePath)) {
+            byte[] dicomBytes = dicomStream.readAllBytes();
+
+            // Transfer Syntax 확인
+            String transferSyntax = getTransferSyntaxFromBytes(dicomBytes);
+            log.debug("Source Transfer Syntax: {}", transferSyntax);
+
+            // 원본이 이미 JPEG Baseline이면 raw fragment 직접 반환 (decode→re-encode 건너뛰기)
+            // DCM4CHE의 JPEG Baseline 디코딩 시 Color Model 문제 회피 (GitHub Issue #346)
+            if (UID.JPEGBaseline8Bit.equals(transferSyntax)) {
+                log.info("Source is already JPEG Baseline, extracting raw fragment directly: path={}, frame={}",
+                        storagePath, frameNumber);
+                return extractJpegFragmentDirectly(dicomBytes, frameNumber);
+            }
+
+            // 1. DICOM 메타데이터 확인 (Window/Level 포함) - JPEG Baseline 외 Transfer Syntax
+            int bitsAllocated;
+            int bitsStored;
+            int samplesPerPixel;
+            double windowCenter = 0;
+            double windowWidth = 0;
+            try (ByteArrayInputStream metaBais = new ByteArrayInputStream(dicomBytes);
+                 DicomInputStream metaDis = new DicomInputStream(metaBais)) {
+                metaDis.readFileMetaInformation();
+                Attributes attrs = metaDis.readDataset();
+                bitsAllocated = attrs.getInt(Tag.BitsAllocated, 16);
+                bitsStored = attrs.getInt(Tag.BitsStored, 12);
+                samplesPerPixel = attrs.getInt(Tag.SamplesPerPixel, 1);
+
+                // Window/Level 메타데이터 읽기 (0028,1050 / 0028,1051)
+                // 다중 값인 경우 첫 번째 값 사용
+                double[] wcValues = attrs.getDoubles(Tag.WindowCenter);
+                double[] wwValues = attrs.getDoubles(Tag.WindowWidth);
+                if (wcValues != null && wcValues.length > 0) {
+                    windowCenter = wcValues[0];
+                }
+                if (wwValues != null && wwValues.length > 0) {
+                    windowWidth = wwValues[0];
+                }
+
+                log.debug("DICOM pixel params: bitsAllocated={}, bitsStored={}, samplesPerPixel={}, windowCenter={}, windowWidth={}",
+                        bitsAllocated, bitsStored, samplesPerPixel, windowCenter, windowWidth);
+            }
+
+            // 2. DCM4CHE ImageIO로 raw pixel 추출 (W/L 미적용)
+            Iterator<ImageReader> readers = ImageIO.getImageReadersByFormatName("DICOM");
+            if (!readers.hasNext()) {
+                throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
+                        "DICOM ImageReader not found. DCM4CHE ImageIO is not installed.");
+            }
+
+            ImageReader reader = readers.next();
+
+            try (ByteArrayInputStream bais = new ByteArrayInputStream(dicomBytes);
+                 ImageInputStream iis = ImageIO.createImageInputStream(bais)) {
+
+                reader.setInput(iis);
+
+                int frameIndex = frameNumber - 1;
+                int numFrames = reader.getNumImages(true);
+
+                if (frameIndex < 0 || frameIndex >= numFrames) {
+                    throw new BusinessException(MiniPacsErrorCode.INVALID_FRAME_NUMBER,
+                            String.format("Frame %d out of range (1-%d)", frameNumber, numFrames));
+                }
+
+                // readRaster()로 W/L 미적용 raw pixels 추출
+                java.awt.image.Raster raster = reader.readRaster(frameIndex, null);
+                int width = raster.getWidth();
+                int height = raster.getHeight();
+
+                // 3. 8-bit BufferedImage 생성
+                BufferedImage jpegImage;
+                if (samplesPerPixel == 1) {
+                    // Grayscale 처리
+                    if (bitsStored <= 8) {
+                        // 8-bit 이미지: W/L 미적용 (이미 0-255 범위로 정규화됨)
+                        // 원본이 JPEG Baseline인 경우 이미 시각화를 위해 W/L이 적용된 상태
+                        log.debug("8-bit grayscale: skipping W/L (bitsStored={})", bitsStored);
+                        jpegImage = createGrayscale8BitImageNoWL(raster);
+                    } else {
+                        // 16-bit 이상: Window/Level 적용하여 8-bit 변환
+                        log.debug("High-bit grayscale: applying W/L (bitsStored={}, wc={}, ww={})",
+                                bitsStored, windowCenter, windowWidth);
+                        jpegImage = createGrayscale8BitImageWithWL(raster, bitsStored, windowCenter, windowWidth);
+                    }
+                } else {
+                    // RGB: 이미 8-bit인 경우 그대로 사용
+                    jpegImage = createRgb8BitImage(raster);
+                }
+
+                // 4. JPEG Baseline으로 인코딩
+                ByteArrayOutputStream jpegOutput = new ByteArrayOutputStream();
+                writeJpegWithQuality(jpegImage, (int) (quality * 100), jpegOutput);
+
+                byte[] jpegBytes = jpegOutput.toByteArray();
+
+                log.info("Transcoded to JPEG Baseline: frame={}, {}x{}, {} bytes (quality={}, wc={}, ww={})",
+                        frameNumber, width, height, jpegBytes.length, quality, windowCenter, windowWidth);
+
+                return jpegBytes;
+
+            } finally {
+                reader.dispose();
+            }
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (IOException e) {
+            log.error("JPEG Baseline transcoding failed: path={}, frame={}", storagePath, frameNumber, e);
+            throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED, e.getMessage());
+        }
+    }
+
+    /**
+     * Raster에서 8-bit Grayscale BufferedImage 생성 (W/L 적용)
+     *
+     * <p>Window/Level 변환을 적용하여 의료 영상이 정상적으로 표시되도록 합니다.
+     * W/L 값이 0이면 픽셀 min/max 기반으로 Auto W/L을 계산합니다.
+     *
+     * @param raster 원본 Raster (16-bit 또는 8-bit)
+     * @param bitsStored 실제 사용 비트 수 (예: 12-bit)
+     * @param windowCenter Window Center (0028,1050) - 0이면 Auto 계산
+     * @param windowWidth Window Width (0028,1051) - 0이면 Auto 계산
+     * @return 8-bit Grayscale BufferedImage (W/L 적용됨)
+     */
+    private BufferedImage createGrayscale8BitImageWithWL(
+            java.awt.image.Raster raster,
+            int bitsStored,
+            double windowCenter,
+            double windowWidth) {
+
+        int width = raster.getWidth();
+        int height = raster.getHeight();
+
+        // W/L이 0이면 Auto W/L 계산 (픽셀 min/max 기반)
+        if (windowCenter == 0 && windowWidth == 0) {
+            int minPixel = Integer.MAX_VALUE;
+            int maxPixel = Integer.MIN_VALUE;
+
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int pixelValue = raster.getSample(x, y, 0);
+                    if (pixelValue < minPixel) minPixel = pixelValue;
+                    if (pixelValue > maxPixel) maxPixel = pixelValue;
+                }
+            }
+
+            // Auto W/L 계산
+            windowWidth = maxPixel - minPixel;
+            windowCenter = (maxPixel + minPixel) / 2.0;
+
+            // width가 0이면 최소값 설정 (divide by zero 방지)
+            if (windowWidth < 1) {
+                windowWidth = 1;
+            }
+
+            log.debug("Auto W/L calculated: center={}, width={}, minPixel={}, maxPixel={}",
+                    windowCenter, windowWidth, minPixel, maxPixel);
+        }
+
+        // 8-bit Grayscale BufferedImage 생성
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+
+        // W/L 범위 계산
+        double windowLow = windowCenter - (windowWidth / 2.0);
+        double windowHigh = windowCenter + (windowWidth / 2.0);
+
+        // 각 픽셀 변환 (W/L 적용)
+        // 공식: output = ((input - windowLow) / windowWidth) * 255
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int originalValue = raster.getSample(x, y, 0);
+
+                // W/L 변환
+                double normalized;
+                if (originalValue <= windowLow) {
+                    normalized = 0;
+                } else if (originalValue >= windowHigh) {
+                    normalized = 255;
+                } else {
+                    normalized = ((originalValue - windowLow) / windowWidth) * 255.0;
+                }
+
+                // 클램핑 (안전장치)
+                int scaledValue = (int) Math.round(normalized);
+                scaledValue = Math.max(0, Math.min(255, scaledValue));
+                image.getRaster().setSample(x, y, 0, scaledValue);
+            }
+        }
+
+        log.debug("Created 8-bit grayscale image with W/L: {}x{}, bitsStored={}, WC={}, WW={}",
+                width, height, bitsStored, windowCenter, windowWidth);
+
+        return image;
+    }
+
+    /**
+     * Raster에서 8-bit Grayscale BufferedImage 생성 (W/L 미적용)
+     *
+     * <p>이미 8-bit인 원본 데이터를 그대로 복사합니다.
+     * JPEG Baseline Transfer Syntax 등 이미 시각화를 위해 정규화된 데이터에 사용합니다.
+     *
+     * @param raster 원본 Raster (이미 8-bit)
+     * @return 8-bit Grayscale BufferedImage
+     */
+    private BufferedImage createGrayscale8BitImageNoWL(java.awt.image.Raster raster) {
+        int width = raster.getWidth();
+        int height = raster.getHeight();
+
+        // 8-bit Grayscale BufferedImage 생성
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+
+        // 픽셀값 직접 복사 (W/L 미적용)
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int value = raster.getSample(x, y, 0) & 0xFF;  // 8-bit로 마스킹
+                image.getRaster().setSample(x, y, 0, value);
+            }
+        }
+
+        log.debug("Created 8-bit grayscale image (no W/L): {}x{}", width, height);
+
+        return image;
+    }
+
+    /**
+     * Raster에서 8-bit RGB BufferedImage 생성
+     *
+     * @param raster 원본 Raster (RGB)
+     * @return 8-bit RGB BufferedImage
+     */
+    private BufferedImage createRgb8BitImage(java.awt.image.Raster raster) {
+        int width = raster.getWidth();
+        int height = raster.getHeight();
+
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int r = raster.getSample(x, y, 0) & 0xFF;
+                int g = raster.getSample(x, y, 1) & 0xFF;
+                int b = raster.getSample(x, y, 2) & 0xFF;
+                int rgb = (r << 16) | (g << 8) | b;
+                image.setRGB(x, y, rgb);
+            }
+        }
+
+        log.debug("Created 8-bit RGB image: {}x{}", width, height);
+
+        return image;
+    }
+
+    /**
+     * DICOM 바이트 배열에서 Transfer Syntax UID 추출
+     *
+     * @param dicomBytes DICOM 파일 바이트 배열
+     * @return Transfer Syntax UID (없으면 null)
+     */
+    private String getTransferSyntaxFromBytes(byte[] dicomBytes) {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(dicomBytes);
+             DicomInputStream dis = new DicomInputStream(bais)) {
+            Attributes fmi = dis.readFileMetaInformation();
+            return fmi != null ? fmi.getString(Tag.TransferSyntaxUID) : null;
+        } catch (IOException e) {
+            log.warn("Failed to read transfer syntax from bytes", e);
+            return null;
+        }
+    }
+
+    /**
+     * JPEG Baseline DICOM에서 raw JPEG fragment 직접 추출
+     *
+     * <p>디코딩/재인코딩 없이 원본 JPEG 바이트를 그대로 반환합니다.
+     * DICOM 표준에 따르면 각 Fragment는 완전한 JPEG 파일 (SOI ~ EOI)입니다.
+     *
+     * <p>이 메서드는 DCM4CHE의 JPEG Baseline 디코딩 시 발생하는 Color Model 문제를 회피합니다.
+     * (참조: https://github.com/dcm4che/dcm4che/issues/346)
+     *
+     * @param dicomBytes DICOM 파일 바이트 배열
+     * @param frameNumber 프레임 번호 (1-based)
+     * @return raw JPEG 바이트 배열
+     * @throws BusinessException 추출 실패 시
+     */
+    private byte[] extractJpegFragmentDirectly(byte[] dicomBytes, int frameNumber) {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(dicomBytes);
+             DicomInputStream dis = new DicomInputStream(bais)) {
+            dis.readFileMetaInformation();
+            Attributes attrs = dis.readDataset();
+
+            int frameIndex = frameNumber - 1;
+            byte[] jpegBytes = extractCompressedFrameData(attrs, frameIndex);
+
+            log.info("Extracted raw JPEG fragment directly: frame={}, size={} bytes",
+                    frameNumber, jpegBytes.length);
+
+            return jpegBytes;
+        } catch (IOException e) {
+            throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
+                    "Failed to extract JPEG fragment: " + e.getMessage());
         }
     }
 

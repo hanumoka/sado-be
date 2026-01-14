@@ -1,0 +1,226 @@
+# =============================================================================
+# SADO MiniPACS - Development Server Docker Compose (24 Core Limited)
+# =============================================================================
+# 사용법: docker-compose -f docker-compose-dev.yml up -d
+#
+# 개발 서버 스펙: 48 Core CPU (SADO 할당: 24 Core)
+# 최적화 대상: MySQL, SeaweedFS 고성능 설정
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ==========================================================================
+  # MySQL 8.0 (24코어 제한)
+  # ==========================================================================
+  mysql:
+    image: mysql:8.0
+    container_name: sado-mysql-dev
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root1234}
+      MYSQL_DATABASE: sado_db
+      MYSQL_USER: ${DB_USERNAME:-root}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-root1234}
+      TZ: Asia/Seoul
+    ports:
+      - "10100:3306"
+    volumes:
+      - sado-mysql-data-dev:/var/lib/mysql
+    command:
+      # 문자셋 설정
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      # 48코어 최적화 설정
+      - --max_connections=300              # 기본 151 → 300 (HikariCP 50 + 여유)
+      - --innodb_buffer_pool_size=4G       # InnoDB 버퍼 풀 (메모리의 50-70%)
+      - --innodb_buffer_pool_instances=8   # 버퍼 풀 인스턴스 (멀티코어 병렬화)
+      - --innodb_log_file_size=512M        # 리두 로그 파일 크기
+      - --innodb_log_buffer_size=64M       # 로그 버퍼 크기
+      - --innodb_flush_log_at_trx_commit=2 # 성능 최적화 (dev 환경)
+      - --innodb_flush_method=O_DIRECT     # 직접 I/O (OS 캐시 우회)
+      - --innodb_io_capacity=2000          # I/O 용량 (SSD 최적화)
+      - --innodb_io_capacity_max=4000      # I/O 최대 용량
+      - --innodb_read_io_threads=8         # 읽기 스레드 (기본 4)
+      - --innodb_write_io_threads=8        # 쓰기 스레드 (기본 4)
+      - --thread_cache_size=100            # 스레드 캐시 (재사용)
+      - --table_open_cache=4000            # 테이블 캐시
+      - --table_definition_cache=2000      # 테이블 정의 캐시
+      - --sort_buffer_size=4M              # 정렬 버퍼
+      - --join_buffer_size=4M              # 조인 버퍼
+      - --tmp_table_size=256M              # 임시 테이블 크기
+      - --max_heap_table_size=256M         # 힙 테이블 최대 크기
+      - --query_cache_type=0               # 쿼리 캐시 비활성화 (MySQL 8.0)
+      - --performance_schema=ON            # 성능 모니터링 활성화
+    networks:
+      - sado-network-dev
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 6G
+        reservations:
+          cpus: '2'
+          memory: 4G
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================================================
+  # SeaweedFS Master (24코어 제한)
+  # ==========================================================================
+  seaweedfs-master:
+    image: chrislusf/seaweedfs:latest
+    container_name: sado-seaweedfs-master-dev
+    ports:
+      - "10400:9333"      # HTTP API (Master 관리)
+      - "10401:19333"     # gRPC (Volume 등록)
+    command: >
+      master
+      -ip=seaweedfs-master
+      -mdir=/data
+      -defaultReplication=000
+      -garbageThreshold=0.1
+      -volumeSizeLimitMB=30000
+    volumes:
+      - sado-seaweedfs-master-dev:/data
+    networks:
+      - sado-network-dev
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+
+  # ==========================================================================
+  # SeaweedFS Volume (24코어 제한 - 고성능 I/O)
+  # ==========================================================================
+  seaweedfs-volume:
+    image: chrislusf/seaweedfs:latest
+    container_name: sado-seaweedfs-volume-dev
+    depends_on:
+      - seaweedfs-master
+    ports:
+      - "10402:8080"      # HTTP API (파일 읽기/쓰기)
+    command: >
+      volume
+      -mserver=seaweedfs-master:9333
+      -port=8080
+      -ip=seaweedfs-volume
+      -max=100
+      -compactionMBps=100
+      -readMode=proxy
+    volumes:
+      - sado-seaweedfs-data-dev:/data
+    networks:
+      - sado-network-dev
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 3G
+        reservations:
+          cpus: '2'
+          memory: 2G
+
+  # ==========================================================================
+  # SeaweedFS Filer + S3 API (24코어 제한)
+  # ==========================================================================
+  seaweedfs-filer:
+    image: chrislusf/seaweedfs:latest
+    container_name: sado-seaweedfs-filer-dev
+    depends_on:
+      - seaweedfs-master
+      - seaweedfs-volume
+    ports:
+      - "10403:8888"      # HTTP API (Filer 관리, Web UI)
+      - "10404:18888"     # gRPC
+      - "10405:8333"      # S3 API (Spring Boot에서 사용)
+    volumes:
+      - ./seaweedfs-s3-config.json:/etc/seaweedfs/s3.json:ro
+      - sado-seaweedfs-filer-dev:/data
+    command: >
+      filer
+      -master=seaweedfs-master:9333
+      -ip=seaweedfs-filer
+      -s3
+      -s3.port=8333
+      -s3.config=/etc/seaweedfs/s3.json
+      -maxMB=256
+      -dirListLimit=100000
+    networks:
+      - sado-network-dev
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 3G
+        reservations:
+          cpus: '2'
+          memory: 2G
+
+  # ==========================================================================
+  # Kafka + Zookeeper (선택적 - 주석 해제하여 사용)
+  # ==========================================================================
+#  zookeeper:
+#    image: confluentinc/cp-zookeeper:7.5.0
+#    container_name: sado-zookeeper-dev
+#    environment:
+#      ZOOKEEPER_CLIENT_PORT: 2181
+#      ZOOKEEPER_TICK_TIME: 2000
+#    ports:
+#      - "10101:2181"
+#    networks:
+#      - sado-network-dev
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: '2'
+#          memory: 1G
+
+#  kafka:
+#    image: confluentinc/cp-kafka:7.5.0
+#    container_name: sado-kafka-dev
+#    depends_on:
+#      - zookeeper
+#    environment:
+#      KAFKA_BROKER_ID: 1
+#      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:10102
+#      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+#      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+#      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+#      KAFKA_NUM_PARTITIONS: 8
+#      KAFKA_NUM_IO_THREADS: 16
+#      KAFKA_NUM_NETWORK_THREADS: 8
+#    ports:
+#      - "10102:9092"
+#    networks:
+#      - sado-network-dev
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: '4'
+#          memory: 2G
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  sado-mysql-data-dev:
+    name: sado-mysql-data-dev
+  sado-seaweedfs-master-dev:
+    name: sado-seaweedfs-master-dev
+  sado-seaweedfs-data-dev:
+    name: sado-seaweedfs-data-dev
+  sado-seaweedfs-filer-dev:
+    name: sado-seaweedfs-filer-dev
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  sado-network-dev:
+    name: sado-network-dev
+    driver: bridge

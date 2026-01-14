@@ -25,6 +25,10 @@ public class InstanceResponse {
     // 2. 소속 시리즈 ID
     private Long seriesId;
 
+    // 2-1. 상위 계층 ID (조회 편의성)
+    private Long studyId;
+    private Long patientId;
+
     // 3. DICOM 식별자
     private String sopInstanceUid;
     private String sopClassUid;

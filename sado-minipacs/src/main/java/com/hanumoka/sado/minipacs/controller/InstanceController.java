@@ -414,6 +414,8 @@ public class InstanceController {
                 .id(instance.getId())
                 .uuid(instance.getUuid())
                 .seriesId(instance.getSeries().getId())
+                .studyId(instance.getSeries().getStudy().getId())
+                .patientId(instance.getSeries().getStudy().getPatient().getId())
                 .sopInstanceUid(instance.getSopInstanceUid())
                 .sopClassUid(instance.getSopClassUid())
                 .rows(instance.getImageRows())

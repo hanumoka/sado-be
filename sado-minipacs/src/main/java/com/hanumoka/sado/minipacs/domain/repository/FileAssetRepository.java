@@ -401,4 +401,22 @@ public interface FileAssetRepository extends JpaRepository<FileAsset, Long> {
         ORDER BY f.category ASC
         """)
     List<com.hanumoka.sado.minipacs.dto.response.admin.CategoryStorageMetrics> findStorageMetricsByAllCategories();
+
+    /**
+     * 테넌트별/파일유형별 스토리지 메트릭 조회
+     *
+     * <p>원본 파일(DICOM)과 사전렌더링 파일(SYSTEM)을 테넌트별로 그룹화하여 조회합니다.
+     *
+     * @return Object[] 배열: [tenantId(Long), category(FileCategory), fileCount(Long), totalSize(Long)]
+     */
+    @Query("""
+        SELECT f.tenantId, f.category, COUNT(f), COALESCE(SUM(f.fileSize), 0)
+        FROM FileAsset f
+        WHERE f.status = 'ACTIVE'
+          AND f.category IN (com.hanumoka.sado.minipacs.domain.enums.FileCategory.DICOM,
+                             com.hanumoka.sado.minipacs.domain.enums.FileCategory.SYSTEM)
+        GROUP BY f.tenantId, f.category
+        ORDER BY f.tenantId ASC, f.category ASC
+        """)
+    List<Object[]> findStorageMetricsByTenantAndType();
 }

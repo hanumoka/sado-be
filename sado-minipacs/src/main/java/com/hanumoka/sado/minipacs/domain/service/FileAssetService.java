@@ -2,6 +2,7 @@ package com.hanumoka.sado.minipacs.domain.service;
 
 import com.hanumoka.sado.common.exception.BusinessException;
 import com.hanumoka.sado.common.exception.ResourceNotFoundException;
+import com.hanumoka.sado.common.tenant.TenantContext;
 import com.hanumoka.sado.minipacs.code.MiniPacsErrorCode;
 import com.hanumoka.sado.minipacs.domain.entity.FileAsset;
 import com.hanumoka.sado.minipacs.domain.enums.FileCategory;
@@ -316,7 +317,13 @@ public class FileAssetService {
     /**
      * S3 Key 생성
      *
-     * <p>경로 구조: assets/{category}/{referenceType}/{referenceId}/{uuid}_{filename}
+     * <p>경로 구조: tenant-{tenantId}/assets/{category}/{referenceType}/{referenceId}/{uuid}_{filename}
+     *
+     * <p>멀티테넌시 격리:
+     * <ul>
+     *   <li>TenantContext에서 현재 요청의 테넌트 ID를 조회</li>
+     *   <li>테넌트 ID를 경로 프리픽스로 사용하여 테넌트별 파일 격리</li>
+     * </ul>
      */
     private String buildS3Key(
             FileCategory category,
@@ -324,10 +331,17 @@ public class FileAssetService {
             Long referenceId,
             String filename
     ) {
+        // 테넌트 ID 조회 (멀티테넌시 격리)
+        Long tenantId = TenantContext.getCurrentTenantId();
+        if (tenantId == null) {
+            throw new IllegalStateException("TenantContext is not set. Cannot generate storage path without tenant isolation.");
+        }
+
         String uuid = UUID.randomUUID().toString().substring(0, 8);
         String safeFilename = sanitizeFilename(filename);
 
-        return String.format("assets/%s/%s/%d/%s_%s",
+        return String.format("tenant-%d/assets/%s/%s/%d/%s_%s",
+                tenantId,
                 category.name().toLowerCase(),
                 referenceType.name().toLowerCase(),
                 referenceId,

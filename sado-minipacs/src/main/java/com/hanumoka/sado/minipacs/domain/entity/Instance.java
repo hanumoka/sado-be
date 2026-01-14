@@ -247,6 +247,24 @@ public class Instance extends TenantAwareEntity {
     @Column(name = "has_compressed_bulkdata")
     private Boolean hasCompressedBulkdata = false;
 
+    /**
+     * Has JPEG Baseline
+     * 사전 렌더링된 JPEG Baseline 데이터 존재 여부
+     * - true: jpeg/ 폴더에 JPEG Baseline 데이터 존재
+     * - false: JPEG Baseline 데이터 없음
+     */
+    @Column(name = "has_jpeg_baseline")
+    private Boolean hasJpegBaseline = false;
+
+    /**
+     * JPEG Baseline Quality
+     * JPEG Baseline 인코딩 품질 (1-100)
+     * - 90: 고품질 (권장)
+     * - 80: 중간 품질
+     */
+    @Column(name = "jpeg_baseline_quality")
+    private Integer jpegBaselineQuality;
+
     // ========== 스토리지 티어링 ==========
 
     /**
@@ -466,6 +484,16 @@ public class Instance extends TenantAwareEntity {
 
         public Builder hasCompressedBulkdata(Boolean hasCompressedBulkdata) {
             instance.hasCompressedBulkdata = hasCompressedBulkdata;
+            return this;
+        }
+
+        public Builder hasJpegBaseline(Boolean hasJpegBaseline) {
+            instance.hasJpegBaseline = hasJpegBaseline;
+            return this;
+        }
+
+        public Builder jpegBaselineQuality(Integer jpegBaselineQuality) {
+            instance.jpegBaselineQuality = jpegBaselineQuality;
             return this;
         }
 

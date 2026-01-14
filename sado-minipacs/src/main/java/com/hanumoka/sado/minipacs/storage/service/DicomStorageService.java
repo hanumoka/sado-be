@@ -198,28 +198,30 @@ public interface DicomStorageService {
     /**
      * S3 Key 생성 (DICOMweb 표준)
      *
+     * @deprecated 이 메서드는 테넌트 격리를 지원하지 않습니다.
+     *             {@link com.hanumoka.sado.minipacs.storage.strategy.DicomwebPathStrategy#generatePath(com.hanumoka.sado.minipacs.storage.dto.DicomFileMetadata)}를 사용하세요.
+     *
+     * <p><strong>경고:</strong> 이 메서드로 생성된 경로는 테넌트 ID를 포함하지 않아
+     * 멀티테넌시 환경에서 데이터 격리가 보장되지 않습니다.
+     *
      * <p>Utility 메서드: 다른 서비스에서 S3 Key를 생성할 때 사용
      *
-     * <p>생성 규칙:
+     * <p>생성 규칙 (테넌트 격리 미적용):
      * <pre>
      * studies/{studyInstanceUid}/series/{seriesInstanceUid}/instances/{sopInstanceUid}.dcm
      * </pre>
      *
-     * <p>사용 예시:
+     * <p>권장 방식 (테넌트 격리 적용):
      * <pre>
-     * String s3Key = DicomStorageService.buildS3Key(
-     *     "1.2.840.113619.2.55.3.12345",
-     *     "1.2.840.113619.2.55.3.12345.1",
-     *     "1.2.840.113619.2.55.3.12345.1.1"
-     * );
-     * // → "studies/1.2.840.113619.2.55.3.12345/series/1.2.840.113619.2.55.3.12345.1/instances/1.2.840.113619.2.55.3.12345.1.1.dcm"
+     * tenant-{tenantId}/studies/{studyInstanceUid}/series/{seriesInstanceUid}/instances/{sopInstanceUid}.dcm
      * </pre>
      *
      * @param studyInstanceUid Study Instance UID
      * @param seriesInstanceUid Series Instance UID
      * @param sopInstanceUid SOP Instance UID
-     * @return S3 Key (studies/.../series/.../instances/....dcm)
+     * @return S3 Key (studies/.../series/.../instances/....dcm) - 테넌트 격리 미적용
      */
+    @Deprecated
     static String buildS3Key(
             String studyInstanceUid,
             String seriesInstanceUid,

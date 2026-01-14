@@ -1,0 +1,75 @@
+# =============================================================================
+# SADO MiniPACS - Development Profile (application-dev.yml)
+# =============================================================================
+# 사용법: --spring.profiles.active=dev 또는 SPRING_PROFILES_ACTIVE=dev
+#
+# 개발 서버 스펙: 48 Core CPU (SADO 할당: 24 Core)
+# - Docker 인프라: ~14 Core (MySQL 4, SeaweedFS 10)
+# - Spring Boot: ~10 Core
+#
+# 이 프로파일은 개발 시 디버깅을 위해 다음을 활성화합니다:
+# - DEBUG/TRACE 로깅
+# - SQL 출력 및 포맷팅
+# - SQL 바인딩 파라미터 출력
+# - 24코어 제한 스레드 풀
+# =============================================================================
+
+# 로깅 설정 (개발용 - 상세 출력)
+logging:
+  level:
+    root: INFO
+    com.hanumoka.sado: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.web: DEBUG
+    # 추가 디버그 로깅 (필요시 활성화)
+    # org.springframework.transaction: DEBUG
+    # org.springframework.data.jpa: DEBUG
+
+spring:
+  # JPA 설정 (개발용 - SQL 출력)
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+
+  # HikariCP 커넥션 풀 (24코어 제한)
+  # 공식: connections = (core_count × 2) + spindle_count = (10 × 2) + 1 = 21
+  # 실제 적용: 30 (MySQL max_connections=300 고려)
+  datasource:
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 10
+
+# Tomcat 설정 (24코어 제한)
+server:
+  tomcat:
+    max-connections: 4000
+    accept-count: 300
+    threads:
+      max: 200
+      min-spare: 10
+
+# 비동기 처리 설정 (24코어 제한, Spring Boot ~10코어)
+# - Pre-rendering: CPU 바운드 → 코어 수의 50% = 5
+# - S3 Upload: I/O 바운드 → 코어 수의 1-2배 = 10-20
+async:
+  pre-rendering:
+    core-pool-size: 4
+    max-pool-size: 8
+    queue-capacity: 1500
+  s3-upload:
+    core-pool-size: 8
+    max-pool-size: 16
+    queue-capacity: 3000
+
+# 업로드 동시성 제한 (24코어 제한)
+upload:
+  max-concurrent: 20
+
+# 개발 환경 전용 설정
+# - 사전 렌더링 비활성화 (빠른 업로드 테스트용, 필요시 주석 해제)
+# pre-rendering:
+#   enabled: false

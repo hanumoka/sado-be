@@ -181,4 +181,64 @@ public class SeaweedFSAdminController {
         log.info("Volume deleted successfully: volumeId={}", volumeId);
         return ApiResponse.success("Volume " + volumeId + " deleted successfully");
     }
+
+    // ============================================================
+    // Filer 파일 삭제/다운로드
+    // ============================================================
+
+    /**
+     * Filer 파일 삭제
+     *
+     * <p>DELETE /api/admin/seaweedfs/filer/file?path=/path/to/file
+     *
+     * @param path 삭제할 파일 경로
+     * @return 삭제 결과 메시지
+     */
+    @Operation(
+        summary = "Filer 파일 삭제",
+        description = "SeaweedFS Filer에서 파일을 삭제합니다. 주의: 되돌릴 수 없습니다."
+    )
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "삭제 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "파일을 찾을 수 없음"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "삭제 실패"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "503", description = "SeaweedFS 서버 접근 불가")
+    })
+    @DeleteMapping("/filer/file")
+    public ApiResponse<String> deleteFilerFile(
+        @RequestParam String path
+    ) {
+        log.warn("DELETE /api/admin/seaweedfs/filer/file?path={}: Deleting file", path);
+
+        seaweedFSAdminService.deleteFilerFile(path);
+
+        log.info("File deleted successfully: path={}", path);
+        return ApiResponse.success("File deleted: " + path);
+    }
+
+    /**
+     * Filer 파일 다운로드 URL 조회
+     *
+     * <p>GET /api/admin/seaweedfs/filer/download-url?path=/path/to/file
+     *
+     * @param path 파일 경로
+     * @return 다운로드 URL
+     */
+    @Operation(
+        summary = "Filer 파일 다운로드 URL 조회",
+        description = "SeaweedFS Filer의 파일 다운로드 URL을 반환합니다. Frontend에서 직접 다운로드에 사용합니다."
+    )
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "URL 생성 성공")
+    })
+    @GetMapping("/filer/download-url")
+    public ApiResponse<String> getFilerFileDownloadUrl(
+        @RequestParam String path
+    ) {
+        log.info("GET /api/admin/seaweedfs/filer/download-url?path={}", path);
+
+        String downloadUrl = seaweedFSAdminService.getFilerFileDownloadUrl(path);
+
+        return ApiResponse.success(downloadUrl);
+    }
 }

@@ -10,7 +10,11 @@ import com.hanumoka.sado.minipacs.dto.response.seaweedfs.FilerEntryResponse;
 import com.hanumoka.sado.minipacs.dto.response.seaweedfs.VolumeInfoResponse;
 import com.hanumoka.sado.minipacs.infrastructure.config.SeaweedFSAdminProperties;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
@@ -63,15 +67,19 @@ public class SeaweedFSAdminService {
     /**
      * 모든 Volume 조회
      *
+     * <p>Volume Server /status API에서 Volume 목록을 조회합니다.
+     * (Master /vol/status는 중첩 객체 구조로 반환하지만, Volume Server /status는 배열로 반환)
+     *
      * @return Volume 목록
      * @throws BusinessException SEAWEEDFS_UNAVAILABLE - SeaweedFS 서버 접근 불가
      * @throws BusinessException SEAWEEDFS_RESPONSE_PARSE_ERROR - 응답 파싱 실패
      */
     public List<VolumeInfoResponse> listVolumes() {
-        log.info("Listing all volumes from SeaweedFS Master: {}", properties.getMasterUrl());
+        log.info("Listing all volumes from SeaweedFS Volume Server: {}", properties.getVolumeUrl());
 
         try {
-            String url = properties.getMasterUrl() + "/vol/status";
+            // Volume Server /status API 사용 (Volumes가 배열로 반환됨)
+            String url = properties.getVolumeUrl() + "/status";
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
 
             if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
@@ -84,7 +92,7 @@ public class SeaweedFSAdminService {
             return parseVolumesResponse(response.getBody());
 
         } catch (ResourceAccessException e) {
-            log.error("SeaweedFS Master 서버에 접근할 수 없습니다: {}", properties.getMasterUrl(), e);
+            log.error("SeaweedFS Volume 서버에 접근할 수 없습니다: {}", properties.getVolumeUrl(), e);
             throw new BusinessException(
                 MiniPacsErrorCode.SEAWEEDFS_UNAVAILABLE,
                 "SeaweedFS 서버에 접근할 수 없습니다."
@@ -100,6 +108,8 @@ public class SeaweedFSAdminService {
 
     /**
      * Volume 응답 파싱
+     *
+     * <p>Volume Server /status 응답의 Volumes 배열을 파싱합니다.
      */
     private List<VolumeInfoResponse> parseVolumesResponse(String responseBody) {
         try {
@@ -109,10 +119,16 @@ public class SeaweedFSAdminService {
             JsonNode volumesNode = root.path("Volumes");
             if (volumesNode.isArray()) {
                 for (JsonNode volumeNode : volumesNode) {
+                    // Collection이 빈 문자열인 경우 null 처리
+                    String collection = volumeNode.path("Collection").asText("");
+                    if (collection.isEmpty()) {
+                        collection = null;
+                    }
+
                     VolumeInfoResponse volume = VolumeInfoResponse.builder()
                         .id(volumeNode.path("Id").asLong())
                         .size(volumeNode.path("Size").asLong())
-                        .collection(volumeNode.path("Collection").asText(null))
+                        .collection(collection)
                         .replication(volumeNode.path("ReplicaPlacement").asText("000"))
                         .status(volumeNode.path("ReadOnly").asBoolean() ? "ReadOnly" : "ReadWrite")
                         .fileCount(volumeNode.path("FileCount").asLong(0))
@@ -139,49 +155,57 @@ public class SeaweedFSAdminService {
     /**
      * Cluster 상태 조회
      *
+     * <p>Master /cluster/status와 Volume Server /status를 조합하여 클러스터 상태를 조회합니다.
+     *
      * @return Cluster 상태
      * @throws BusinessException SEAWEEDFS_UNAVAILABLE - SeaweedFS 서버 접근 불가
      */
     public ClusterStatusResponse getClusterStatus() {
-        log.info("Getting cluster status from SeaweedFS Master: {}", properties.getMasterUrl());
+        log.info("Getting cluster status from SeaweedFS");
 
         try {
-            String url = properties.getMasterUrl() + "/cluster/status";
-            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            // 1. Master에서 isLeader 확인
+            String clusterUrl = properties.getMasterUrl() + "/cluster/status";
+            ResponseEntity<String> clusterResponse = restTemplate.getForEntity(clusterUrl, String.class);
+            JsonNode clusterRoot = objectMapper.readTree(clusterResponse.getBody());
+            boolean isLeader = clusterRoot.path("IsLeader").asBoolean(false);
 
-            if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
-                throw new BusinessException(
-                    MiniPacsErrorCode.SEAWEEDFS_API_ERROR,
-                    "Cluster 상태 조회 실패"
-                );
+            // 2. Volume Server에서 상세 정보 조회
+            String volumeStatusUrl = properties.getVolumeUrl() + "/status";
+            ResponseEntity<String> volumeResponse = restTemplate.getForEntity(volumeStatusUrl, String.class);
+            JsonNode volumeRoot = objectMapper.readTree(volumeResponse.getBody());
+
+            // 3. DiskStatuses에서 용량 추출
+            JsonNode diskStatuses = volumeRoot.path("DiskStatuses");
+            Long totalCapacity = 0L;
+            Long usedSpace = 0L;
+            Long freeSpace = 0L;
+            if (diskStatuses.isArray() && diskStatuses.size() > 0) {
+                JsonNode disk = diskStatuses.get(0);
+                totalCapacity = disk.path("all").asLong(0);
+                usedSpace = disk.path("used").asLong(0);
+                freeSpace = disk.path("free").asLong(0);
             }
 
-            return parseClusterStatusResponse(response.getBody());
+            // 4. Volumes 배열에서 Volume 수 및 파일 수 계산
+            JsonNode volumes = volumeRoot.path("Volumes");
+            int volumeCount = 0;
+            long totalFiles = 0;
+            long totalUsedVolumeSize = 0;
+            if (volumes.isArray()) {
+                volumeCount = volumes.size();
+                for (JsonNode vol : volumes) {
+                    totalFiles += vol.path("FileCount").asLong(0);
+                    totalUsedVolumeSize += vol.path("Size").asLong(0);
+                }
+            }
 
-        } catch (ResourceAccessException e) {
-            log.error("SeaweedFS Master 서버에 접근할 수 없습니다", e);
-            throw new BusinessException(
-                MiniPacsErrorCode.SEAWEEDFS_UNAVAILABLE,
-                "SeaweedFS 서버에 접근할 수 없습니다."
-            );
-        }
-    }
-
-    /**
-     * Cluster 상태 응답 파싱
-     */
-    private ClusterStatusResponse parseClusterStatusResponse(String responseBody) {
-        try {
-            JsonNode root = objectMapper.readTree(responseBody);
-
-            // 1. Health 판단
-            boolean isLeader = root.path("IsLeader").asBoolean(false);
-            JsonNode topologyNode = root.path("Topology");
-            ClusterStatusResponse.HealthStatus health = isLeader && topologyNode != null && !topologyNode.isMissingNode()
+            // 5. Health 판단: isLeader && Volume Server 응답 정상
+            ClusterStatusResponse.HealthStatus health = isLeader && volumeCount > 0
                 ? ClusterStatusResponse.HealthStatus.HEALTHY
                 : ClusterStatusResponse.HealthStatus.DEGRADED;
 
-            // 2. Master 노드 정보
+            // 6. Master 노드 정보
             List<ClusterStatusResponse.MasterNode> masters = new ArrayList<>();
             masters.add(ClusterStatusResponse.MasterNode.builder()
                 .address(properties.getMasterUrl().replace("http://", ""))
@@ -189,80 +213,52 @@ public class SeaweedFSAdminService {
                 .status("active")
                 .build());
 
-            // 3. Volume Server 정보 파싱
+            // 7. Volume Server 노드 정보
             List<ClusterStatusResponse.VolumeServerNode> volumeServers = new ArrayList<>();
-            Long totalUsedSize = 0L;
-            Long totalFreeSize = 0L;
-            Integer totalVolumes = 0;
+            volumeServers.add(ClusterStatusResponse.VolumeServerNode.builder()
+                .address(properties.getVolumeUrl().replace("http://", ""))
+                .volumeCount(volumeCount)
+                .usedDiskSize(usedSpace)
+                .freeDiskSize(freeSpace)
+                .status("active")
+                .build());
 
-            // Topology → DataCenters → Racks → DataNodes 경로 탐색
-            JsonNode dataCentersNode = topologyNode.path("DataCenters");
-            if (dataCentersNode.isArray() && dataCentersNode.size() > 0) {
-                for (JsonNode dcNode : dataCentersNode) {
-                    JsonNode racksNode = dcNode.path("Racks");
-                    if (racksNode.isArray()) {
-                        for (JsonNode rackNode : racksNode) {
-                            JsonNode dataNodesNode = rackNode.path("DataNodes");
-                            if (dataNodesNode.isArray()) {
-                                for (JsonNode dataNode : dataNodesNode) {
-                                    // Volume 정보 추출
-                                    String publicUrl = dataNode.path("PublicUrl").asText("");
-                                    JsonNode volumesNode = dataNode.path("Volumes");
-
-                                    Long usedDiskSize = volumesNode.path("UsedVolumeSize").asLong(0L);
-                                    Long freeDiskSize = volumesNode.path("FreeVolumeSize").asLong(0L);
-                                    Integer volumeCount = volumesNode.path("VolumeCount").asInt(0);
-
-                                    // VolumeServerNode 생성
-                                    volumeServers.add(ClusterStatusResponse.VolumeServerNode.builder()
-                                        .address(publicUrl)
-                                        .volumeCount(volumeCount)
-                                        .usedDiskSize(usedDiskSize)
-                                        .freeDiskSize(freeDiskSize)
-                                        .status("active")
-                                        .build());
-
-                                    // 전체 용량 누적
-                                    totalUsedSize += usedDiskSize;
-                                    totalFreeSize += freeDiskSize;
-                                    totalVolumes += volumeCount;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 4. Filer 정보 (간소화)
+            // 8. Filer 정보
             List<ClusterStatusResponse.FilerNode> filers = new ArrayList<>();
             filers.add(ClusterStatusResponse.FilerNode.builder()
                 .address(properties.getFilerUrl().replace("http://", ""))
                 .status("active")
                 .build());
 
-            // 5. 응답 구성
+            // 9. 응답 구성
             ClusterStatusResponse response = ClusterStatusResponse.builder()
                 .health(health)
                 .masters(masters)
                 .volumeServers(volumeServers)
                 .filers(filers)
-                .totalVolumes(totalVolumes)
-                .totalFiles(0L)  // 파일 개수는 별도 API 필요
-                .totalUsedSize(totalUsedSize)
-                .totalFreeSize(totalFreeSize)
-                .totalCapacity(totalUsedSize + totalFreeSize)
+                .totalVolumes(volumeCount)
+                .totalFiles(totalFiles)
+                .totalUsedSize(usedSpace)
+                .totalFreeSize(freeSpace)
+                .totalCapacity(totalCapacity)
                 .build();
 
-            log.info("Parsed cluster status: health={}, volumes={}, usedSize={}, freeSize={}, capacity={}",
-                health, totalVolumes, totalUsedSize, totalFreeSize, response.getTotalCapacity());
+            log.info("Cluster status: health={}, volumes={}, files={}, usedSize={}, freeSize={}, capacity={}",
+                health, volumeCount, totalFiles, usedSpace, freeSpace, totalCapacity);
 
             return response;
 
+        } catch (ResourceAccessException e) {
+            log.error("SeaweedFS 서버에 접근할 수 없습니다", e);
+            throw new BusinessException(
+                MiniPacsErrorCode.SEAWEEDFS_UNAVAILABLE,
+                "SeaweedFS 서버에 접근할 수 없습니다."
+            );
         } catch (Exception e) {
-            log.error("Failed to parse cluster status response", e);
+            log.error("Failed to get cluster status", e);
             throw new BusinessException(
                 MiniPacsErrorCode.SEAWEEDFS_RESPONSE_PARSE_ERROR,
-                "Cluster 상태 파싱에 실패했습니다."
+                "Cluster 상태 조회에 실패했습니다."
             );
         }
     }
@@ -279,7 +275,18 @@ public class SeaweedFSAdminService {
 
         try {
             String url = properties.getFilerUrl() + path + "?pretty=y";
-            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+
+            // SeaweedFS Filer는 Accept 헤더가 없으면 HTML을 반환하므로 명시적으로 JSON 요청
+            HttpHeaders headers = new HttpHeaders();
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                requestEntity,
+                String.class
+            );
 
             if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
                 throw new BusinessException(
@@ -326,13 +333,16 @@ public class SeaweedFSAdminService {
                         ZoneId.systemDefault()
                     );
 
+                    // SeaweedFS FullPath는 이미 절대 경로이므로 그대로 사용
+                    String fullPath = entryNode.path("FullPath").asText();
+
                     FilerEntryResponse entry = FilerEntryResponse.builder()
                         .name(name.substring(name.lastIndexOf('/') + 1))
                         .isDirectory(isDir)
                         .size(size)
                         .modifiedTime(modifiedTime)
                         .mimeType(entryNode.path("Mime").asText("application/octet-stream"))
-                        .fullPath(basePath.endsWith("/") ? basePath + name : basePath + "/" + name)
+                        .fullPath(fullPath)
                         .build();
 
                     entries.add(entry);
@@ -511,5 +521,72 @@ public class SeaweedFSAdminService {
                 "Volume Server 응답 파싱에 실패했습니다."
             );
         }
+    }
+
+    // ============================================================
+    // Filer 파일 삭제/다운로드
+    // ============================================================
+
+    /**
+     * Filer 파일 삭제
+     *
+     * <p>SeaweedFS Filer에서 파일을 삭제합니다.
+     *
+     * @param path 삭제할 파일 경로 (예: "/buckets/minipacs/studies/.../instance.dcm")
+     * @throws BusinessException FILE_NOT_FOUND - 파일이 존재하지 않음
+     * @throws BusinessException STORAGE_DELETE_FAILED - 삭제 실패
+     */
+    public void deleteFilerFile(String path) {
+        log.warn("Deleting file from Filer: {}", path);
+
+        try {
+            String url = properties.getFilerUrl() + path;
+
+            restTemplate.delete(url);
+
+            log.info("File deleted successfully from Filer: {}", path);
+
+        } catch (HttpClientErrorException.NotFound e) {
+            log.error("File not found in Filer: {}", path);
+            throw new BusinessException(
+                MiniPacsErrorCode.FILE_NOT_FOUND,
+                "파일을 찾을 수 없습니다: " + path
+            );
+        } catch (ResourceAccessException e) {
+            log.error("SeaweedFS Filer 서버에 접근할 수 없습니다", e);
+            throw new BusinessException(
+                MiniPacsErrorCode.SEAWEEDFS_UNAVAILABLE,
+                "SeaweedFS Filer 서버에 접근할 수 없습니다."
+            );
+        } catch (Exception e) {
+            log.error("Failed to delete file from Filer: {}", path, e);
+            throw new BusinessException(
+                MiniPacsErrorCode.STORAGE_DELETE_FAILED,
+                "파일 삭제에 실패했습니다: " + path
+            );
+        }
+    }
+
+    /**
+     * Filer 파일 다운로드 URL 생성
+     *
+     * <p>SeaweedFS Filer의 파일 다운로드 URL을 반환합니다.
+     * <p>주의: 이 URL은 직접 접근 가능한 URL로, 인증이 필요한 경우 별도 처리 필요
+     *
+     * @param path 파일 경로 (예: "/buckets/minipacs/studies/.../instance.dcm")
+     * @return 다운로드 URL
+     */
+    public String getFilerFileDownloadUrl(String path) {
+        // Filer URL + 파일 경로
+        return properties.getFilerUrl() + path;
+    }
+
+    /**
+     * Filer URL 반환 (Frontend에서 직접 접근용)
+     *
+     * @return Filer base URL
+     */
+    public String getFilerUrl() {
+        return properties.getFilerUrl();
     }
 }

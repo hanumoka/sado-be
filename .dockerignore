@@ -1,0 +1,39 @@
+# =============================================================================
+# SADO Backend - Docker Ignore
+# =============================================================================
+
+# Build outputs
+**/build/
+**/out/
+**/.gradle/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# Logs
+*.log
+logs/
+
+# Test files
+**/src/test/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db

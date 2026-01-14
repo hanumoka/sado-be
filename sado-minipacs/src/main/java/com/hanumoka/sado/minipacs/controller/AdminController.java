@@ -2,6 +2,7 @@ package com.hanumoka.sado.minipacs.controller;
 
 import com.hanumoka.sado.common.dto.ApiResponse;
 import com.hanumoka.sado.minipacs.domain.entity.FileAsset;
+import com.hanumoka.sado.minipacs.domain.entity.Instance;
 import com.hanumoka.sado.minipacs.domain.entity.StorageMetricsSnapshot;
 import com.hanumoka.sado.minipacs.domain.entity.TierTransitionLog;
 import com.hanumoka.sado.minipacs.domain.entity.TieringPolicy;
@@ -24,8 +25,13 @@ import com.hanumoka.sado.minipacs.dto.response.admin.SeaweedFSCapacityResponse;
 import com.hanumoka.sado.minipacs.dto.response.admin.StorageMetricsTrendResponse;
 import com.hanumoka.sado.minipacs.dto.response.admin.StorageSummary;
 import com.hanumoka.sado.minipacs.dto.response.admin.TierDistribution;
+import com.hanumoka.sado.minipacs.dto.response.admin.TenantStorageMetrics;
 import com.hanumoka.sado.minipacs.dto.response.admin.TierTransitionHistoryResponse;
 import com.hanumoka.sado.minipacs.dto.response.admin.TieringPolicies;
+import com.hanumoka.sado.minipacs.dto.response.admin.MonitoringTasksResponse;
+import com.hanumoka.sado.minipacs.dto.response.admin.UploadTask;
+import com.hanumoka.sado.minipacs.dto.response.admin.RenderingTask;
+import com.hanumoka.sado.minipacs.dto.response.admin.TaskSummary;
 import com.hanumoka.sado.minipacs.dto.response.seaweedfs.ClusterStatusResponse;
 import com.hanumoka.sado.minipacs.infrastructure.service.SeaweedFSAdminService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -330,6 +336,86 @@ public class AdminController {
     }
 
     /**
+     * 테넌트별 스토리지 사용량 메트릭 조회
+     * GET /api/admin/metrics/storage-by-tenant
+     *
+     * <p>각 테넌트별로 원본 파일(DICOM)과 사전렌더링 파일(SYSTEM)의
+     * 사용량을 구분하여 제공합니다.
+     *
+     * @return 테넌트별 스토리지 메트릭 목록
+     */
+    @Operation(
+        summary = "테넌트별 스토리지 사용량 메트릭 조회",
+        description = "테넌트별로 원본 파일(DICOM)과 사전렌더링 파일(SYSTEM)의 개수와 크기를 조회합니다."
+    )
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음 (ADMIN 역할 필요)")
+    })
+    @GetMapping("/metrics/storage-by-tenant")
+    public ApiResponse<List<TenantStorageMetrics>> getStorageByTenant() {
+        log.info("GET /api/admin/metrics/storage-by-tenant");
+
+        // 테넌트/카테고리별 통계 조회
+        List<Object[]> rawMetrics = fileAssetRepository.findStorageMetricsByTenantAndType();
+
+        // tenantId 기준으로 그룹화하여 TenantStorageMetrics로 변환
+        java.util.Map<Long, TenantStorageMetrics.TenantStorageMetricsBuilder> builderMap = new java.util.LinkedHashMap<>();
+
+        for (Object[] row : rawMetrics) {
+            Long tenantId = (Long) row[0];
+            com.hanumoka.sado.minipacs.domain.enums.FileCategory category =
+                (com.hanumoka.sado.minipacs.domain.enums.FileCategory) row[1];
+            Long fileCount = (Long) row[2];
+            Long totalSize = (Long) row[3];
+
+            TenantStorageMetrics.TenantStorageMetricsBuilder builder =
+                builderMap.computeIfAbsent(tenantId, id ->
+                    TenantStorageMetrics.builder()
+                        .tenantId(id)
+                        .tenantName("Tenant " + id)  // TODO: Tenant 엔티티에서 이름 조회
+                        .originalFileCount(0L)
+                        .originalSize(0L)
+                        .preRenderedFileCount(0L)
+                        .preRenderedSize(0L)
+                        .totalSize(0L)
+                );
+
+            // DICOM = 원본, SYSTEM = 사전렌더링
+            if (category == com.hanumoka.sado.minipacs.domain.enums.FileCategory.DICOM) {
+                // Builder에서 직접 접근 불가하므로 임시 변수 사용
+                TenantStorageMetrics temp = builder.build();
+                builder.originalFileCount(fileCount)
+                       .originalSize(totalSize)
+                       .preRenderedFileCount(temp.getPreRenderedFileCount())
+                       .preRenderedSize(temp.getPreRenderedSize())
+                       .totalSize(temp.getTotalSize() + totalSize);
+            } else if (category == com.hanumoka.sado.minipacs.domain.enums.FileCategory.SYSTEM) {
+                TenantStorageMetrics temp = builder.build();
+                builder.preRenderedFileCount(fileCount)
+                       .preRenderedSize(totalSize)
+                       .originalFileCount(temp.getOriginalFileCount())
+                       .originalSize(temp.getOriginalSize())
+                       .totalSize(temp.getTotalSize() + totalSize);
+            }
+        }
+
+        List<TenantStorageMetrics> result = builderMap.values().stream()
+            .map(TenantStorageMetrics.TenantStorageMetricsBuilder::build)
+            .toList();
+
+        log.info("Storage by tenant: total tenants={}", result.size());
+        result.forEach(metric ->
+            log.debug("Tenant {}: original={}/{}, preRendered={}/{}",
+                metric.getTenantId(),
+                metric.getOriginalFileCount(), metric.getOriginalSize(),
+                metric.getPreRenderedFileCount(), metric.getPreRenderedSize())
+        );
+
+        return ApiResponse.success(result);
+    }
+
+    /**
      * 스토리지 메트릭 트렌드 조회
      * GET /api/admin/metrics/trends?range=7d
      *
@@ -585,6 +671,123 @@ public class AdminController {
 
         log.info("SeaweedFS capacity: total={}, used={}, free={}, usage={}%",
             totalCapacity, usedSpace, freeSpace, percentUsed);
+
+        return ApiResponse.success(response);
+    }
+
+    /**
+     * 모니터링 작업 현황 조회
+     * GET /api/admin/monitoring/tasks
+     *
+     * <p>업로드 및 사전렌더링 작업 현황을 실시간으로 조회합니다.
+     * 프론트엔드에서 5초 간격으로 폴링합니다.
+     *
+     * @param limit 최근 업로드 조회 개수 (기본값: 10)
+     * @return 모니터링 작업 현황
+     */
+    @Operation(
+        summary = "모니터링 작업 현황 조회",
+        description = "업로드 및 사전렌더링 작업 현황을 조회합니다. " +
+                      "최근 1시간 내 업로드된 Instance와 렌더링 진행 중인 작업 목록을 제공합니다."
+    )
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음 (ADMIN 역할 필요)")
+    })
+    @GetMapping("/monitoring/tasks")
+    public ApiResponse<MonitoringTasksResponse> getMonitoringTasks(
+            @RequestParam(defaultValue = "10")
+            @Min(value = 1, message = "Limit must be >= 1")
+            @Max(value = 50, message = "Limit must be <= 50")
+            int limit
+    ) {
+        log.info("GET /api/admin/monitoring/tasks?limit={}", limit);
+
+        LocalDateTime oneHourAgo = LocalDateTime.now().minusHours(1);
+
+        // 1. 최근 업로드 조회 (최근 1시간)
+        Pageable pageable = PageRequest.of(0, limit);
+        Page<Instance> recentUploads = instanceRepository.findRecentUploads(oneHourAgo, pageable);
+
+        List<UploadTask> uploadTasks = recentUploads.getContent().stream()
+            .map(instance -> UploadTask.builder()
+                .instanceId(instance.getId())
+                .sopInstanceUid(instance.getSopInstanceUid())
+                .studyDescription(instance.getSeries().getStudy().getStudyDescription())
+                .modality(instance.getSeries().getModality())
+                .fileSize(instance.getFileSize())
+                .uploadedAt(instance.getCreatedAt())
+                .renderingStatus(instance.getTranscodingStatus() != null
+                    ? instance.getTranscodingStatus().name()
+                    : "NONE")
+                .build())
+            .toList();
+
+        // 2. 렌더링 진행 중인 작업 조회 (PENDING + PROCESSING)
+        List<Instance> renderingInstances = instanceRepository.findByTranscodingStatusIn(
+            List.of(Instance.TranscodingStatus.PENDING, Instance.TranscodingStatus.PROCESSING)
+        );
+
+        List<RenderingTask> renderingTasks = renderingInstances.stream()
+            .map(instance -> {
+                int totalFrames = instance.getNumberOfFrames() != null ? instance.getNumberOfFrames() : 1;
+                int renderedFrames = instance.getPrerenderedFrameCount() != null ? instance.getPrerenderedFrameCount() : 0;
+                int progressPercent = totalFrames > 0 ? (renderedFrames * 100 / totalFrames) : 0;
+
+                return RenderingTask.builder()
+                    .instanceId(instance.getId())
+                    .sopInstanceUid(instance.getSopInstanceUid())
+                    .studyDescription(instance.getSeries().getStudy().getStudyDescription())
+                    .modality(instance.getSeries().getModality())
+                    .status(instance.getTranscodingStatus().name())
+                    .totalFrames(totalFrames)
+                    .renderedFrames(renderedFrames)
+                    .renderedSize(instance.getPrerenderedTotalSize())
+                    .startedAt(instance.getCreatedAt())
+                    .progressPercent(progressPercent)
+                    .build();
+            })
+            .toList();
+
+        // 3. 요약 통계 계산
+        int totalPending = 0;
+        int totalProcessing = 0;
+
+        List<Object[]> statusCounts = instanceRepository.countByTranscodingStatus();
+        for (Object[] row : statusCounts) {
+            Instance.TranscodingStatus status = (Instance.TranscodingStatus) row[0];
+            Long count = (Long) row[1];
+            if (status == Instance.TranscodingStatus.PENDING) {
+                totalPending = count.intValue();
+            } else if (status == Instance.TranscodingStatus.PROCESSING) {
+                totalProcessing = count.intValue();
+            }
+        }
+
+        // 최근 1시간 내 완료/실패 개수
+        int recentCompleted = (int) instanceRepository.countByPrerenderedAtAfterAndTranscodingStatus(
+            oneHourAgo, Instance.TranscodingStatus.COMPLETED
+        );
+        int recentFailed = (int) instanceRepository.countByPrerenderedAtAfterAndTranscodingStatus(
+            oneHourAgo, Instance.TranscodingStatus.FAILED
+        );
+
+        TaskSummary summary = TaskSummary.builder()
+            .totalPending(totalPending)
+            .totalProcessing(totalProcessing)
+            .recentCompleted(recentCompleted)
+            .recentFailed(recentFailed)
+            .build();
+
+        // 4. 응답 생성
+        MonitoringTasksResponse response = MonitoringTasksResponse.builder()
+            .uploadTasks(uploadTasks)
+            .renderingTasks(renderingTasks)
+            .summary(summary)
+            .build();
+
+        log.info("Monitoring tasks: uploads={}, rendering={}, pending={}, processing={}",
+            uploadTasks.size(), renderingTasks.size(), totalPending, totalProcessing);
 
         return ApiResponse.success(response);
     }

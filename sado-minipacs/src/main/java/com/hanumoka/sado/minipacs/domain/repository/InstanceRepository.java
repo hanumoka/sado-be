@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -221,5 +222,82 @@ public interface InstanceRepository extends JpaRepository<Instance, Long> {
             ORDER BY i.instanceNumber
             """)
     List<Instance> findAllBySeriesInstanceUid(@Param("seriesInstanceUid") String seriesInstanceUid);
+
+    // ========== 모니터링 API 용 쿼리 ==========
+
+    /**
+     * 최근 업로드된 Instance 조회
+     *
+     * <p>지정된 시각 이후에 생성된 Instance 목록을 조회합니다.
+     * Series, Study를 JOIN FETCH하여 N+1 문제를 방지합니다.
+     *
+     * @param since 조회 시작 시각
+     * @param pageable 페이징 정보
+     * @return 최근 업로드된 Instance 목록 (생성 시각 내림차순)
+     */
+    @Query(value = """
+            SELECT DISTINCT i FROM Instance i
+            JOIN FETCH i.series s
+            JOIN FETCH s.study st
+            WHERE i.createdAt >= :since
+            ORDER BY i.createdAt DESC
+            """,
+            countQuery = """
+            SELECT COUNT(i) FROM Instance i
+            WHERE i.createdAt >= :since
+            """)
+    Page<Instance> findRecentUploads(
+            @Param("since") LocalDateTime since,
+            Pageable pageable
+    );
+
+    /**
+     * 렌더링 대기/진행 중인 Instance 조회
+     *
+     * <p>TranscodingStatus가 PENDING 또는 PROCESSING인 Instance 목록을 조회합니다.
+     *
+     * @param statuses 조회할 TranscodingStatus 목록
+     * @return 렌더링 대기/진행 중인 Instance 목록
+     */
+    @Query("""
+            SELECT DISTINCT i FROM Instance i
+            JOIN FETCH i.series s
+            JOIN FETCH s.study st
+            WHERE i.transcodingStatus IN :statuses
+            ORDER BY i.createdAt ASC
+            """)
+    List<Instance> findByTranscodingStatusIn(
+            @Param("statuses") List<Instance.TranscodingStatus> statuses
+    );
+
+    /**
+     * TranscodingStatus별 Instance 개수 조회
+     *
+     * @return [TranscodingStatus, count] 배열 목록
+     */
+    @Query("""
+            SELECT i.transcodingStatus, COUNT(i)
+            FROM Instance i
+            WHERE i.transcodingStatus IS NOT NULL
+            GROUP BY i.transcodingStatus
+            """)
+    List<Object[]> countByTranscodingStatus();
+
+    /**
+     * 특정 시각 이후 특정 상태로 완료된 Instance 개수 조회
+     *
+     * @param since 조회 시작 시각
+     * @param status TranscodingStatus (COMPLETED 또는 FAILED)
+     * @return 해당 조건의 Instance 개수
+     */
+    @Query("""
+            SELECT COUNT(i) FROM Instance i
+            WHERE i.prerenderedAt >= :since
+              AND i.transcodingStatus = :status
+            """)
+    long countByPrerenderedAtAfterAndTranscodingStatus(
+            @Param("since") LocalDateTime since,
+            @Param("status") Instance.TranscodingStatus status
+    );
 
 }

@@ -927,7 +927,7 @@ public class DicomWebController {
             @Parameter(description = "프레임 번호 또는 쉼표로 구분된 목록 (예: 1 또는 1,2,3,4,5)") @PathVariable String frameList,
             @Parameter(description = "Accept 헤더 (압축 유지: image/jp2, 디코딩: application/octet-stream)")
             @RequestHeader(value = "Accept", defaultValue = "multipart/related; type=\"application/octet-stream\"") String acceptHeader,
-            @Parameter(description = "데이터 포맷: auto(압축 우선), raw(디코딩된 픽셀), compressed(원본 압축)")
+            @Parameter(description = "데이터 포맷: auto(jpeg>compressed>raw), jpeg(JPEG Baseline), raw(디코딩된 픽셀), compressed/original(원본 압축)")
             @RequestParam(value = "format", defaultValue = "auto") String format
     ) {
         // frameList 파싱 (예: "1" → [1], "1,2,3" → [1,2,3])
@@ -987,25 +987,49 @@ public class DicomWebController {
         boolean usePrerendered = instance.getTranscodingStatus() == Instance.TranscodingStatus.COMPLETED
                 && instance.getPrerenderedBasePath() != null;
 
-        // format 파라미터에 따른 원본 인코딩 데이터 사용 여부 결정
-        // - auto: 원본 인코딩 데이터가 있으면 사용, 없으면 decoded
-        // - original: 원본 인코딩 데이터만 사용 (없으면 decoded 폴백)
-        // - compressed: original의 레거시 별칭 (하위 호환)
-        // - raw/decoded: 디코딩된 픽셀 데이터만 사용
+        // format 파라미터에 따른 데이터 포맷 결정
+        // - auto: 우선순위 jpeg > compressed > raw
+        // - jpeg: JPEG Baseline 데이터 (jpeg/ 폴더)
+        // - original/compressed: 원본 압축 데이터 (compressed/ 폴더)
+        // - raw/decoded: 디코딩된 픽셀 데이터 (bulkdata/ 폴더)
         boolean hasCompressedData = Boolean.TRUE.equals(instance.getHasCompressedBulkdata());
-        boolean useCompressedFormat = hasCompressedData &&
-                ("original".equalsIgnoreCase(format) || "compressed".equalsIgnoreCase(format) || "auto".equalsIgnoreCase(format));
+        boolean hasJpegBaseline = Boolean.TRUE.equals(instance.getHasJpegBaseline());
 
-        // 압축 데이터 사용 시 출력 설정 업데이트
+        // format에 따른 사용 포맷 결정
+        boolean useJpegFormat = false;
+        boolean useCompressedFormat = false;
+
+        if ("jpeg-baseline".equalsIgnoreCase(format)) {
+            // 명시적 jpeg-baseline 요청
+            useJpegFormat = hasJpegBaseline;
+        } else if ("original".equalsIgnoreCase(format) || "compressed".equalsIgnoreCase(format)) {
+            // 명시적 compressed 요청
+            useCompressedFormat = hasCompressedData;
+        } else if ("auto".equalsIgnoreCase(format)) {
+            // auto: 우선순위 jpeg > compressed > raw
+            if (hasJpegBaseline) {
+                useJpegFormat = true;
+            } else if (hasCompressedData) {
+                useCompressedFormat = true;
+            }
+            // else: raw 사용 (기본값)
+        }
+        // else: raw/decoded 요청 - 둘 다 false로 유지
+
+        // 출력 설정 결정
         String effectiveMimeType = mimeType;
         String effectiveTransferSyntax = outputTransferSyntax;
-        if (useCompressedFormat && usePrerendered) {
+
+        if (useJpegFormat && usePrerendered) {
+            effectiveMimeType = "image/jpeg";
+            effectiveTransferSyntax = UID.JPEGBaseline8Bit;  // 1.2.840.10008.1.2.4.50
+        } else if (useCompressedFormat && usePrerendered) {
             effectiveMimeType = dicomRenderingService.getMimeTypeForTransferSyntax(originalTransferSyntax);
             effectiveTransferSyntax = originalTransferSyntax;
         }
 
-        log.debug("WADO-RS BulkData format selection: format={}, hasCompressedData={}, useCompressedFormat={}",
-                format, hasCompressedData, useCompressedFormat);
+        log.debug("WADO-RS BulkData format selection: format={}, hasJpegBaseline={}, hasCompressedData={}, useJpegFormat={}, useCompressedFormat={}",
+                format, hasJpegBaseline, hasCompressedData, useJpegFormat, useCompressedFormat);
 
         // 응답 헤더 설정 (format 선택 후)
         HttpHeaders headers = new HttpHeaders();
@@ -1016,8 +1040,8 @@ public class DicomWebController {
         // DICOM 메타데이터 헤더 추가 (클라이언트가 픽셀 해석에 필요)
         headers.set("X-DICOM-TransferSyntax", effectiveTransferSyntax);
         headers.set("X-DICOM-OriginalTransferSyntax", originalTransferSyntax);
-        headers.set("X-DICOM-Format", useCompressedFormat ? "original" : "decoded");
-        headers.set("X-DICOM-DecompressedOnServer", String.valueOf(!useCompressedFormat && !preserveCompression));
+        headers.set("X-DICOM-Format", useJpegFormat ? "jpeg" : (useCompressedFormat ? "original" : "decoded"));
+        headers.set("X-DICOM-DecompressedOnServer", String.valueOf(!useJpegFormat && !useCompressedFormat && !preserveCompression));
         if (instance.getPhotometricInterpretation() != null) {
             headers.set("X-DICOM-PhotometricInterpretation", instance.getPhotometricInterpretation());
         }
@@ -1032,6 +1056,7 @@ public class DicomWebController {
         StreamingResponseBody responseBody;
         final String finalMimeType = effectiveMimeType;
         final String finalTransferSyntax = effectiveTransferSyntax;
+        final boolean finalUseJpeg = useJpegFormat;
         final boolean finalUseCompressed = useCompressedFormat;
 
         if (frameNumbers.size() == 1) {
@@ -1040,7 +1065,11 @@ public class DicomWebController {
             if (usePrerendered) {
                 // 사전 렌더링 데이터 사용 (S3에서 직접 반환)
                 String prerenderedPath;
-                if (finalUseCompressed) {
+                if (finalUseJpeg) {
+                    // JPEG Baseline 데이터 경로
+                    prerenderedPath = String.format("%s/jpeg/frame-%03d.jpg",
+                            instance.getPrerenderedBasePath(), frameNumber);
+                } else if (finalUseCompressed) {
                     // 압축 데이터 경로 (확장자는 Transfer Syntax에 따라 다름)
                     String extension = getExtensionForTransferSyntax(originalTransferSyntax);
                     prerenderedPath = String.format("%s/compressed/frame-%03d.%s",
@@ -1067,8 +1096,9 @@ public class DicomWebController {
                         outputStream.write(partFooter.getBytes(StandardCharsets.UTF_8));
                         outputStream.flush();
 
+                        String formatName = finalUseJpeg ? "jpeg" : (finalUseCompressed ? "original" : "decoded");
                         log.info("WADO-RS BulkData (prerendered): frame={}, path={}, format={}",
-                                frameNumber, finalPath, finalUseCompressed ? "original" : "decoded");
+                                frameNumber, finalPath, formatName);
                     }
                 };
             } else {
@@ -1086,36 +1116,61 @@ public class DicomWebController {
                 String basePath = instance.getPrerenderedBasePath();
                 String compressedExtension = finalUseCompressed ? getExtensionForTransferSyntax(originalTransferSyntax) : null;
                 responseBody = outputStream -> {
+                    int successCount = 0;
+                    int failCount = 0;
+
                     for (int i = 0; i < frameNumbers.size(); i++) {
                         int frameNumber = frameNumbers.get(i);
                         String prerenderedPath;
-                        if (finalUseCompressed) {
+                        if (finalUseJpeg) {
+                            // JPEG Baseline 데이터 경로
+                            prerenderedPath = String.format("%s/jpeg/frame-%03d.jpg", basePath, frameNumber);
+                        } else if (finalUseCompressed) {
                             prerenderedPath = String.format("%s/compressed/frame-%03d.%s", basePath, frameNumber, compressedExtension);
                         } else {
                             prerenderedPath = String.format("%s/bulkdata/frame-%03d.raw", basePath, frameNumber);
                         }
 
-                        try (var inputStream = dicomStorageService.downloadFileStream(prerenderedPath)) {
-                            // Multipart 헤더 작성
-                            String partHeader = "--" + boundary + "\r\n"
+                        try {
+                            try (var inputStream = dicomStorageService.downloadFileStream(prerenderedPath)) {
+                                // Multipart 헤더 작성
+                                String partHeader = "--" + boundary + "\r\n"
+                                        + "Content-Type: " + finalMimeType + "; transfer-syntax=" + finalTransferSyntax + "\r\n"
+                                        + "Content-Location: /frames/" + frameNumber + "\r\n"
+                                        + "\r\n";
+                                outputStream.write(partHeader.getBytes(StandardCharsets.UTF_8));
+
+                                // 사전 렌더링 데이터 스트리밍
+                                inputStream.transferTo(outputStream);
+
+                                outputStream.write("\r\n".getBytes(StandardCharsets.UTF_8));
+                                successCount++;
+                            }
+                        } catch (Exception e) {
+                            // 개별 프레임 실패 시 에러 마커 프레임 반환 (빈 데이터)
+                            log.warn("Failed to load prerendered frame {}: path={}, error={}",
+                                    frameNumber, prerenderedPath, e.getMessage());
+
+                            // 에러 마커 파트 작성 (Content-Length: 0)
+                            String errorPartHeader = "--" + boundary + "\r\n"
                                     + "Content-Type: " + finalMimeType + "; transfer-syntax=" + finalTransferSyntax + "\r\n"
                                     + "Content-Location: /frames/" + frameNumber + "\r\n"
+                                    + "Content-Length: 0\r\n"
                                     + "\r\n";
-                            outputStream.write(partHeader.getBytes(StandardCharsets.UTF_8));
-
-                            // 사전 렌더링 데이터 스트리밍
-                            inputStream.transferTo(outputStream);
-
+                            outputStream.write(errorPartHeader.getBytes(StandardCharsets.UTF_8));
                             outputStream.write("\r\n".getBytes(StandardCharsets.UTF_8));
+                            failCount++;
                         }
                     }
-                    // 종료 boundary
+
+                    // 종료 boundary (항상 작성)
                     String endBoundary = "--" + boundary + "--\r\n";
                     outputStream.write(endBoundary.getBytes(StandardCharsets.UTF_8));
                     outputStream.flush();
 
-                    log.info("WADO-RS BulkData (prerendered): frames={}, basePath={}, format={}",
-                            frameNumbers.size(), basePath, finalUseCompressed ? "compressed" : "raw");
+                    String formatName = finalUseJpeg ? "jpeg" : (finalUseCompressed ? "compressed" : "raw");
+                    log.info("WADO-RS BulkData (prerendered): frames={}, success={}, failed={}, basePath={}, format={}",
+                            frameNumbers.size(), successCount, failCount, basePath, formatName);
                 };
             } else {
                 // 실시간 렌더링: DICOM 1회 로드로 최적화 (압축 유지 지원)

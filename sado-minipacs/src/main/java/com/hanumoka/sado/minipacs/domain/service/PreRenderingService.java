@@ -1,10 +1,12 @@
 package com.hanumoka.sado.minipacs.domain.service;
 
 import com.hanumoka.sado.common.exception.BusinessException;
+import com.hanumoka.sado.common.tenant.TenantContext;
 import com.hanumoka.sado.minipacs.code.MiniPacsErrorCode;
 import com.hanumoka.sado.minipacs.domain.entity.Instance;
 import com.hanumoka.sado.minipacs.domain.repository.InstanceRepository;
 import com.hanumoka.sado.minipacs.dto.FrameExtractionResult;
+import com.hanumoka.sado.minipacs.infrastructure.config.PreRenderingProperties;
 import com.hanumoka.sado.minipacs.infrastructure.config.S3Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -45,7 +47,10 @@ import java.util.concurrent.atomic.AtomicLong;
  * <ul>
  *   <li>Thumbnail: 128x128 JPEG (첫 번째 프레임)</li>
  *   <li>BulkData: Raw PixelData (.raw, 각 프레임)</li>
+ *   <li>Compressed: 원본 압축 유지 (.j2k/.jpg/.jls, 압축 DICOM만)</li>
+ *   <li>JPEG Baseline: 원본 해상도 JPEG 90% (.jpg, 각 프레임)</li>
  *   <li>Rendered: PNG 이미지 (각 프레임)</li>
+ *   <li>Cine: 다양한 해상도 JPEG (256/128/64/32px)</li>
  * </ul>
  *
  * <p>S3 저장 구조:
@@ -53,10 +58,16 @@ import java.util.concurrent.atomic.AtomicLong;
  * {sopInstanceUID}/
  * ├── thumbnail.jpg           (128x128, 첫 프레임)
  * ├── bulkdata/
- * │   ├── frame-001.raw
+ * │   ├── frame-001.raw       (Raw PixelData, 비압축)
+ * │   └── ...
+ * ├── compressed/             (압축 DICOM인 경우만)
+ * │   ├── frame-001.j2k       (JPEG 2000)
+ * │   └── ...
+ * ├── jpeg/                   (JPEG Baseline, 원본 해상도)
+ * │   ├── frame-001.jpg       (90% 품질)
  * │   └── ...
  * ├── rendered/
- * │   ├── frame-001.png
+ * │   ├── frame-001.png       (W/L 적용 PNG)
  * │   └── ...
  * └── cine/
  *     ├── frame-001-256.jpg   (256px)
@@ -74,22 +85,25 @@ public class PreRenderingService {
     private final InstanceRepository instanceRepository;
     private final S3Client s3Client;
     private final S3Properties s3Properties;
+    private final PreRenderingProperties preRenderingProperties;
     private final Executor s3UploadExecutor;
 
     /**
-     * 생성자 - S3 업로드 전용 Executor 주입
+     * 생성자 - S3 업로드 전용 Executor 및 설정 주입
      */
     public PreRenderingService(
             DicomRenderingService dicomRenderingService,
             InstanceRepository instanceRepository,
             S3Client s3Client,
             S3Properties s3Properties,
+            PreRenderingProperties preRenderingProperties,
             @Qualifier("s3UploadExecutor") Executor s3UploadExecutor
     ) {
         this.dicomRenderingService = dicomRenderingService;
         this.instanceRepository = instanceRepository;
         this.s3Client = s3Client;
         this.s3Properties = s3Properties;
+        this.preRenderingProperties = preRenderingProperties;
         this.s3UploadExecutor = s3UploadExecutor;
     }
 
@@ -102,6 +116,8 @@ public class PreRenderingService {
     private static final int CINE_SIZE_64 = 64;
     private static final int CINE_SIZE_32 = 32;
     private static final float CINE_JPEG_QUALITY = 0.8f;  // 80% 품질
+    private static final float JPEG_BASELINE_QUALITY = 0.9f;  // 90% 품질 (권장)
+    private static final int JPEG_BASELINE_QUALITY_INT = 90;  // 정수형 (Instance 저장용)
 
     /**
      * 사전 렌더링 결과 DTO
@@ -111,7 +127,9 @@ public class PreRenderingService {
             int frameCount,
             long totalSize,
             LocalDateTime completedAt,
-            boolean hasCompressedBulkdata  // NEW: 압축 BulkData 존재 여부
+            boolean hasCompressedBulkdata,  // 압축 BulkData 존재 여부
+            boolean hasJpegBaseline,        // JPEG Baseline 존재 여부
+            int jpegBaselineQuality         // JPEG Baseline 인코딩 품질 (1-100)
     ) {}
 
     /**
@@ -127,6 +145,13 @@ public class PreRenderingService {
     @Async("preRenderingExecutor")
     public void preRenderAsync(Long instanceId, String studyInstanceUid, String seriesInstanceUid) {
         log.info("[PreRender] Starting async pre-rendering: instanceId={}", instanceId);
+
+        // 사전 렌더링 전체 비활성화 체크
+        if (!preRenderingProperties.isEnabled()) {
+            log.info("[PreRender] Skipped (disabled in config): instanceId={}", instanceId);
+            updateTranscodingStatus(instanceId, Instance.TranscodingStatus.NONE);
+            return;
+        }
 
         try {
             // 1. 상태를 PROCESSING으로 변경
@@ -194,11 +219,13 @@ public class PreRenderingService {
         instance.setPrerenderedTotalSize(result.totalSize());
         instance.setPrerenderedAt(result.completedAt());
         instance.setThumbnailPath(result.prerenderedBasePath() + "/thumbnail.jpg");
-        instance.setHasCompressedBulkdata(result.hasCompressedBulkdata());  // NEW
+        instance.setHasCompressedBulkdata(result.hasCompressedBulkdata());
+        instance.setHasJpegBaseline(result.hasJpegBaseline());
+        instance.setJpegBaselineQuality(result.jpegBaselineQuality());
 
         instanceRepository.save(instance);
-        log.debug("[PreRender] Result updated: instanceId={}, basePath={}, hasCompressed={}",
-                instanceId, result.prerenderedBasePath(), result.hasCompressedBulkdata());
+        log.debug("[PreRender] Result updated: instanceId={}, basePath={}, hasCompressed={}, hasJpegBaseline={}",
+                instanceId, result.prerenderedBasePath(), result.hasCompressedBulkdata(), result.hasJpegBaseline());
     }
 
     /**
@@ -234,6 +261,7 @@ public class PreRenderingService {
         List<CompletableFuture<Long>> uploadFutures = new ArrayList<>();
         AtomicLong totalSize = new AtomicLong(0);
         boolean[] hasCompressedBulkdata = {false};  // effectively final for lambda
+        boolean[] hasJpegBaseline = {false};  // JPEG Baseline 생성 여부
 
         try {
             // 0. Transfer Syntax 확인 (압축 DICOM 여부)
@@ -241,21 +269,39 @@ public class PreRenderingService {
             boolean isCompressedDicom = dicomRenderingService.isCompressedTransferSyntax(transferSyntaxUid);
             log.debug("[PreRender] Transfer Syntax: {}, compressed={}", transferSyntaxUid, isCompressedDicom);
 
+            // 활성화된 렌더링 대상 로그
+            log.debug("[PreRender] Enabled targets: thumbnail={}, bulkdata={}, compressed={}, jpeg={}, rendered={}, cine={}",
+                    preRenderingProperties.isThumbnailEnabled(),
+                    preRenderingProperties.isBulkdataEnabled(),
+                    preRenderingProperties.isCompressedEnabled(),
+                    preRenderingProperties.isJpegEnabled(),
+                    preRenderingProperties.isRenderedEnabled(),
+                    preRenderingProperties.isCineEnabled());
+
+            // 품질 설정 가져오기
+            float jpegQuality = preRenderingProperties.getJpegQualityAsFloat();
+            float cineQuality = preRenderingProperties.getCineQualityAsFloat();
+            PreRenderingProperties.CineConfig cineConfig = preRenderingProperties.getTargets().getCine();
+
             // 1. 썸네일 생성 (첫 번째 프레임, 128x128 JPEG) - 비동기 업로드
-            CompletableFuture<Long> thumbnailFuture = generateThumbnailAsync(storagePath, basePath);
-            uploadFutures.add(thumbnailFuture);
-            log.debug("[PreRender] Thumbnail generation submitted");
+            if (preRenderingProperties.isThumbnailEnabled()) {
+                CompletableFuture<Long> thumbnailFuture = generateThumbnailAsync(storagePath, basePath);
+                uploadFutures.add(thumbnailFuture);
+                log.debug("[PreRender] Thumbnail generation submitted");
+            }
 
             // 2. 각 프레임에 대해 BulkData + Compressed + Rendered PNG + Cine JPEG 생성
             for (int frameNumber = 1; frameNumber <= numberOfFrames; frameNumber++) {
                 final int frame = frameNumber;  // effectively final for lambda
 
                 // 2.1 Raw PixelData 추출 및 비동기 저장
-                CompletableFuture<Long> rawFuture = generateBulkDataAsync(storagePath, basePath, frame);
-                uploadFutures.add(rawFuture);
+                if (preRenderingProperties.isBulkdataEnabled()) {
+                    CompletableFuture<Long> rawFuture = generateBulkDataAsync(storagePath, basePath, frame);
+                    uploadFutures.add(rawFuture);
+                }
 
-                // 2.2 원본 압축 데이터 저장 (압축 DICOM인 경우만)
-                if (isCompressedDicom) {
+                // 2.2 원본 압축 데이터 저장 (압축 DICOM인 경우만, 설정 활성화 시)
+                if (preRenderingProperties.isCompressedEnabled() && isCompressedDicom) {
                     CompletableFuture<Long> compressedFuture = generateCompressedBulkDataAsync(
                             storagePath, basePath, frame, transferSyntaxUid);
                     uploadFutures.add(compressedFuture.thenApply(size -> {
@@ -267,14 +313,38 @@ public class PreRenderingService {
                 }
 
                 // 2.3 Rendered PNG 생성 및 비동기 저장 (512px)
-                CompletableFuture<Long> pngFuture = generateRenderedPngAsync(storagePath, basePath, frame);
-                uploadFutures.add(pngFuture);
+                if (preRenderingProperties.isRenderedEnabled()) {
+                    CompletableFuture<Long> pngFuture = generateRenderedPngAsync(storagePath, basePath, frame);
+                    uploadFutures.add(pngFuture);
+                }
 
-                // 2.4 Cine JPEG 생성 (256px, 128px, 64px, 32px)
-                uploadFutures.add(generateCineJpegAsync(storagePath, basePath, frame, CINE_SIZE_256));
-                uploadFutures.add(generateCineJpegAsync(storagePath, basePath, frame, CINE_SIZE_128));
-                uploadFutures.add(generateCineJpegAsync(storagePath, basePath, frame, CINE_SIZE_64));
-                uploadFutures.add(generateCineJpegAsync(storagePath, basePath, frame, CINE_SIZE_32));
+                // 2.4 Cine JPEG 생성 (개별 해상도별 on/off 지원)
+                if (preRenderingProperties.isCineEnabled()) {
+                    if (cineConfig.isSize256()) {
+                        uploadFutures.add(generateCineJpegAsync(storagePath, basePath, frame, CINE_SIZE_256, cineQuality));
+                    }
+                    if (cineConfig.isSize128()) {
+                        uploadFutures.add(generateCineJpegAsync(storagePath, basePath, frame, CINE_SIZE_128, cineQuality));
+                    }
+                    if (cineConfig.isSize64()) {
+                        uploadFutures.add(generateCineJpegAsync(storagePath, basePath, frame, CINE_SIZE_64, cineQuality));
+                    }
+                    if (cineConfig.isSize32()) {
+                        uploadFutures.add(generateCineJpegAsync(storagePath, basePath, frame, CINE_SIZE_32, cineQuality));
+                    }
+                }
+
+                // 2.5 JPEG Baseline 생성 (원본 해상도)
+                if (preRenderingProperties.isJpegEnabled()) {
+                    CompletableFuture<Long> jpegBaselineFuture = generateJpegBaselineAsync(
+                            storagePath, basePath, frame, jpegQuality);
+                    uploadFutures.add(jpegBaselineFuture.thenApply(size -> {
+                        if (size > 0) {
+                            hasJpegBaseline[0] = true;
+                        }
+                        return size;
+                    }));
+                }
 
                 if (frameNumber % 10 == 0 || frameNumber == numberOfFrames) {
                     log.debug("[PreRender] Progress: {}/{} frames submitted (pending uploads: {})",
@@ -305,10 +375,18 @@ public class PreRenderingService {
 
             LocalDateTime completedAt = LocalDateTime.now();
 
-            log.info("[PreRender] Completed: basePath={}, frames={}, totalSize={} bytes, hasCompressed={}, uploads={}",
-                    basePath, numberOfFrames, totalSize.get(), hasCompressedBulkdata[0], uploadFutures.size());
+            log.info("[PreRender] Completed: basePath={}, frames={}, totalSize={} bytes, hasCompressed={}, hasJpegBaseline={}, uploads={}",
+                    basePath, numberOfFrames, totalSize.get(), hasCompressedBulkdata[0], hasJpegBaseline[0], uploadFutures.size());
 
-            return new PreRenderingResult(basePath, numberOfFrames, totalSize.get(), completedAt, hasCompressedBulkdata[0]);
+            return new PreRenderingResult(
+                    basePath,
+                    numberOfFrames,
+                    totalSize.get(),
+                    completedAt,
+                    hasCompressedBulkdata[0],
+                    hasJpegBaseline[0],
+                    preRenderingProperties.getTargets().getJpeg().getQuality()
+            );
 
         } catch (Exception e) {
             log.error("[PreRender] Failed during execution: sopInstanceUid={}", sopInstanceUid, e);
@@ -320,11 +398,15 @@ public class PreRenderingService {
     /**
      * 사전 렌더링 기본 경로 생성
      *
-     * <p>구조: studies/{studyUID}/series/{seriesUID}/instances/{sopInstanceUID}/
+     * <p>구조: tenant-{tenantId}/studies/{studyUID}/series/{seriesUID}/instances/{sopInstanceUID}/
      */
     private String buildPrerenderedBasePath(String studyUid, String seriesUid, String sopInstanceUid) {
-        return String.format("studies/%s/series/%s/instances/%s",
-                studyUid, seriesUid, sopInstanceUid);
+        Long tenantId = TenantContext.getCurrentTenantId();
+        if (tenantId == null) {
+            tenantId = 1L; // 기본 테넌트
+        }
+        return String.format("tenant-%d/studies/%s/series/%s/instances/%s",
+                tenantId, studyUid, seriesUid, sopInstanceUid);
     }
 
     /**
@@ -522,7 +604,17 @@ public class PreRenderingService {
      *
      * @return CompletableFuture<Long> - 저장된 JPEG 파일 크기 (bytes)
      */
+    /**
+     * Cine JPEG 생성 (기본 품질 사용) - 하위 호환
+     */
     private CompletableFuture<Long> generateCineJpegAsync(String storagePath, String basePath, int frameNumber, int size) {
+        return generateCineJpegAsync(storagePath, basePath, frameNumber, size, CINE_JPEG_QUALITY);
+    }
+
+    /**
+     * Cine JPEG 생성 (품질 지정)
+     */
+    private CompletableFuture<Long> generateCineJpegAsync(String storagePath, String basePath, int frameNumber, int size, float quality) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 // 1. DICOM에서 PNG 렌더링
@@ -538,8 +630,8 @@ public class PreRenderingService {
                 // 3. 리사이징 (정사각형 타겟)
                 BufferedImage resized = resizeImage(original, size, size);
 
-                // 4. JPEG로 인코딩 (80% 품질)
-                byte[] jpegBytes = encodeToJpeg(resized, CINE_JPEG_QUALITY);
+                // 4. JPEG로 인코딩 (지정된 품질)
+                byte[] jpegBytes = encodeToJpeg(resized, quality);
 
                 // 5. S3에 업로드
                 String s3Key = String.format("%s/cine/frame-%03d-%d.jpg", basePath, frameNumber, size);
@@ -549,6 +641,59 @@ public class PreRenderingService {
             } catch (IOException e) {
                 throw new BusinessException(MiniPacsErrorCode.DICOM_RENDER_FAILED,
                         "Cine JPEG generation failed for frame " + frameNumber + ": " + e.getMessage());
+            }
+        }, s3UploadExecutor);
+    }
+
+    /**
+     * JPEG Baseline 생성 (원본 해상도, W/L 미적용 선형 스케일링) - 비동기 버전
+     *
+     * <p>WADO-RS BulkData API에서 JPEG Baseline 형식으로 서빙하기 위해
+     * 원본 해상도의 JPEG를 생성합니다.
+     *
+     * <p>변환 과정:
+     * <ol>
+     *   <li>원본 DICOM에서 raw pixel 추출 (W/L 미적용)</li>
+     *   <li>16-bit → 8-bit 선형 스케일링</li>
+     *   <li>JPEG Baseline으로 인코딩</li>
+     * </ol>
+     *
+     * <p>클라이언트에서 8-bit 범위 내에서 W/L 조절이 가능합니다.
+     *
+     * <p>S3 저장 경로: {basePath}/jpeg/frame-{frameNumber}.jpg
+     *
+     * @param storagePath 원본 DICOM 파일 S3 경로
+     * @param basePath 사전 렌더링 기본 경로
+     * @param frameNumber 프레임 번호 (1-based)
+     * @param quality JPEG 품질 (0.0f ~ 1.0f, 0.9f = 90%)
+     * @return CompletableFuture<Long> - 저장된 JPEG 파일 크기 (bytes)
+     */
+    private CompletableFuture<Long> generateJpegBaselineAsync(
+            String storagePath, String basePath, int frameNumber, float quality) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                // JPEG Baseline 변환 (W/L 미적용, 선형 스케일링)
+                // dicomRenderingService.transcodeToJpegBaseline()이 다음을 수행:
+                // 1. raw pixel 추출 (readRaster, W/L 미적용)
+                // 2. 16-bit → 8-bit 선형 스케일링
+                // 3. JPEG Baseline 인코딩
+                byte[] jpegBytes = dicomRenderingService.transcodeToJpegBaseline(storagePath, frameNumber, quality);
+
+                // S3에 업로드
+                String s3Key = String.format("%s/jpeg/frame-%03d.jpg", basePath, frameNumber);
+                uploadToS3(s3Key, jpegBytes, "image/jpeg");
+
+                if (frameNumber == 1) {
+                    log.debug("[PreRender] JPEG Baseline generated (W/L-free): s3Key={}, size={} bytes, quality={}%",
+                            s3Key, jpegBytes.length, (int)(quality * 100));
+                }
+
+                return (long) jpegBytes.length;
+
+            } catch (Exception e) {
+                log.warn("[PreRender] Failed to generate JPEG Baseline for frame {}: {}",
+                        frameNumber, e.getMessage());
+                return 0L;  // 실패 시 0 반환 (다른 포맷은 있으므로 진행)
             }
         }, s3UploadExecutor);
     }
