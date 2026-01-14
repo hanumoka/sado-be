@@ -52,4 +52,9 @@ public class UploadTask {
      * 렌더링 상태 (NONE, PENDING, PROCESSING, COMPLETED, FAILED)
      */
     private String renderingStatus;
+
+    /**
+     * 테넌트 ID
+     */
+    private Long tenantId;
 }

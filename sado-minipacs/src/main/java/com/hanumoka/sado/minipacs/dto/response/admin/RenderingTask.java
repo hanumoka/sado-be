@@ -67,4 +67,9 @@ public class RenderingTask {
      * 진행률 (0-100)
      */
     private Integer progressPercent;
+
+    /**
+     * 테넌트 ID
+     */
+    private Long tenantId;
 }

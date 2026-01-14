@@ -720,6 +720,7 @@ public class AdminController {
                 .renderingStatus(instance.getTranscodingStatus() != null
                     ? instance.getTranscodingStatus().name()
                     : "NONE")
+                .tenantId(instance.getTenantId())
                 .build())
             .toList();
 
@@ -745,6 +746,7 @@ public class AdminController {
                     .renderedSize(instance.getPrerenderedTotalSize())
                     .startedAt(instance.getCreatedAt())
                     .progressPercent(progressPercent)
+                    .tenantId(instance.getTenantId())
                     .build();
             })
             .toList();

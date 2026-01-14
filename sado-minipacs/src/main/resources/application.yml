@@ -155,14 +155,20 @@ storage:
   #   storage.access-strategy: backend-proxy
 
 # Admin & Tiering 설정
+# ============================================================================
+# [POC 상태] 현재 Tiering은 DB 메타데이터(storageTier 필드)만 업데이트합니다.
+# - 물리적 파일 이동 없음: SeaweedFS 볼륨이 1개여도 문제없음
+# - 실제 SSD → HDD → Archive 이동은 미구현
+# - 향후 Multi-Volume Server 구성 시 물리적 이동 로직 추가 필요
+# ============================================================================
 admin:
   tiering:
     # HOT → WARM 전환 기준 (일 단위)
     hot-to-warm-days: 30
     # WARM → COLD 전환 기준 (일 단위)
     warm-to-cold-days: 365
-    # 자동 Tiering 스케줄러 활성화 여부
-    scheduler-enabled: true
+    # 자동 Tiering 스케줄러 활성화 여부 (현재 비활성화 - DB 라벨링만 수행)
+    scheduler-enabled: false
     # HOT → WARM 스케줄 (Cron 표현식: 매일 새벽 3시)
     hot-to-warm-schedule: "0 0 3 * * *"
     # WARM → COLD 스케줄 (Cron 표현식: 매일 새벽 4시)
