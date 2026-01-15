@@ -1,5 +1,7 @@
 package com.hanumoka.sado.minipacs.domain.service;
 
+import static com.hanumoka.sado.common.util.StringUtils.hasText;
+import com.hanumoka.sado.common.util.EntityFinder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hanumoka.sado.common.exception.ResourceNotFoundException;
@@ -85,8 +87,7 @@ public class InstanceService {
      * @throws ResourceNotFoundException Instance가 존재하지 않는 경우
      */
     public Instance findById(Long id) {
-        return instanceRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Instance not found with id: " + id));
+        return EntityFinder.findById(instanceRepository, id, "Instance");
     }
 
     /**
@@ -132,7 +133,7 @@ public class InstanceService {
 
         // storageTier String -> Enum 변환 (null-safe)
         Instance.StorageTier storageTierEnum = null;
-        if (storageTier != null && !storageTier.isEmpty()) {
+        if (hasText(storageTier)) {
             try {
                 storageTierEnum = Instance.StorageTier.valueOf(storageTier.toUpperCase());
             } catch (IllegalArgumentException e) {
@@ -175,7 +176,7 @@ public class InstanceService {
 
         // storageTier String -> Enum 변환 (null-safe)
         Instance.StorageTier storageTierEnum = null;
-        if (storageTier != null && !storageTier.isEmpty()) {
+        if (hasText(storageTier)) {
             try {
                 storageTierEnum = Instance.StorageTier.valueOf(storageTier.toUpperCase());
             } catch (IllegalArgumentException e) {
@@ -473,7 +474,7 @@ public class InstanceService {
                 storagePath);
 
         // 1. S3에서 DICOM 파일 먼저 삭제 (실패 시 예외 발생 → 트랜잭션 롤백)
-        if (storagePath != null && !storagePath.isEmpty()) {
+        if (hasText(storagePath)) {
             dicomStorageService.deleteDicomFile(storagePath);
             log.info("Deleted S3 file: {}", storagePath);
         }

@@ -1,6 +1,8 @@
 package com.hanumoka.sado.minipacs.domain.service;
 
+import static com.hanumoka.sado.common.util.StringUtils.hasText;
 import com.hanumoka.sado.common.exception.ResourceNotFoundException;
+import com.hanumoka.sado.common.util.EntityFinder;
 import com.hanumoka.sado.common.tenant.TenantProvider;
 import com.hanumoka.sado.common.util.UuidV7Generator;
 import com.hanumoka.sado.minipacs.domain.entity.Patient;
@@ -35,8 +37,7 @@ public class PatientService {
      * @throws ResourceNotFoundException 환자가 존재하지 않는 경우
      */
     public Patient findById(Long id) {
-        return patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+        return EntityFinder.findById(patientRepository, id, "Patient");
     }
 
     /**
@@ -150,9 +151,7 @@ public class PatientService {
             String patientSex) {
 
         // issuer NULL 정규화 (MySQL unique constraint 작동을 위해)
-        String normalizedIssuer = (issuerOfPatientId != null && !issuerOfPatientId.isEmpty())
-            ? issuerOfPatientId
-            : "";
+        String normalizedIssuer = hasText(issuerOfPatientId) ? issuerOfPatientId : "";
 
         // 1. MySQL Upsert 실행 (Exception 없음, 완전 원자적)
         Long tenantId = tenantProvider.getCurrentTenantId();

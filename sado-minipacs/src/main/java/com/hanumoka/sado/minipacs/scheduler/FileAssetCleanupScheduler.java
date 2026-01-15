@@ -1,5 +1,6 @@
 package com.hanumoka.sado.minipacs.scheduler;
 
+import static com.hanumoka.sado.common.util.StringUtils.hasText;
 import com.hanumoka.sado.minipacs.domain.entity.FileAsset;
 import com.hanumoka.sado.minipacs.domain.enums.FileStatus;
 import com.hanumoka.sado.minipacs.domain.repository.FileAssetRepository;
@@ -143,7 +144,7 @@ public class FileAssetCleanupScheduler {
             try {
                 String storagePath = fileAsset.getStoragePath();
 
-                if (storagePath != null && !storagePath.isEmpty()) {
+                if (hasText(storagePath)) {
                     dicomStorageService.deleteDicomFile(storagePath);
                     log.debug("Deleted physical file: {}", storagePath);
                 }

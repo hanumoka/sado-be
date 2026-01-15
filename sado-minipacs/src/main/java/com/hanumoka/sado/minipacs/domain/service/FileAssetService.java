@@ -2,6 +2,7 @@ package com.hanumoka.sado.minipacs.domain.service;
 
 import com.hanumoka.sado.common.exception.BusinessException;
 import com.hanumoka.sado.common.exception.ResourceNotFoundException;
+import com.hanumoka.sado.common.util.EntityFinder;
 import com.hanumoka.sado.common.tenant.TenantContext;
 import com.hanumoka.sado.minipacs.code.MiniPacsErrorCode;
 import com.hanumoka.sado.minipacs.domain.entity.FileAsset;
@@ -96,8 +97,7 @@ public class FileAssetService {
      * @throws ResourceNotFoundException FileAsset이 존재하지 않는 경우
      */
     public FileAsset findById(Long id) {
-        return fileAssetRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("FileAsset not found with id: " + id));
+        return EntityFinder.findById(fileAssetRepository, id, "FileAsset");
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.hanumoka.sado.minipacs.domain.service;
 
 import com.hanumoka.sado.common.exception.ResourceNotFoundException;
+import com.hanumoka.sado.common.util.EntityFinder;
 import com.hanumoka.sado.common.tenant.TenantProvider;
 import com.hanumoka.sado.common.util.UuidV7Generator;
 import com.hanumoka.sado.minipacs.domain.entity.Patient;
@@ -38,8 +39,7 @@ public class StudyService {
      * @throws ResourceNotFoundException Study가 존재하지 않는 경우
      */
     public Study findById(Long id) {
-        return studyRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Study not found with id: " + id));
+        return EntityFinder.findById(studyRepository, id, "Study");
     }
 
     /**

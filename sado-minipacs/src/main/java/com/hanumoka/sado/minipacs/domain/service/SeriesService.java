@@ -1,6 +1,7 @@
 package com.hanumoka.sado.minipacs.domain.service;
 
 import com.hanumoka.sado.common.exception.ResourceNotFoundException;
+import com.hanumoka.sado.common.util.EntityFinder;
 import com.hanumoka.sado.common.tenant.TenantProvider;
 import com.hanumoka.sado.common.util.UuidV7Generator;
 import com.hanumoka.sado.minipacs.domain.entity.Series;
@@ -58,8 +59,7 @@ public class SeriesService {
      * @throws ResourceNotFoundException Series가 존재하지 않는 경우
      */
     public Series findById(Long id) {
-        return seriesRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Series not found with id: " + id));
+        return EntityFinder.findById(seriesRepository, id, "Series");
     }
 
     /**

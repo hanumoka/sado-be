@@ -1,5 +1,6 @@
 package com.hanumoka.sado.minipacs.controller;
 
+import static com.hanumoka.sado.common.util.StringUtils.hasText;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hanumoka.sado.common.dto.ApiResponse;
@@ -220,7 +221,7 @@ public class InstanceController {
         // 임시로 storagePath를 fileId로 사용 (Week 4-5 구현 완료 시 수정)
         String fileId = instance.getStoragePath();
 
-        if (fileId == null || fileId.isEmpty()) {
+        if (!hasText(fileId)) {
             throw new IllegalStateException(
                     "Instance has no file stored. instanceId=" + id
             );
@@ -394,7 +395,7 @@ public class InstanceController {
     private InstanceResponse toResponse(Instance instance) {
         // storageUri 생성 (Pre-signed URL)
         String storageUri = "";  // null 대신 빈 문자열 초기화
-        if (instance.getStoragePath() != null && !instance.getStoragePath().isEmpty()) {
+        if (hasText(instance.getStoragePath())) {
             try {
                 Long tenantId = instance.getTenantId();
                 Long userId = 1L; // TODO: 실제 User ID (Week 12+)

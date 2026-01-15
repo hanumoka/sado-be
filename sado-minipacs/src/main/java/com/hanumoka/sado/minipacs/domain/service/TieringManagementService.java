@@ -1,5 +1,6 @@
 package com.hanumoka.sado.minipacs.domain.service;
 
+import static com.hanumoka.sado.common.util.StringUtils.hasText;
 import com.hanumoka.sado.common.exception.BusinessException;
 import com.hanumoka.sado.minipacs.code.MiniPacsErrorCode;
 import com.hanumoka.sado.minipacs.domain.entity.FileAsset;
@@ -149,10 +150,10 @@ public class TieringManagementService {
         policy.setWarmToColdDays(warmToColdDays);
         policy.setSchedulerEnabled(schedulerEnabled);
 
-        if (hotToWarmSchedule != null && !hotToWarmSchedule.isEmpty()) {
+        if (hasText(hotToWarmSchedule)) {
             policy.setHotToWarmSchedule(hotToWarmSchedule);
         }
-        if (warmToColdSchedule != null && !warmToColdSchedule.isEmpty()) {
+        if (hasText(warmToColdSchedule)) {
             policy.setWarmToColdSchedule(warmToColdSchedule);
         }
 

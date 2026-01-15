@@ -1,6 +1,7 @@
 package com.hanumoka.sado.minipacs.controller;
 
 import com.hanumoka.sado.common.exception.BusinessException;
+import static com.hanumoka.sado.common.util.StringUtils.hasText;
 import com.hanumoka.sado.minipacs.code.MiniPacsErrorCode;
 import com.hanumoka.sado.minipacs.domain.entity.Instance;
 import com.hanumoka.sado.minipacs.domain.entity.Series;
@@ -116,7 +117,7 @@ public class DicomWebController {
         // Study 조회
         List<Study> studies;
 
-        if (StudyInstanceUID != null && !StudyInstanceUID.isEmpty()) {
+        if (hasText(StudyInstanceUID)) {
             // StudyInstanceUID로 직접 검색
             studies = studyService.findByStudyInstanceUid(StudyInstanceUID)
                     .map(List::of)
@@ -125,7 +126,7 @@ public class DicomWebController {
             // CRITICAL: OOM 방지 - DB 쿼리로 필터링 (findAll() + Stream 제거)
             // StudyDate 파싱 (YYYYMMDD → LocalDate)
             java.time.LocalDate studyDateFilter = null;
-            if (StudyDate != null && !StudyDate.isEmpty()) {
+            if (hasText(StudyDate)) {
                 try {
                     studyDateFilter = java.time.LocalDate.parse(StudyDate,
                             java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
@@ -187,13 +188,13 @@ public class DicomWebController {
         List<Series> seriesList = seriesService.findByStudyId(study.getId());
 
         // 필터링
-        if (SeriesInstanceUID != null && !SeriesInstanceUID.isEmpty()) {
+        if (hasText(SeriesInstanceUID)) {
             seriesList = seriesList.stream()
                     .filter(s -> SeriesInstanceUID.equals(s.getSeriesInstanceUid()))
                     .toList();
         }
 
-        if (Modality != null && !Modality.isEmpty()) {
+        if (hasText(Modality)) {
             seriesList = seriesList.stream()
                     .filter(s -> Modality.equals(s.getModality()))
                     .toList();
@@ -245,7 +246,7 @@ public class DicomWebController {
         List<Instance> instances = instanceService.findBySeriesId(series.getId());
 
         // 필터링
-        if (SOPInstanceUID != null && !SOPInstanceUID.isEmpty()) {
+        if (hasText(SOPInstanceUID)) {
             instances = instances.stream()
                     .filter(i -> SOPInstanceUID.equals(i.getSopInstanceUid()))
                     .toList();
