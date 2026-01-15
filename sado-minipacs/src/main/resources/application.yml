@@ -223,8 +223,9 @@ pre-rendering:
       enabled: true
       size: 128
     # Raw PixelData (.raw) - Cornerstone3D wadors 로더용
+    # 비활성화: 용량 절약 (원본의 10배 이상 증가 방지)
     bulkdata:
-      enabled: true
+      enabled: false
     # 원본 압축 데이터 (압축 DICOM인 경우만) - 대역폭 절감용
     compressed:
       enabled: true
