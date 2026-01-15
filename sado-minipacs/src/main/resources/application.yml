@@ -234,14 +234,16 @@ pre-rendering:
       enabled: true
       quality: 90    # 1-100, 권장: 90
     # PNG 렌더링 (512px, W/L 적용) - WADO-RS Rendered API용
+    # 비활성화: cine-256으로 대체하여 용량 54% 절감 (PNG ~200KB/frame → JPEG ~20KB/frame)
     rendered:
-      enabled: true
+      enabled: false
     # Cine JPEG (256/128/64/32px) - 빠른 Cine 재생용
+    # WADO-RS Rendered API도 cine-256을 사용 (rendered 비활성화 시)
     cine:
       enabled: true
       quality: 80    # 1-100, 권장: 80
-      size256: true  # 256px 생성 여부
+      size256: true  # 256px 생성 여부 (WADO-RS Rendered 대체용)
       size128: true  # 128px 생성 여부
-      size64: true   # 64px 생성 여부
-      size32: true   # 32px 생성 여부
+      size64: false  # 64px 생성 여부 - 비활성화: 사용 빈도 낮음
+      size32: false  # 32px 생성 여부 - 비활성화: 사용 빈도 낮음
 

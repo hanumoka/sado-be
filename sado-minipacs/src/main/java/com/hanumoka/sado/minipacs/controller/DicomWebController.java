@@ -747,10 +747,10 @@ public class DicomWebController {
                                 instance.getPrerenderedBasePath(), frameNumber);
                         contentType = MediaType.IMAGE_JPEG;
                         break;
-                    default: // 512 또는 기타
-                        prerenderedPath = String.format("%s/rendered/frame-%03d.png",
+                    default: // 512 또는 기타 → cine-256 사용 (rendered PNG 대신, 용량 절감)
+                        prerenderedPath = String.format("%s/cine/frame-%03d-256.jpg",
                                 instance.getPrerenderedBasePath(), frameNumber);
-                        contentType = MediaType.IMAGE_PNG;
+                        contentType = MediaType.IMAGE_JPEG;
                 }
 
                 StreamingResponseBody responseBody = outputStream -> {
@@ -846,9 +846,9 @@ public class DicomWebController {
                     multipartImageType = "image/jpeg";
                     pathPattern = "%s/cine/frame-%03d-32.jpg";
                     break;
-                default: // 512 또는 기타
-                    multipartImageType = "image/png";
-                    pathPattern = "%s/rendered/frame-%03d.png";
+                default: // 512 또는 기타 → cine-256 사용 (rendered PNG 대신, 용량 절감)
+                    multipartImageType = "image/jpeg";
+                    pathPattern = "%s/cine/frame-%03d-256.jpg";
             }
 
             responseBody = outputStream -> {
