@@ -32,6 +32,7 @@ import com.hanumoka.sado.minipacs.storage.strategy.StorageAccessStrategy;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -65,6 +66,13 @@ public class InstanceController {
     private final ObjectMapper objectMapper;
 
     private final StorageAccessStrategy storageAccessStrategy; // Storage 접근 전략 (pre-signed url or backed proxy)
+
+    /**
+     * 기본 User ID (Week 12+ Spring Security 도입 전까지 임시 사용)
+     * application.yml의 minipacs.default-user-id 설정값 사용
+     */
+    @Value("${minipacs.default-user-id:1}")
+    private Long defaultUserId;
 
     /**
      * 영상 목록 조회 (페이지네이션)
@@ -228,10 +236,10 @@ public class InstanceController {
         }
 
         // 3. Tenant ID, User ID 추출
-        // TODO: Spring Security @AuthenticationPrincipal로 실제 User 정보 받기
-        // POC에서는 임시로 instance.getTenantId() 사용
+        // TODO: Spring Security @AuthenticationPrincipal로 실제 User 정보 받기 (Week 12+)
+        // POC에서는 application.yml의 minipacs.default-user-id 설정값 사용
         Long tenantId = instance.getTenantId();
-        Long userId = 1L; // TODO: 실제 User ID로 교체 (Week 12+ Keycloak 연동 시)
+        Long userId = defaultUserId;
 
         // 4. StorageAccessStrategy로 파일 접근 URL 생성
         // - Pre-signed URL 방식: S3Presigner로 서명된 URL 생성 (1시간 유효)
@@ -398,7 +406,8 @@ public class InstanceController {
         if (hasText(instance.getStoragePath())) {
             try {
                 Long tenantId = instance.getTenantId();
-                Long userId = 1L; // TODO: 실제 User ID (Week 12+)
+                // application.yml의 minipacs.default-user-id 설정값 사용 (Week 12+ Spring Security 도입 전까지)
+                Long userId = defaultUserId;
 
                 FileAccessResponse fileAccess = storageAccessStrategy.getFileAccess(
                     instance.getStoragePath(), userId, tenantId

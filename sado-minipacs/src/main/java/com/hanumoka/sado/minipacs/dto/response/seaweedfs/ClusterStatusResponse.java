@@ -5,12 +5,16 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
  * SeaweedFS Cluster 상태 응답 DTO
  *
  * <p>SeaweedFS 클러스터 전체의 상태 및 구성 정보
+ *
+ * <p>다중 노드 환경을 지원하며, 각 노드의 상태와
+ * 클러스터 전체의 Health 상태를 제공합니다.
  */
 @Getter
 @Builder
@@ -24,8 +28,9 @@ public class ClusterStatusResponse {
      * <p>값:
      * <ul>
      *   <li>HEALTHY: 모든 노드 정상</li>
-     *   <li>DEGRADED: 일부 노드 비정상</li>
-     *   <li>DOWN: 클러스터 다운</li>
+     *   <li>WARNING: 일부 노드 다운 (서비스 가능)</li>
+     *   <li>DEGRADED: Quorum 위험 또는 Filer 없음</li>
+     *   <li>CRITICAL: Leader 없음 또는 Volume Server 없음</li>
      * </ul>
      */
     private HealthStatus health;
@@ -44,6 +49,11 @@ public class ClusterStatusResponse {
      * Filer 서버 목록
      */
     private List<FilerNode> filers;
+
+    /**
+     * 클러스터 통계 요약
+     */
+    private ClusterStats clusterStats;
 
     /**
      * 전체 Volume 수
@@ -73,7 +83,7 @@ public class ClusterStatusResponse {
     private Long totalCapacity;
 
     /**
-     * Cluster 상태
+     * Cluster Health 상태
      */
     public enum HealthStatus {
         /**
@@ -82,14 +92,26 @@ public class ClusterStatusResponse {
         HEALTHY,
 
         /**
-         * 일부 노드 비정상 (서비스는 가능)
+         * 일부 노드 다운 (서비스 가능)
+         */
+        WARNING,
+
+        /**
+         * Quorum 위험 또는 Filer 없음
          */
         DEGRADED,
 
         /**
-         * Cluster 전체 다운
+         * Leader 없음 또는 Volume Server 없음 (서비스 불가)
          */
-        DOWN
+        CRITICAL
+    }
+
+    /**
+     * 노드 상태
+     */
+    public enum NodeStatus {
+        UP, DOWN
     }
 
     /**
@@ -101,9 +123,16 @@ public class ClusterStatusResponse {
     @AllArgsConstructor
     public static class MasterNode {
         /**
+         * 노드 이름 (설정에서 지정)
+         *
+         * <p>예: "master-1"
+         */
+        private String name;
+
+        /**
          * Master 주소
          *
-         * <p>예: "localhost:9333"
+         * <p>예: "http://localhost:9333"
          */
         private String address;
 
@@ -113,11 +142,26 @@ public class ClusterStatusResponse {
         private Boolean isLeader;
 
         /**
-         * 상태
+         * 현재 Leader 주소
          *
-         * <p>예: "active", "standby"
+         * <p>이 노드가 인식하는 Leader의 주소
          */
-        private String status;
+        private String leader;
+
+        /**
+         * 노드 상태
+         */
+        private NodeStatus status;
+
+        /**
+         * 에러 메시지 (DOWN 상태일 경우)
+         */
+        private String errorMessage;
+
+        /**
+         * 마지막 상태 체크 시간
+         */
+        private Instant lastChecked;
     }
 
     /**
@@ -129,9 +173,16 @@ public class ClusterStatusResponse {
     @AllArgsConstructor
     public static class VolumeServerNode {
         /**
+         * 노드 이름 (설정에서 지정)
+         *
+         * <p>예: "volume-1"
+         */
+        private String name;
+
+        /**
          * Volume Server 주소
          *
-         * <p>예: "localhost:8080"
+         * <p>예: "http://localhost:8080"
          */
         private String address;
 
@@ -139,6 +190,11 @@ public class ClusterStatusResponse {
          * Volume 수
          */
         private Integer volumeCount;
+
+        /**
+         * 전체 디스크 용량 (bytes)
+         */
+        private Long totalDiskSpace;
 
         /**
          * 사용 중인 디스크 크기 (bytes)
@@ -151,11 +207,19 @@ public class ClusterStatusResponse {
         private Long freeDiskSize;
 
         /**
-         * 상태
-         *
-         * <p>예: "active", "readonly", "offline"
+         * 노드 상태
          */
-        private String status;
+        private NodeStatus status;
+
+        /**
+         * 에러 메시지 (DOWN 상태일 경우)
+         */
+        private String errorMessage;
+
+        /**
+         * 마지막 상태 체크 시간
+         */
+        private Instant lastChecked;
     }
 
     /**
@@ -167,17 +231,63 @@ public class ClusterStatusResponse {
     @AllArgsConstructor
     public static class FilerNode {
         /**
+         * 노드 이름 (설정에서 지정)
+         *
+         * <p>예: "filer-1"
+         */
+        private String name;
+
+        /**
          * Filer 주소
          *
-         * <p>예: "localhost:8888"
+         * <p>예: "http://localhost:8888"
          */
         private String address;
 
         /**
-         * 상태
-         *
-         * <p>예: "active", "offline"
+         * 노드 상태
          */
-        private String status;
+        private NodeStatus status;
+
+        /**
+         * 에러 메시지 (DOWN 상태일 경우)
+         */
+        private String errorMessage;
+
+        /**
+         * 마지막 상태 체크 시간
+         */
+        private Instant lastChecked;
+    }
+
+    /**
+     * 클러스터 통계 요약
+     *
+     * <p>모든 Volume Server를 합산한 클러스터 전체 통계
+     */
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ClusterStats {
+        /**
+         * 전체 Volume 수
+         */
+        private Integer totalVolumeCount;
+
+        /**
+         * 전체 파일 수
+         */
+        private Long totalFileCount;
+
+        /**
+         * 전체 사용 용량 (bytes)
+         */
+        private Long totalUsedSpace;
+
+        /**
+         * 전체 용량 (bytes)
+         */
+        private Long totalCapacity;
     }
 }

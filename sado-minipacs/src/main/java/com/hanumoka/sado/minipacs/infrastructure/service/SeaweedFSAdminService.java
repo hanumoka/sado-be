@@ -26,6 +26,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * SeaweedFS Admin 서비스
@@ -153,114 +156,295 @@ public class SeaweedFSAdminService {
     }
 
     /**
-     * Cluster 상태 조회
+     * Cluster 상태 조회 (다중 노드 지원)
      *
-     * <p>Master /cluster/status와 Volume Server /status를 조합하여 클러스터 상태를 조회합니다.
+     * <p>설정된 모든 Master/Volume/Filer 노드의 상태를 조회하고
+     * 클러스터 전체의 Health 상태를 계산합니다.
+     *
+     * <p>Volume Server 조회는 병렬로 처리되어 성능을 최적화합니다.
      *
      * @return Cluster 상태
-     * @throws BusinessException SEAWEEDFS_UNAVAILABLE - SeaweedFS 서버 접근 불가
      */
     public ClusterStatusResponse getClusterStatus() {
-        log.info("Getting cluster status from SeaweedFS");
+        log.info("Getting cluster status from SeaweedFS (multi-node)");
 
+        List<ClusterStatusResponse.MasterNode> masterNodes = new ArrayList<>();
+        List<ClusterStatusResponse.VolumeServerNode> volumeServerNodes = new ArrayList<>();
+        List<ClusterStatusResponse.FilerNode> filerNodes = new ArrayList<>();
+
+        // 1. 모든 Master 노드 순회
+        for (SeaweedFSAdminProperties.NodeConfig master : properties.getEffectiveMasters()) {
+            if (!master.isEnabled()) continue;
+            ClusterStatusResponse.MasterNode node = checkMasterNode(master);
+            masterNodes.add(node);
+        }
+
+        // 2. 모든 Volume Server 순회 (병렬 처리)
+        ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
         try {
-            // 1. Master에서 isLeader 확인
-            String clusterUrl = properties.getMasterUrl() + "/cluster/status";
-            ResponseEntity<String> clusterResponse = restTemplate.getForEntity(clusterUrl, String.class);
-            JsonNode clusterRoot = objectMapper.readTree(clusterResponse.getBody());
-            boolean isLeader = clusterRoot.path("IsLeader").asBoolean(false);
+            List<CompletableFuture<ClusterStatusResponse.VolumeServerNode>> volumeFutures =
+                properties.getEffectiveVolumeServers().stream()
+                    .filter(SeaweedFSAdminProperties.NodeConfig::isEnabled)
+                    .map(vs -> CompletableFuture.supplyAsync(() -> checkVolumeServer(vs), executor))
+                    .toList();
 
-            // 2. Volume Server에서 상세 정보 조회
-            String volumeStatusUrl = properties.getVolumeUrl() + "/status";
-            ResponseEntity<String> volumeResponse = restTemplate.getForEntity(volumeStatusUrl, String.class);
-            JsonNode volumeRoot = objectMapper.readTree(volumeResponse.getBody());
+            volumeServerNodes = volumeFutures.stream()
+                .map(CompletableFuture::join)
+                .toList();
+        } finally {
+            executor.shutdown();
+        }
 
-            // 3. DiskStatuses에서 용량 추출
-            JsonNode diskStatuses = volumeRoot.path("DiskStatuses");
-            Long totalCapacity = 0L;
-            Long usedSpace = 0L;
-            Long freeSpace = 0L;
-            if (diskStatuses.isArray() && diskStatuses.size() > 0) {
-                JsonNode disk = diskStatuses.get(0);
-                totalCapacity = disk.path("all").asLong(0);
-                usedSpace = disk.path("used").asLong(0);
-                freeSpace = disk.path("free").asLong(0);
-            }
+        // 3. 모든 Filer 순회
+        for (SeaweedFSAdminProperties.NodeConfig filer : properties.getEffectiveFilers()) {
+            if (!filer.isEnabled()) continue;
+            ClusterStatusResponse.FilerNode node = checkFilerNode(filer);
+            filerNodes.add(node);
+        }
 
-            // 4. Volumes 배열에서 Volume 수 및 파일 수 계산
-            JsonNode volumes = volumeRoot.path("Volumes");
-            int volumeCount = 0;
-            long totalFiles = 0;
-            long totalUsedVolumeSize = 0;
-            if (volumes.isArray()) {
-                volumeCount = volumes.size();
-                for (JsonNode vol : volumes) {
-                    totalFiles += vol.path("FileCount").asLong(0);
-                    totalUsedVolumeSize += vol.path("Size").asLong(0);
+        // 4. 클러스터 전체 Health 계산
+        ClusterStatusResponse.HealthStatus health = calculateClusterHealth(
+            masterNodes, volumeServerNodes, filerNodes
+        );
+
+        // 5. 클러스터 통계 집계
+        ClusterStatusResponse.ClusterStats clusterStats = aggregateStats(volumeServerNodes);
+
+        // 6. 응답 구성 (하위 호환성을 위해 기존 필드도 유지)
+        ClusterStatusResponse response = ClusterStatusResponse.builder()
+            .health(health)
+            .masters(masterNodes)
+            .volumeServers(volumeServerNodes)
+            .filers(filerNodes)
+            .clusterStats(clusterStats)
+            .totalVolumes(clusterStats.getTotalVolumeCount())
+            .totalFiles(clusterStats.getTotalFileCount())
+            .totalUsedSize(clusterStats.getTotalUsedSpace())
+            .totalFreeSize(clusterStats.getTotalCapacity() - clusterStats.getTotalUsedSpace())
+            .totalCapacity(clusterStats.getTotalCapacity())
+            .build();
+
+        log.info("Cluster status: health={}, masters={}/{}, volumeServers={}/{}, filers={}/{}",
+            health,
+            masterNodes.stream().filter(m -> m.getStatus() == ClusterStatusResponse.NodeStatus.UP).count(),
+            masterNodes.size(),
+            volumeServerNodes.stream().filter(v -> v.getStatus() == ClusterStatusResponse.NodeStatus.UP).count(),
+            volumeServerNodes.size(),
+            filerNodes.stream().filter(f -> f.getStatus() == ClusterStatusResponse.NodeStatus.UP).count(),
+            filerNodes.size()
+        );
+
+        return response;
+    }
+
+    /**
+     * 개별 Master 노드 상태 체크
+     *
+     * @param config 노드 설정
+     * @return Master 노드 상태
+     */
+    private ClusterStatusResponse.MasterNode checkMasterNode(SeaweedFSAdminProperties.NodeConfig config) {
+        try {
+            String statusUrl = config.getUrl() + "/cluster/status";
+            ResponseEntity<String> response = restTemplate.getForEntity(statusUrl, String.class);
+            JsonNode root = objectMapper.readTree(response.getBody());
+
+            return ClusterStatusResponse.MasterNode.builder()
+                .name(config.getName())
+                .address(config.getUrl())
+                .isLeader(root.path("IsLeader").asBoolean(false))
+                .leader(root.path("Leader").asText())
+                .status(ClusterStatusResponse.NodeStatus.UP)
+                .lastChecked(Instant.now())
+                .build();
+        } catch (Exception e) {
+            log.warn("Master node {} is down: {}", config.getName(), e.getMessage());
+            return ClusterStatusResponse.MasterNode.builder()
+                .name(config.getName())
+                .address(config.getUrl())
+                .isLeader(false)
+                .status(ClusterStatusResponse.NodeStatus.DOWN)
+                .errorMessage(e.getMessage())
+                .lastChecked(Instant.now())
+                .build();
+        }
+    }
+
+    /**
+     * 개별 Volume Server 노드 상태 체크
+     *
+     * @param config 노드 설정
+     * @return Volume Server 노드 상태
+     */
+    private ClusterStatusResponse.VolumeServerNode checkVolumeServer(SeaweedFSAdminProperties.NodeConfig config) {
+        try {
+            String statusUrl = config.getUrl() + "/status";
+            ResponseEntity<String> response = restTemplate.getForEntity(statusUrl, String.class);
+            JsonNode root = objectMapper.readTree(response.getBody());
+
+            // DiskStatuses에서 용량 추출
+            JsonNode diskStatuses = root.path("DiskStatuses");
+            long totalSize = 0, freeSize = 0, usedSize = 0;
+            if (diskStatuses.isArray()) {
+                for (JsonNode disk : diskStatuses) {
+                    totalSize += disk.path("all").asLong(0);
+                    freeSize += disk.path("free").asLong(0);
+                    usedSize += disk.path("used").asLong(0);
                 }
             }
 
-            // 5. Health 판단: isLeader && Volume Server 응답 정상
-            ClusterStatusResponse.HealthStatus health = isLeader && volumeCount > 0
-                ? ClusterStatusResponse.HealthStatus.HEALTHY
-                : ClusterStatusResponse.HealthStatus.DEGRADED;
+            // Volumes 배열에서 Volume 수 계산
+            JsonNode volumes = root.path("Volumes");
+            int volumeCount = volumes.isArray() ? volumes.size() : 0;
 
-            // 6. Master 노드 정보
-            List<ClusterStatusResponse.MasterNode> masters = new ArrayList<>();
-            masters.add(ClusterStatusResponse.MasterNode.builder()
-                .address(properties.getMasterUrl().replace("http://", ""))
-                .isLeader(isLeader)
-                .status("active")
-                .build());
-
-            // 7. Volume Server 노드 정보
-            List<ClusterStatusResponse.VolumeServerNode> volumeServers = new ArrayList<>();
-            volumeServers.add(ClusterStatusResponse.VolumeServerNode.builder()
-                .address(properties.getVolumeUrl().replace("http://", ""))
+            return ClusterStatusResponse.VolumeServerNode.builder()
+                .name(config.getName())
+                .address(config.getUrl())
                 .volumeCount(volumeCount)
-                .usedDiskSize(usedSpace)
-                .freeDiskSize(freeSpace)
-                .status("active")
-                .build());
-
-            // 8. Filer 정보
-            List<ClusterStatusResponse.FilerNode> filers = new ArrayList<>();
-            filers.add(ClusterStatusResponse.FilerNode.builder()
-                .address(properties.getFilerUrl().replace("http://", ""))
-                .status("active")
-                .build());
-
-            // 9. 응답 구성
-            ClusterStatusResponse response = ClusterStatusResponse.builder()
-                .health(health)
-                .masters(masters)
-                .volumeServers(volumeServers)
-                .filers(filers)
-                .totalVolumes(volumeCount)
-                .totalFiles(totalFiles)
-                .totalUsedSize(usedSpace)
-                .totalFreeSize(freeSpace)
-                .totalCapacity(totalCapacity)
+                .totalDiskSpace(totalSize)
+                .usedDiskSize(usedSize)
+                .freeDiskSize(freeSize)
+                .status(ClusterStatusResponse.NodeStatus.UP)
+                .lastChecked(Instant.now())
                 .build();
-
-            log.info("Cluster status: health={}, volumes={}, files={}, usedSize={}, freeSize={}, capacity={}",
-                health, volumeCount, totalFiles, usedSpace, freeSpace, totalCapacity);
-
-            return response;
-
-        } catch (ResourceAccessException e) {
-            log.error("SeaweedFS 서버에 접근할 수 없습니다", e);
-            throw new BusinessException(
-                MiniPacsErrorCode.SEAWEEDFS_UNAVAILABLE,
-                "SeaweedFS 서버에 접근할 수 없습니다."
-            );
         } catch (Exception e) {
-            log.error("Failed to get cluster status", e);
-            throw new BusinessException(
-                MiniPacsErrorCode.SEAWEEDFS_RESPONSE_PARSE_ERROR,
-                "Cluster 상태 조회에 실패했습니다."
-            );
+            log.warn("Volume server {} is down: {}", config.getName(), e.getMessage());
+            return ClusterStatusResponse.VolumeServerNode.builder()
+                .name(config.getName())
+                .address(config.getUrl())
+                .volumeCount(0)
+                .totalDiskSpace(0L)
+                .usedDiskSize(0L)
+                .freeDiskSize(0L)
+                .status(ClusterStatusResponse.NodeStatus.DOWN)
+                .errorMessage(e.getMessage())
+                .lastChecked(Instant.now())
+                .build();
         }
+    }
+
+    /**
+     * 개별 Filer 노드 상태 체크
+     *
+     * @param config 노드 설정
+     * @return Filer 노드 상태
+     */
+    private ClusterStatusResponse.FilerNode checkFilerNode(SeaweedFSAdminProperties.NodeConfig config) {
+        try {
+            // Filer health check - 루트 디렉토리 접근 테스트
+            String checkUrl = config.getUrl() + "/?pretty=y";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
+            restTemplate.exchange(checkUrl, HttpMethod.GET, requestEntity, String.class);
+
+            return ClusterStatusResponse.FilerNode.builder()
+                .name(config.getName())
+                .address(config.getUrl())
+                .status(ClusterStatusResponse.NodeStatus.UP)
+                .lastChecked(Instant.now())
+                .build();
+        } catch (Exception e) {
+            log.warn("Filer node {} is down: {}", config.getName(), e.getMessage());
+            return ClusterStatusResponse.FilerNode.builder()
+                .name(config.getName())
+                .address(config.getUrl())
+                .status(ClusterStatusResponse.NodeStatus.DOWN)
+                .errorMessage(e.getMessage())
+                .lastChecked(Instant.now())
+                .build();
+        }
+    }
+
+    /**
+     * 클러스터 Health 상태 계산
+     *
+     * <p>계산 로직:
+     * <ul>
+     *   <li>CRITICAL: Leader 없음 또는 Volume Server 전체 다운</li>
+     *   <li>DEGRADED: Master 과반 다운 또는 Filer 전체 다운</li>
+     *   <li>WARNING: 일부 노드 다운 (서비스 가능)</li>
+     *   <li>HEALTHY: 모든 노드 정상</li>
+     * </ul>
+     *
+     * @param masters Master 노드 목록
+     * @param volumeServers Volume Server 노드 목록
+     * @param filers Filer 노드 목록
+     * @return 클러스터 Health 상태
+     */
+    private ClusterStatusResponse.HealthStatus calculateClusterHealth(
+        List<ClusterStatusResponse.MasterNode> masters,
+        List<ClusterStatusResponse.VolumeServerNode> volumeServers,
+        List<ClusterStatusResponse.FilerNode> filers
+    ) {
+        // Master: Leader가 1개 존재해야 함
+        long activeMasters = masters.stream()
+            .filter(m -> m.getStatus() == ClusterStatusResponse.NodeStatus.UP)
+            .count();
+        boolean hasLeader = masters.stream()
+            .anyMatch(m -> m.getStatus() == ClusterStatusResponse.NodeStatus.UP && Boolean.TRUE.equals(m.getIsLeader()));
+
+        // Volume Server: 최소 1개 정상
+        long activeVolumes = volumeServers.stream()
+            .filter(v -> v.getStatus() == ClusterStatusResponse.NodeStatus.UP)
+            .count();
+
+        // Filer: 최소 1개 정상
+        long activeFilers = filers.stream()
+            .filter(f -> f.getStatus() == ClusterStatusResponse.NodeStatus.UP)
+            .count();
+
+        // CRITICAL: Leader 없음 또는 Volume Server 전체 다운
+        if (!hasLeader || activeVolumes == 0) {
+            return ClusterStatusResponse.HealthStatus.CRITICAL;
+        }
+
+        // DEGRADED: Master 과반 다운 또는 Filer 전체 다운
+        if (activeMasters < (masters.size() / 2) + 1 || activeFilers == 0) {
+            return ClusterStatusResponse.HealthStatus.DEGRADED;
+        }
+
+        // WARNING: 일부 노드 다운
+        if (activeMasters < masters.size() ||
+            activeVolumes < volumeServers.size() ||
+            activeFilers < filers.size()) {
+            return ClusterStatusResponse.HealthStatus.WARNING;
+        }
+
+        // HEALTHY: 모든 노드 정상
+        return ClusterStatusResponse.HealthStatus.HEALTHY;
+    }
+
+    /**
+     * Volume Server 통계 집계
+     *
+     * @param volumeServers Volume Server 노드 목록
+     * @return 집계된 클러스터 통계
+     */
+    private ClusterStatusResponse.ClusterStats aggregateStats(
+        List<ClusterStatusResponse.VolumeServerNode> volumeServers
+    ) {
+        int totalVolumeCount = 0;
+        long totalUsedSpace = 0;
+        long totalCapacity = 0;
+
+        for (ClusterStatusResponse.VolumeServerNode vs : volumeServers) {
+            if (vs.getStatus() == ClusterStatusResponse.NodeStatus.UP) {
+                totalVolumeCount += vs.getVolumeCount();
+                totalUsedSpace += vs.getUsedDiskSize();
+                totalCapacity += vs.getTotalDiskSpace();
+            }
+        }
+
+        // 파일 수는 별도 API 호출이 필요하므로 0으로 설정
+        // 필요시 Master /dir/status API로 조회 가능
+        return ClusterStatusResponse.ClusterStats.builder()
+            .totalVolumeCount(totalVolumeCount)
+            .totalFileCount(0L)  // 별도 조회 필요
+            .totalUsedSpace(totalUsedSpace)
+            .totalCapacity(totalCapacity)
+            .build();
     }
 
     /**

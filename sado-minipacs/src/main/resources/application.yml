@@ -129,12 +129,44 @@ seaweedfs:
     max-retries: 3                     # 최대 재시도 횟수 (503, 429, 네트워크 오류)
 
   # SeaweedFS Admin API 설정 (클러스터 관리)
+  # ============================================================================
+  # 단일 노드 설정 (현재 사용 중, 하위 호환성 유지)
+  # ============================================================================
   admin:
     master-url: http://localhost:10400   # Master 서버 (메타데이터 관리, Cluster 상태)
     volume-url: http://localhost:10402   # Volume 서버 (실제 파일 저장)
     filer-url: http://localhost:10403    # Filer 서버 (파일 시스템 인터페이스)
     connection-timeout: 5000             # 연결 타임아웃 (5초)
     read-timeout: 30000                  # 읽기 타임아웃 (30초)
+
+    # ============================================================================
+    # 다중 노드 설정 (권장, 프로덕션 환경)
+    # 아래 설정을 활성화하면 단일 노드 설정(master-url, volume-url, filer-url)보다 우선 적용됩니다.
+    # ============================================================================
+    # masters:
+    #   - name: master-1
+    #     url: http://seaweed-master-1:9333
+    #     enabled: true
+    #   - name: master-2
+    #     url: http://seaweed-master-2:9333
+    #     enabled: true
+    #   - name: master-3
+    #     url: http://seaweed-master-3:9333
+    #     enabled: true
+    # volume-servers:
+    #   - name: volume-1
+    #     url: http://seaweed-volume-1:8080
+    #     enabled: true
+    #   - name: volume-2
+    #     url: http://seaweed-volume-2:8080
+    #     enabled: true
+    # filers:
+    #   - name: filer-1
+    #     url: http://seaweed-filer-1:8888
+    #     enabled: true
+    #   - name: filer-2
+    #     url: http://seaweed-filer-2:8888
+    #     enabled: true
 
 # Storage 접근 전략 설정 (Week 4-5 추가)
 storage:
