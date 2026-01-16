@@ -161,6 +161,32 @@ services:
           memory: 2G
 
   # ==========================================================================
+  # Nginx Caching Proxy (DICOMweb API 캐싱)
+  # ==========================================================================
+  nginx-cache:
+    image: nginx:alpine
+    container_name: sado-nginx-cache-dev
+    ports:
+      - "10202:80"              # Nginx 캐시 프록시 포트
+    volumes:
+      - ./nginx-cache.conf:/etc/nginx/conf.d/default.conf:ro
+      - sado-nginx-cache-dev:/tmp/nginx/cache
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - sado-network-dev
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ==========================================================================
   # Kafka + Zookeeper (선택적 - 주석 해제하여 사용)
   # ==========================================================================
 #  zookeeper:
@@ -216,6 +242,8 @@ volumes:
     name: sado-seaweedfs-data-dev
   sado-seaweedfs-filer-dev:
     name: sado-seaweedfs-filer-dev
+  sado-nginx-cache-dev:
+    name: sado-nginx-cache-dev
 
 # =============================================================================
 # Networks
