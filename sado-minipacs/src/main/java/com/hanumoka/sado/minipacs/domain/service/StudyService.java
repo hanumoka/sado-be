@@ -9,6 +9,10 @@ import com.hanumoka.sado.minipacs.domain.entity.Study;
 import com.hanumoka.sado.minipacs.domain.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +34,7 @@ public class StudyService {
     private final StudyRepository studyRepository;
     private final PatientService patientService;
     private final TenantProvider tenantProvider;
+    private final CacheManager cacheManager;
 
     /**
      * Study PK로 조회
@@ -45,10 +50,14 @@ public class StudyService {
     /**
      * DICOM Study Instance UID로 조회
      *
+     * <p>캐시 적용: QIDO-RS 조회 시 반복 쿼리 방지
+     *
      * @param studyInstanceUid DICOM Study Instance UID (0020,000D)
      * @return Study 엔티티 (Optional)
      */
+    @Cacheable(value = "studies", key = "#studyInstanceUid", unless = "#result == null || !#result.present")
     public Optional<Study> findByStudyInstanceUid(String studyInstanceUid) {
+        log.debug("Cache miss - querying DB for studyInstanceUid={}", studyInstanceUid);
         return studyRepository.findByStudyInstanceUid(studyInstanceUid);
     }
 
@@ -236,31 +245,44 @@ public class StudyService {
     /**
      * Study 업데이트
      *
+     * <p>캐시 무효화: 업데이트 시 해당 UID의 캐시 삭제
+     *
      * @param study Study 엔티티
      * @return 업데이트된 Study
      */
     @Transactional
+    @CacheEvict(value = "studies", key = "#study.studyInstanceUid")
     public Study updateStudy(Study study) {
         // 존재 여부 확인
         findById(study.getId());
 
-        log.info("Updating study: id={}", study.getId());
+        log.info("Updating study: id={}, evicting cache for uid={}", study.getId(), study.getStudyInstanceUid());
         return studyRepository.save(study);
     }
 
     /**
      * Study 삭제
      *
+     * <p>캐시 무효화: 삭제 시 해당 UID의 캐시 즉시 삭제
+     *
      * @param id Study PK
      */
     @Transactional
     public void deleteStudy(Long id) {
         Study study = findById(id);
+        String studyInstanceUid = study.getStudyInstanceUid();
 
         log.info("Deleting study: id={}, studyInstanceUid={}",
                 id,
-                study.getStudyInstanceUid());
+                studyInstanceUid);
 
         studyRepository.delete(study);
+
+        // 캐시 즉시 무효화
+        Cache cache = cacheManager.getCache("studies");
+        if (cache != null) {
+            cache.evict(studyInstanceUid);
+            log.debug("Cache evicted for studyInstanceUid={}", studyInstanceUid);
+        }
     }
 }

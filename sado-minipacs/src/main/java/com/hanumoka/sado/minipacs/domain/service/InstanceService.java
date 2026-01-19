@@ -27,6 +27,10 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,6 +73,9 @@ public class InstanceService {
     // 사전 렌더링 서비스
     private final PreRenderingService preRenderingService;
 
+    // 캐시 관리
+    private final CacheManager cacheManager;
+
     /**
      * CRITICAL: Self-injection for AOP proxy access
      * Required for @Retryable to work correctly with @Transactional
@@ -93,10 +100,14 @@ public class InstanceService {
     /**
      * DICOM SOP Instance UID로 조회
      *
+     * <p>캐시 적용: WADO-RS 조회 시 반복 쿼리 방지
+     *
      * @param sopInstanceUid DICOM SOP Instance UID (0008,0018)
      * @return Instance 엔티티 (Optional)
      */
+    @Cacheable(value = "instances", key = "#sopInstanceUid", unless = "#result == null || !#result.present")
     public Optional<Instance> findBySopInstanceUid(String sopInstanceUid) {
+        log.debug("Cache miss - querying DB for sopInstanceUid={}", sopInstanceUid);
         return instanceRepository.findBySopInstanceUid(sopInstanceUid);
     }
 
@@ -435,11 +446,12 @@ public class InstanceService {
      * @return 업데이트된 Instance
      */
     @Transactional
+    @CacheEvict(value = "instances", key = "#instance.sopInstanceUid")
     public Instance updateInstance(Instance instance) {
         // 존재 여부 확인
         findById(instance.getId());
 
-        log.info("Updating instance: id={}", instance.getId());
+        log.info("Updating instance: id={}, evicting cache for uid={}", instance.getId(), instance.getSopInstanceUid());
         return instanceRepository.save(instance);
     }
 
@@ -467,10 +479,11 @@ public class InstanceService {
         Instance instance = findById(id);
         Series series = instance.getSeries();
         String storagePath = instance.getStoragePath();
+        String sopInstanceUid = instance.getSopInstanceUid();
 
         log.info("Deleting instance: id={}, sopInstanceUid={}, storagePath={}",
                 id,
-                instance.getSopInstanceUid(),
+                sopInstanceUid,
                 storagePath);
 
         // 1. S3에서 DICOM 파일 먼저 삭제 (실패 시 예외 발생 → 트랜잭션 롤백)
@@ -487,6 +500,13 @@ public class InstanceService {
 
         instanceRepository.delete(instance);
         log.info("Deleted instance from DB: id={}", id);
+
+        // 3. 캐시 즉시 무효화
+        Cache cache = cacheManager.getCache("instances");
+        if (cache != null) {
+            cache.evict(sopInstanceUid);
+            log.debug("Cache evicted for sopInstanceUid={}", sopInstanceUid);
+        }
     }
 
     /**

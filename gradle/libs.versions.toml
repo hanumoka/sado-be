@@ -31,6 +31,9 @@ spring-retry = "2.0.10"
 # AspectJ (for AOP)
 aspectj = "1.9.24"
 
+# Caffeine Cache
+caffeine = "3.1.8"
+
 # Test
 junit = "5.10.1"
 
@@ -64,6 +67,10 @@ spring-retry = { module = "org.springframework.retry:spring-retry", version.ref 
 
 # AspectJ (for AOP support)
 aspectj-weaver = { module = "org.aspectj:aspectjweaver", version.ref = "aspectj" }
+
+# Spring Cache + Caffeine
+spring-boot-starter-cache = { module = "org.springframework.boot:spring-boot-starter-cache", version.ref = "spring-boot" }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
 
 # Spring Boot Test
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot" }

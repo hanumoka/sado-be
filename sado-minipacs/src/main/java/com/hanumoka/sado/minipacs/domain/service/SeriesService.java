@@ -9,6 +9,10 @@ import com.hanumoka.sado.minipacs.domain.entity.Study;
 import com.hanumoka.sado.minipacs.domain.repository.SeriesRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +33,7 @@ public class SeriesService {
     private final SeriesRepository seriesRepository;
     private final StudyService studyService;
     private final TenantProvider tenantProvider;
+    private final CacheManager cacheManager;
 
     /**
      * 전체 Series 조회
@@ -65,10 +70,14 @@ public class SeriesService {
     /**
      * DICOM Series Instance UID로 조회
      *
+     * <p>캐시 적용: QIDO-RS 조회 시 반복 쿼리 방지
+     *
      * @param seriesInstanceUid DICOM Series Instance UID (0020,000E)
      * @return Series 엔티티 (Optional)
      */
+    @Cacheable(value = "series", key = "#seriesInstanceUid", unless = "#result == null || !#result.present")
     public Optional<Series> findBySeriesInstanceUid(String seriesInstanceUid) {
+        log.debug("Cache miss - querying DB for seriesInstanceUid={}", seriesInstanceUid);
         return seriesRepository.findBySeriesInstanceUid(seriesInstanceUid);
     }
 
@@ -212,16 +221,19 @@ public class SeriesService {
      * @return 업데이트된 Series
      */
     @Transactional
+    @CacheEvict(value = "series", key = "#series.seriesInstanceUid")
     public Series updateSeries(Series series) {
         // 존재 여부 확인
         findById(series.getId());
 
-        log.info("Updating series: id={}", series.getId());
+        log.info("Updating series: id={}, evicting cache for uid={}", series.getId(), series.getSeriesInstanceUid());
         return seriesRepository.save(series);
     }
 
     /**
      * Series 삭제
+     *
+     * <p>캐시 무효화: 삭제 시 해당 UID의 캐시 즉시 삭제
      *
      * @param id Series PK
      */
@@ -229,10 +241,11 @@ public class SeriesService {
     public void deleteSeries(Long id) {
         Series series = findById(id);
         Study study = series.getStudy();
+        String seriesInstanceUid = series.getSeriesInstanceUid();
 
         log.info("Deleting series: id={}, seriesInstanceUid={}",
                 id,
-                series.getSeriesInstanceUid());
+                seriesInstanceUid);
 
         // 비즈니스 메서드 호출 (역정규화 필드 자동 업데이트)
         if (study != null) {
@@ -240,5 +253,12 @@ public class SeriesService {
         }
 
         seriesRepository.delete(series);
+
+        // 캐시 즉시 무효화
+        Cache cache = cacheManager.getCache("series");
+        if (cache != null) {
+            cache.evict(seriesInstanceUid);
+            log.debug("Cache evicted for seriesInstanceUid={}", seriesInstanceUid);
+        }
     }
 }
