@@ -75,7 +75,7 @@ public class SeriesService {
      * @param seriesInstanceUid DICOM Series Instance UID (0020,000E)
      * @return Series 엔티티 (Optional)
      */
-    @Cacheable(value = "series", key = "#seriesInstanceUid", unless = "#result == null || !#result.present")
+    @Cacheable(value = "series", key = "#seriesInstanceUid", unless = "#result == null")
     public Optional<Series> findBySeriesInstanceUid(String seriesInstanceUid) {
         log.debug("Cache miss - querying DB for seriesInstanceUid={}", seriesInstanceUid);
         return seriesRepository.findBySeriesInstanceUid(seriesInstanceUid);

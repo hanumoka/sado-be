@@ -55,7 +55,7 @@ public class StudyService {
      * @param studyInstanceUid DICOM Study Instance UID (0020,000D)
      * @return Study 엔티티 (Optional)
      */
-    @Cacheable(value = "studies", key = "#studyInstanceUid", unless = "#result == null || !#result.present")
+    @Cacheable(value = "studies", key = "#studyInstanceUid", unless = "#result == null")
     public Optional<Study> findByStudyInstanceUid(String studyInstanceUid) {
         log.debug("Cache miss - querying DB for studyInstanceUid={}", studyInstanceUid);
         return studyRepository.findByStudyInstanceUid(studyInstanceUid);

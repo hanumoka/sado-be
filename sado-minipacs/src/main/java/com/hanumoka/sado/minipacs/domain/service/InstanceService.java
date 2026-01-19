@@ -83,7 +83,7 @@ public class InstanceService {
      * @param sopInstanceUid DICOM SOP Instance UID (0008,0018)
      * @return Instance 엔티티 (Optional)
      */
-    @Cacheable(value = "instances", key = "#sopInstanceUid", unless = "#result == null || !#result.present")
+    @Cacheable(value = "instances", key = "#sopInstanceUid", unless = "#result == null")
     public Optional<Instance> findBySopInstanceUid(String sopInstanceUid) {
         log.debug("Cache miss - querying DB for sopInstanceUid={}", sopInstanceUid);
         return instanceRepository.findBySopInstanceUid(sopInstanceUid);
