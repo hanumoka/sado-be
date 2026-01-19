@@ -300,4 +300,23 @@ public interface InstanceRepository extends JpaRepository<Instance, Long> {
             @Param("status") Instance.TranscodingStatus status
     );
 
+    // ========== 테넌트별 사전렌더링 용량 조회 ==========
+
+    /**
+     * 테넌트별 사전렌더링 용량 조회
+     *
+     * <p>사전렌더링 완료된 Instance의 prerenderedTotalSize를 테넌트별로 합산합니다.
+     * FileAsset 테이블이 아닌 Instance 테이블에서 조회합니다.
+     *
+     * @return [tenantId, instanceCount, totalPrerenderedSize] 배열 목록
+     */
+    @Query("""
+            SELECT i.tenantId, COUNT(i), COALESCE(SUM(i.prerenderedTotalSize), 0)
+            FROM Instance i
+            WHERE i.transcodingStatus = com.hanumoka.sado.minipacs.domain.entity.Instance$TranscodingStatus.COMPLETED
+            GROUP BY i.tenantId
+            ORDER BY i.tenantId ASC
+            """)
+    List<Object[]> findPrerenderedSizeByTenant();
+
 }

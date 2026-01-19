@@ -356,24 +356,50 @@ public class AdminController {
     public ApiResponse<List<TenantStorageMetrics>> getStorageByTenant() {
         log.info("GET /api/admin/metrics/storage-by-tenant");
 
-        // 테넌트/카테고리별 통계 조회
-        List<Object[]> rawMetrics = fileAssetRepository.findStorageMetricsByTenantAndType();
+        // 1. FileAsset 테이블에서 원본 파일(DICOM) 통계 조회
+        List<Object[]> fileAssetMetrics = fileAssetRepository.findStorageMetricsByTenantAndType();
 
-        // tenantId 기준으로 그룹화하여 TenantStorageMetrics로 변환
+        // 2. Instance 테이블에서 사전렌더링 통계 조회
+        List<Object[]> prerenderedMetrics = instanceRepository.findPrerenderedSizeByTenant();
+
+        // 3. tenantId 기준으로 그룹화
         java.util.Map<Long, TenantStorageMetrics.TenantStorageMetricsBuilder> builderMap = new java.util.LinkedHashMap<>();
 
-        for (Object[] row : rawMetrics) {
+        // 3.1 원본 파일(DICOM) 데이터 처리
+        for (Object[] row : fileAssetMetrics) {
             Long tenantId = (Long) row[0];
             com.hanumoka.sado.minipacs.domain.enums.FileCategory category =
                 (com.hanumoka.sado.minipacs.domain.enums.FileCategory) row[1];
             Long fileCount = (Long) row[2];
             Long totalSize = (Long) row[3];
 
+            // DICOM 카테고리만 원본으로 처리 (SYSTEM은 무시 - Instance에서 조회)
+            if (category == com.hanumoka.sado.minipacs.domain.enums.FileCategory.DICOM) {
+                builderMap.computeIfAbsent(tenantId, id ->
+                    TenantStorageMetrics.builder()
+                        .tenantId(id)
+                        .tenantName("Tenant " + id)
+                        .originalFileCount(0L)
+                        .originalSize(0L)
+                        .preRenderedFileCount(0L)
+                        .preRenderedSize(0L)
+                        .totalSize(0L)
+                ).originalFileCount(fileCount)
+                 .originalSize(totalSize);
+            }
+        }
+
+        // 3.2 사전렌더링 데이터 병합 (Instance 테이블에서 조회)
+        for (Object[] row : prerenderedMetrics) {
+            Long tenantId = (Long) row[0];
+            Long instanceCount = (Long) row[1];
+            Long prerenderedSize = (Long) row[2];
+
             TenantStorageMetrics.TenantStorageMetricsBuilder builder =
                 builderMap.computeIfAbsent(tenantId, id ->
                     TenantStorageMetrics.builder()
                         .tenantId(id)
-                        .tenantName("Tenant " + id)  // TODO: Tenant 엔티티에서 이름 조회
+                        .tenantName("Tenant " + id)
                         .originalFileCount(0L)
                         .originalSize(0L)
                         .preRenderedFileCount(0L)
@@ -381,27 +407,20 @@ public class AdminController {
                         .totalSize(0L)
                 );
 
-            // DICOM = 원본, SYSTEM = 사전렌더링
-            if (category == com.hanumoka.sado.minipacs.domain.enums.FileCategory.DICOM) {
-                // Builder에서 직접 접근 불가하므로 임시 변수 사용
-                TenantStorageMetrics temp = builder.build();
-                builder.originalFileCount(fileCount)
-                       .originalSize(totalSize)
-                       .preRenderedFileCount(temp.getPreRenderedFileCount())
-                       .preRenderedSize(temp.getPreRenderedSize())
-                       .totalSize(temp.getTotalSize() + totalSize);
-            } else if (category == com.hanumoka.sado.minipacs.domain.enums.FileCategory.SYSTEM) {
-                TenantStorageMetrics temp = builder.build();
-                builder.preRenderedFileCount(fileCount)
-                       .preRenderedSize(totalSize)
-                       .originalFileCount(temp.getOriginalFileCount())
-                       .originalSize(temp.getOriginalSize())
-                       .totalSize(temp.getTotalSize() + totalSize);
-            }
+            // 기존 원본 데이터 유지하면서 사전렌더링 데이터 추가
+            TenantStorageMetrics temp = builder.build();
+            builder.originalFileCount(temp.getOriginalFileCount())
+                   .originalSize(temp.getOriginalSize())
+                   .preRenderedFileCount(instanceCount)
+                   .preRenderedSize(prerenderedSize);
         }
 
+        // 4. totalSize 계산 및 결과 생성
         List<TenantStorageMetrics> result = builderMap.values().stream()
-            .map(TenantStorageMetrics.TenantStorageMetricsBuilder::build)
+            .map(builder -> {
+                TenantStorageMetrics temp = builder.build();
+                return builder.totalSize(temp.getOriginalSize() + temp.getPreRenderedSize()).build();
+            })
             .toList();
 
         log.info("Storage by tenant: total tenants={}", result.size());
