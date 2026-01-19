@@ -1,5 +1,6 @@
 package com.hanumoka.sado.minipacs.infrastructure.config;
 
+import com.hanumoka.sado.common.tenant.TenantContextTaskDecorator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -58,9 +59,12 @@ public class AsyncConfig {
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(60);
 
+        // TenantContext 비동기 전파 (멀티테넌시 지원)
+        executor.setTaskDecorator(new TenantContextTaskDecorator());
+
         executor.initialize();
 
-        log.info("PreRendering Executor initialized: corePoolSize={}, maxPoolSize={}, queueCapacity={}, rejectionPolicy=CallerRunsPolicy",
+        log.info("PreRendering Executor initialized: corePoolSize={}, maxPoolSize={}, queueCapacity={}, rejectionPolicy=CallerRunsPolicy, taskDecorator=TenantContextTaskDecorator",
                 config.getCorePoolSize(), config.getMaxPoolSize(), config.getQueueCapacity());
 
         return executor;
@@ -91,9 +95,12 @@ public class AsyncConfig {
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(120);
 
+        // TenantContext 비동기 전파 (멀티테넌시 지원)
+        executor.setTaskDecorator(new TenantContextTaskDecorator());
+
         executor.initialize();
 
-        log.info("S3 Upload Executor initialized: corePoolSize={}, maxPoolSize={}, queueCapacity={}",
+        log.info("S3 Upload Executor initialized: corePoolSize={}, maxPoolSize={}, queueCapacity={}, taskDecorator=TenantContextTaskDecorator",
                 config.getCorePoolSize(), config.getMaxPoolSize(), config.getQueueCapacity());
 
         return executor;

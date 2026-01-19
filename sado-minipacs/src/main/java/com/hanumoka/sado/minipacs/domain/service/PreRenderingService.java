@@ -403,7 +403,11 @@ public class PreRenderingService {
     private String buildPrerenderedBasePath(String studyUid, String seriesUid, String sopInstanceUid) {
         Long tenantId = TenantContext.getCurrentTenantId();
         if (tenantId == null) {
-            tenantId = 1L; // 기본 테넌트
+            // TenantContextTaskDecorator가 정상 동작하면 이 경고는 발생하지 않음
+            log.warn("[PreRender] TenantContext is null in async thread. Using default tenant. " +
+                    "This may indicate TaskDecorator is not working properly. " +
+                    "sopInstanceUid={}, thread={}", sopInstanceUid, Thread.currentThread().getName());
+            tenantId = 1L; // 기본 테넌트 (폴백)
         }
         return String.format("tenant-%d/studies/%s/series/%s/instances/%s",
                 tenantId, studyUid, seriesUid, sopInstanceUid);
