@@ -24,7 +24,8 @@ import java.util.Objects;
         columnNames = {"tenant_id", "series_instance_uid"}
     ),
     indexes = {
-        @Index(name = "idx_series_study_modality", columnList = "study_id, modality")
+        @Index(name = "idx_series_study_modality", columnList = "study_id, modality"),
+        @Index(name = "idx_series_instance_uid", columnList = "series_instance_uid")
     }
 )
 @Getter

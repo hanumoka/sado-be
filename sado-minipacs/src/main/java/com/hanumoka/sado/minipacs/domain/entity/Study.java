@@ -26,7 +26,8 @@ import java.util.Objects;
         columnNames = {"tenant_id", "study_instance_uid"}
     ),
     indexes = {
-        @Index(name = "idx_study_patient_date", columnList = "patient_id, study_date")
+        @Index(name = "idx_study_patient_date", columnList = "patient_id, study_date"),
+        @Index(name = "idx_study_instance_uid", columnList = "study_instance_uid")
     }
 )
 // @EntityListeners 제거 (2026-01-05) - PatientStatisticsListener 제거로 인한 Deadlock 해결

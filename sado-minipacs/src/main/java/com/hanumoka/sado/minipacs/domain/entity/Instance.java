@@ -24,7 +24,8 @@ import java.util.Objects;
     ),
     indexes = {
         @Index(name = "idx_instance_series_number", columnList = "series_id, instance_number"),
-        @Index(name = "idx_instance_storage_path", columnList = "storage_path")
+        @Index(name = "idx_instance_storage_path", columnList = "storage_path"),
+        @Index(name = "idx_instance_sop_uid", columnList = "sop_instance_uid")
     }
 )
 @Getter
