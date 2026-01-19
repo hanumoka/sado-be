@@ -313,7 +313,7 @@ public interface InstanceRepository extends JpaRepository<Instance, Long> {
     @Query("""
             SELECT i.tenantId, COUNT(i), COALESCE(SUM(i.prerenderedTotalSize), 0)
             FROM Instance i
-            WHERE i.transcodingStatus = com.hanumoka.sado.minipacs.domain.entity.Instance$TranscodingStatus.COMPLETED
+            WHERE i.transcodingStatus = 'COMPLETED'
             GROUP BY i.tenantId
             ORDER BY i.tenantId ASC
             """)
