@@ -5,6 +5,8 @@ import com.hanumoka.sado.minipacs.dto.request.seaweedfs.CreateVolumeRequest;
 import com.hanumoka.sado.minipacs.dto.response.seaweedfs.ClusterStatusResponse;
 import com.hanumoka.sado.minipacs.dto.response.seaweedfs.FilerEntryResponse;
 import com.hanumoka.sado.minipacs.dto.response.seaweedfs.VolumeInfoResponse;
+import com.hanumoka.sado.minipacs.dto.response.seaweedfs.VolumePageResponse;
+import com.hanumoka.sado.minipacs.dto.response.seaweedfs.CollectionStatsResponse;
 import com.hanumoka.sado.minipacs.infrastructure.service.SeaweedFSAdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -63,6 +65,79 @@ public class SeaweedFSAdminController {
 
         log.info("Volumes retrieved: count={}", volumes.size());
         return ApiResponse.success(volumes);
+    }
+
+    /**
+     * Volume 목록 조회 (페이징 + 필터링)
+     *
+     * <p>GET /api/admin/seaweedfs/volumes/page?page=0&size=50&collection=minipacs&status=ReadWrite&sortBy=id&order=asc
+     *
+     * @param page 페이지 번호 (기본값: 0)
+     * @param size 페이지 크기 (기본값: 50)
+     * @param collection Collection 필터 (선택)
+     * @param status 상태 필터 (선택): ReadWrite, ReadOnly
+     * @param sortBy 정렬 기준 (기본값: id): id, size, fileCount, usedSize, collection
+     * @param order 정렬 순서 (기본값: asc): asc, desc
+     * @return 페이징된 Volume 목록
+     */
+    @Operation(
+        summary = "Volume 목록 조회 (페이징)",
+        description = "SeaweedFS Volume을 페이징하여 조회합니다. Collection, 상태 필터링 및 정렬 지원."
+    )
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "503", description = "SeaweedFS 서버 접근 불가"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "응답 파싱 실패")
+    })
+    @GetMapping("/volumes/page")
+    public ApiResponse<VolumePageResponse> listVolumesPaged(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "50") int size,
+        @RequestParam(required = false) String collection,
+        @RequestParam(required = false) String status,
+        @RequestParam(defaultValue = "id") String sortBy,
+        @RequestParam(defaultValue = "asc") String order
+    ) {
+        log.info("GET /api/admin/seaweedfs/volumes/page: page={}, size={}, collection={}, status={}, sortBy={}, order={}",
+                page, size, collection, status, sortBy, order);
+
+        VolumePageResponse response = seaweedFSAdminService.listVolumesPaged(
+                page, size, collection, status, sortBy, order
+        );
+
+        log.info("Volumes retrieved: page={}/{}, elements={}/{}",
+                page, response.getTotalPages(), response.getContent().size(), response.getTotalElements());
+
+        return ApiResponse.success(response);
+    }
+
+    /**
+     * Collection별 통계 조회
+     *
+     * <p>GET /api/admin/seaweedfs/collections/stats
+     *
+     * <p>모든 Volume을 Collection별로 그룹화하여 통계를 반환합니다.
+     * Collection이 없는 Volume은 "(default)" 그룹으로 표시됩니다.
+     *
+     * @return Collection별 통계 목록 (사용량 내림차순 정렬)
+     */
+    @Operation(
+        summary = "Collection별 통계 조회",
+        description = "SeaweedFS Volume을 Collection별로 그룹화하여 통계를 조회합니다. Volume 수, 파일 수, 용량 정보 포함."
+    )
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "503", description = "SeaweedFS 서버 접근 불가"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "응답 파싱 실패")
+    })
+    @GetMapping("/collections/stats")
+    public ApiResponse<List<CollectionStatsResponse>> getCollectionStats() {
+        log.info("GET /api/admin/seaweedfs/collections/stats");
+
+        List<CollectionStatsResponse> stats = seaweedFSAdminService.getCollectionStats();
+
+        log.info("Collection stats retrieved: collections={}", stats.size());
+        return ApiResponse.success(stats);
     }
 
     /**

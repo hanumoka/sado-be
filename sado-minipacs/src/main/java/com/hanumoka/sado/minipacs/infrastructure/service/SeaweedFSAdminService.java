@@ -8,6 +8,8 @@ import com.hanumoka.sado.minipacs.dto.request.seaweedfs.CreateVolumeRequest;
 import com.hanumoka.sado.minipacs.dto.response.seaweedfs.ClusterStatusResponse;
 import com.hanumoka.sado.minipacs.dto.response.seaweedfs.FilerEntryResponse;
 import com.hanumoka.sado.minipacs.dto.response.seaweedfs.VolumeInfoResponse;
+import com.hanumoka.sado.minipacs.dto.response.seaweedfs.VolumePageResponse;
+import com.hanumoka.sado.minipacs.dto.response.seaweedfs.CollectionStatsResponse;
 import com.hanumoka.sado.minipacs.infrastructure.config.SeaweedFSAdminProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -25,7 +27,10 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -107,6 +112,176 @@ public class SeaweedFSAdminService {
                 "SeaweedFS API 호출에 실패했습니다: " + e.getMessage()
             );
         }
+    }
+
+    /**
+     * Volume 목록 조회 (페이징 + 필터링)
+     *
+     * <p>SeaweedFS는 페이징 API를 제공하지 않으므로,
+     * 전체 데이터를 조회 후 메모리에서 필터링/페이징 수행
+     *
+     * <p>주의: Volume 수가 매우 많은 경우(1000+) 성능 고려 필요
+     *
+     * @param page 페이지 번호 (0부터 시작)
+     * @param size 페이지 크기
+     * @param collection Collection 필터 (null이면 전체)
+     * @param status 상태 필터 (null이면 전체)
+     * @param sortBy 정렬 기준: id, size, fileCount, usedSize, collection
+     * @param order 정렬 순서: asc, desc
+     * @return 페이징된 Volume 목록
+     */
+    public VolumePageResponse listVolumesPaged(
+            int page,
+            int size,
+            String collection,
+            String status,
+            String sortBy,
+            String order
+    ) {
+        // 1. 전체 Volume 조회
+        List<VolumeInfoResponse> allVolumes = listVolumes();
+
+        // 2. 사용 가능한 Collection 목록 추출 (필터 드롭다운용)
+        List<String> availableCollections = allVolumes.stream()
+                .map(VolumeInfoResponse::getCollection)
+                .filter(c -> c != null && !c.isEmpty())
+                .distinct()
+                .sorted()
+                .toList();
+
+        // 3. 필터링
+        List<VolumeInfoResponse> filtered = allVolumes.stream()
+                .filter(v -> collection == null || collection.isEmpty() || collection.equals(v.getCollection()))
+                .filter(v -> status == null || status.isEmpty() || status.equals(v.getStatus()))
+                .toList();
+
+        // 4. 정렬
+        Comparator<VolumeInfoResponse> comparator = getVolumeComparator(sortBy);
+        if ("desc".equalsIgnoreCase(order)) {
+            comparator = comparator.reversed();
+        }
+
+        List<VolumeInfoResponse> sorted = filtered.stream()
+                .sorted(comparator)
+                .toList();
+
+        // 5. 페이징
+        int totalElements = sorted.size();
+        int fromIndex = page * size;
+        int toIndex = Math.min(fromIndex + size, totalElements);
+
+        List<VolumeInfoResponse> pageContent;
+        if (fromIndex >= totalElements) {
+            pageContent = List.of();
+        } else {
+            pageContent = sorted.subList(fromIndex, toIndex);
+        }
+
+        log.debug("Volume pagination: page={}, size={}, filtered={}, total={}",
+                page, size, pageContent.size(), totalElements);
+
+        return VolumePageResponse.of(pageContent, page, size, totalElements, availableCollections);
+    }
+
+    /**
+     * Volume 정렬 Comparator 반환
+     *
+     * @param sortBy 정렬 기준
+     * @return Comparator
+     */
+    private Comparator<VolumeInfoResponse> getVolumeComparator(String sortBy) {
+        return switch (sortBy.toLowerCase()) {
+            case "size" -> Comparator.comparing(
+                    VolumeInfoResponse::getSize,
+                    Comparator.nullsLast(Comparator.naturalOrder())
+            );
+            case "filecount" -> Comparator.comparing(
+                    VolumeInfoResponse::getFileCount,
+                    Comparator.nullsLast(Comparator.naturalOrder())
+            );
+            case "usedsize" -> Comparator.comparing(
+                    VolumeInfoResponse::getUsedSize,
+                    Comparator.nullsLast(Comparator.naturalOrder())
+            );
+            case "collection" -> Comparator.comparing(
+                    VolumeInfoResponse::getCollection,
+                    Comparator.nullsLast(Comparator.naturalOrder())
+            );
+            default -> Comparator.comparing(
+                    VolumeInfoResponse::getId,
+                    Comparator.nullsLast(Comparator.naturalOrder())
+            );
+        };
+    }
+
+    /**
+     * Collection별 통계 조회
+     *
+     * <p>모든 Volume을 Collection별로 그룹화하여 통계를 집계합니다.
+     *
+     * @return Collection별 통계 목록 (사용량 내림차순 정렬)
+     */
+    public List<CollectionStatsResponse> getCollectionStats() {
+        // 1. 전체 Volume 조회
+        List<VolumeInfoResponse> allVolumes = listVolumes();
+
+        // 2. Collection별로 그룹화 (null/empty는 "(default)"로 처리)
+        Map<String, List<VolumeInfoResponse>> groupedByCollection = allVolumes.stream()
+                .collect(Collectors.groupingBy(
+                        v -> (v.getCollection() == null || v.getCollection().isEmpty())
+                                ? "(default)"
+                                : v.getCollection()
+                ));
+
+        // 3. 각 그룹별 통계 집계
+        List<CollectionStatsResponse> stats = groupedByCollection.entrySet().stream()
+                .map(entry -> {
+                    String collectionName = entry.getKey();
+                    List<VolumeInfoResponse> volumes = entry.getValue();
+
+                    long totalFileCount = volumes.stream()
+                            .mapToLong(v -> v.getFileCount() != null ? v.getFileCount() : 0)
+                            .sum();
+
+                    long totalUsedSize = volumes.stream()
+                            .mapToLong(v -> v.getUsedSize() != null ? v.getUsedSize() : 0)
+                            .sum();
+
+                    long totalSize = volumes.stream()
+                            .mapToLong(v -> v.getSize() != null ? v.getSize() : 0)
+                            .sum();
+
+                    int readWriteCount = (int) volumes.stream()
+                            .filter(v -> "ReadWrite".equals(v.getStatus()))
+                            .count();
+
+                    int readOnlyCount = (int) volumes.stream()
+                            .filter(v -> "ReadOnly".equals(v.getStatus()))
+                            .count();
+
+                    List<Long> volumeIds = volumes.stream()
+                            .map(VolumeInfoResponse::getId)
+                            .sorted()
+                            .toList();
+
+                    return CollectionStatsResponse.builder()
+                            .collection(collectionName)
+                            .volumeCount(volumes.size())
+                            .totalFileCount(totalFileCount)
+                            .totalUsedSize(totalUsedSize)
+                            .totalSize(totalSize)
+                            .readWriteCount(readWriteCount)
+                            .readOnlyCount(readOnlyCount)
+                            .volumeIds(volumeIds)
+                            .build();
+                })
+                .sorted(Comparator.comparing(CollectionStatsResponse::getTotalUsedSize).reversed())
+                .toList();
+
+        log.debug("Collection stats calculated: {} collections from {} volumes",
+                stats.size(), allVolumes.size());
+
+        return stats;
     }
 
     /**
