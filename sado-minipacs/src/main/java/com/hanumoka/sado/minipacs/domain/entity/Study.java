@@ -84,8 +84,13 @@ public class Study extends TenantAwareEntity {
      * CRITICAL: CascadeType.ALL 제거 (데이터 무결성 보호)
      * - Study 삭제 시 Series/Instance 연쇄 삭제 방지
      * - orphanRemoval 제거하여 실수로 인한 데이터 손실 방지
+     *
+     * CRITICAL: @BatchSize 추가 (N+1 쿼리 방지)
+     * - Study 목록 조회 후 series 접근 시 IN 절로 10개씩 묶어서 조회
+     * - 100개 Study 조회 시 100번 쿼리 → 10번 쿼리 (90% 감소)
      */
     @OneToMany(mappedBy = "study", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @org.hibernate.annotations.BatchSize(size = 10)
     private List<Series> series = new ArrayList<>();
 
     // ========== 비즈니스 메서드 ==========
