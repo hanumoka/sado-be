@@ -1,29 +1,12 @@
 package com.hanumoka.sado.minipacs.controller;
 
 import static com.hanumoka.sado.common.util.StringUtils.hasText;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hanumoka.sado.common.dto.ApiResponse;
-import com.hanumoka.sado.minipacs.domain.entity.DicomMetadataRecord;
-import com.hanumoka.sado.minipacs.domain.entity.FileAsset;
 import com.hanumoka.sado.minipacs.domain.entity.Instance;
-import com.hanumoka.sado.minipacs.domain.entity.Patient;
 import com.hanumoka.sado.minipacs.domain.entity.Series;
-import com.hanumoka.sado.minipacs.domain.entity.Study;
-import com.hanumoka.sado.minipacs.domain.enums.FileCategory;
-import com.hanumoka.sado.minipacs.domain.enums.FileStatus;
-import com.hanumoka.sado.minipacs.domain.enums.ReferenceType;
-import com.hanumoka.sado.minipacs.domain.parser.DicomMetadataExtractor;
-import com.hanumoka.sado.minipacs.domain.repository.DicomMetadataRecordRepository;
-import com.hanumoka.sado.minipacs.domain.util.DicomFileValidator;
-import com.hanumoka.sado.minipacs.domain.repository.FileAssetRepository;
+import com.hanumoka.sado.minipacs.domain.service.DicomUploadService;
 import com.hanumoka.sado.minipacs.domain.service.InstanceService;
-import com.hanumoka.sado.minipacs.domain.service.PatientService;
 import com.hanumoka.sado.minipacs.domain.service.SeriesService;
-import com.hanumoka.sado.minipacs.domain.service.StudyService;
-import com.hanumoka.sado.minipacs.storage.service.DicomStorageService;
-import com.hanumoka.sado.minipacs.storage.dto.DicomFileMetadata;
-import com.hanumoka.sado.minipacs.storage.dto.StorageResult;
 import com.hanumoka.sado.minipacs.dto.request.CreateInstanceRequest;
 import com.hanumoka.sado.minipacs.dto.request.UpdateInstanceRequest;
 import com.hanumoka.sado.minipacs.dto.response.InstanceResponse;
@@ -33,16 +16,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.data.domain.Page;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import org.springframework.data.domain.Page;
-
 import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Instance REST API Controller
@@ -57,15 +36,9 @@ import java.util.Optional;
 public class InstanceController {
 
     private final InstanceService instanceService;
+    private final DicomUploadService dicomUploadService;
     private final SeriesService seriesService;
-    private final StudyService studyService;
-    private final PatientService patientService;
-    private final DicomStorageService dicomStorageService;
-    private final DicomMetadataRecordRepository dicomMetadataRecordRepository;
-    private final FileAssetRepository fileAssetRepository;
-    private final ObjectMapper objectMapper;
-
-    private final StorageAccessStrategy storageAccessStrategy; // Storage 접근 전략 (pre-signed url or backed proxy)
+    private final StorageAccessStrategy storageAccessStrategy;
 
     /**
      * 기본 User ID (Week 12+ Spring Security 도입 전까지 임시 사용)
@@ -296,30 +269,15 @@ public class InstanceController {
         log.warn("DEPRECATED API called: POST /api/instances/upload. " +
                  "Please migrate to DICOMweb STOW-RS: POST /dicomweb/studies");
 
-        // 비즈니스 로직은 InstanceService.uploadDicomFile()로 이동됨
+        // 비즈니스 로직은 DicomUploadService.uploadDicomFile()로 이동됨
         byte[] fileBytes = file.getBytes();
-        Instance savedInstance = instanceService.uploadDicomFile(
+        Instance savedInstance = dicomUploadService.uploadDicomFile(
             fileBytes,
             file.getOriginalFilename()
         );
 
         return ApiResponse.success(toResponse(savedInstance));
     }
-
-    /**
-     * DicomMetadata → JSON 문자열 변환
-     */
-    private String convertMetadataToJson(DicomMetadataExtractor.DicomMetadata metadata) {
-        try {
-            return objectMapper.writeValueAsString(metadata);
-        } catch (JsonProcessingException e) {
-            log.warn("Failed to convert metadata to JSON, using empty object", e);
-            return "{}";
-        }
-    }
-
-
-
 
     // ========== Helper Methods: Entity ↔ DTO 변환 ==========
 

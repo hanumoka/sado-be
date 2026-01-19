@@ -7,6 +7,7 @@ import com.hanumoka.sado.minipacs.domain.entity.Instance;
 import com.hanumoka.sado.minipacs.domain.entity.Series;
 import com.hanumoka.sado.minipacs.domain.entity.Study;
 import com.hanumoka.sado.minipacs.domain.service.DicomRenderingService;
+import com.hanumoka.sado.minipacs.domain.service.DicomUploadService;
 import com.hanumoka.sado.minipacs.dto.FrameExtractionResult;
 import com.hanumoka.sado.minipacs.domain.service.InstanceService;
 import com.hanumoka.sado.minipacs.domain.service.SeriesService;
@@ -80,6 +81,7 @@ public class DicomWebController {
     private final StudyService studyService;
     private final SeriesService seriesService;
     private final InstanceService instanceService;
+    private final DicomUploadService dicomUploadService;
     private final DicomStorageService dicomStorageService;
     private final DicomRenderingService dicomRenderingService;
     private final UploadLimiter uploadLimiter;
@@ -1573,9 +1575,9 @@ public class DicomWebController {
         // - 타임아웃 초과 시 TooManyRequestsException → GlobalExceptionHandler에서 429 반환
         return uploadLimiter.executeWithLimit(() -> {
             try {
-                // 4. Service 호출 (모든 비즈니스 로직은 Service에서 처리)
+                // 4. Service 호출 (모든 비즈니스 로직은 DicomUploadService에서 처리)
                 byte[] fileBytes = file.getBytes();
-                Instance instance = instanceService.uploadDicomFile(
+                Instance instance = dicomUploadService.uploadDicomFile(
                         fileBytes,
                         file.getOriginalFilename()
                 );
